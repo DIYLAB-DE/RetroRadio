@@ -1,0 +1,2 @@
+# Git soll Zeilenenden nie umwandeln: das Projekt mischt CRLF und LF absichtlich je Datei, und ein Wechsel zwischen Windows und Linux darf keine Scheinaenderungen erzeugen.
+* -text
