@@ -1,5 +1,7 @@
 # Internetdienste einrichten
 
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > Internetdienste einrichten
+
 Die Dienste werden am Radio unter **Einstellungen -> Cloud-Anbindung** und **Einstellungen -> Wetter** eingerichtet. Die [Weboberfläche](../Weboberfläche.md) bietet die Eingabe der längeren Adressen ebenfalls an.
 
 | Funktion | Voraussetzung | Anleitung |
@@ -7,7 +9,7 @@ Die Dienste werden am Radio unter **Einstellungen -> Cloud-Anbindung** und **Ein
 | Kalender und Termine der Tagesansicht | Eigene Google-Apps-Script-Web-App für den Kalender | [Google einrichten](google/README.md) |
 | Kontakte und Geburtstage | Eigene Google-Apps-Script-Web-App mit People API | [Google einrichten](google/README.md) |
 | Aufgaben und Erledigt-Markierung | Eigene Google-Apps-Script-Web-App mit Tasks API | [Google einrichten](google/README.md) |
-| Flugradar | Wetterstandort; optional OpenSky-API-Client | [Flugradar einrichten](Flugradar.md) |
+| Flugradar | Wetterstandort, optional OpenSky-API-Client | [Flugradar einrichten](Flugradar.md) |
 | Wetter | WLAN und eingestellter Standort | [Wetterstandort](#wetterstandort) |
 
 ## Wetterstandort
@@ -18,6 +20,8 @@ Die Firmware verwendet Open-Meteo für Wetterdaten und OpenStreetMap-basierte Or
 
 ## Eigene Werte und Demomodus
 
-Die Google-Adressen gehören zu Deinen eigenen Bereitstellungen. Eine leere Adresse führt bei den betreffenden Anwendungen zu den eingebauten Beispieldaten. Für Screenshots oder Vorführungen die persönlichen Google-Adressen entfernen und die Anwendung neu öffnen. **Alle löschen** im Cloud-Bereich betrifft auch OpenSky; zum Trennen einzelner Dienste nur deren Felder leeren und speichern.
+Die Google-Adressen gehören zu Deinen eigenen Bereitstellungen. Eine leere Adresse führt bei den betreffenden Anwendungen zu den eingebauten Beispieldaten. Für Screenshots oder Vorführungen die persönlichen Google-Adressen entfernen und die Anwendung neu öffnen. **Alle löschen** im Cloud-Bereich betrifft auch OpenSky, zum Trennen einzelner Dienste nur deren Felder leeren und speichern.
 
 Private Bereitstellungsadressen, Kalenderkennungen und Client-Secrets gehören nicht in öffentliche Repositorys, Fehlerberichte oder Bildschirmfotos.
+
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > Internetdienste einrichten

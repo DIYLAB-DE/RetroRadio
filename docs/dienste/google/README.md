@@ -1,5 +1,7 @@
 # Google-Kalender, Kontakte und Aufgaben
 
+[RetroRadio](../../../README.md) > [Dokumentation](../../../README.md#dokumentation) > [Internetdienste](../README.md) > Google-Kalender, Kontakte und Aufgaben
+
 RetroRadio meldet sich nicht direkt bei Deinem Google-Konto an. Drei kleine Google-Apps-Script-Web-Apps stellen die benötigten Daten für das Gerät bereit. Jede Anwendung erhält eine eigene Adresse. Diese Anleitung gilt gleichermaßen unter Windows, Linux und macOS, da die Einrichtung im Browser erfolgt.
 
 ## Dateien und Berechtigungen
@@ -38,15 +40,15 @@ Die zum Radio passenden Grenzen sind voreingestellt: höchstens **25 kommende Te
 
 ### Kontakte
 
-MAX_CONTACTS ist auf **100** gesetzt und entspricht der Geräteanzeige. REQUIRE_PHONE kann auf true gestellt werden, wenn nur Kontakte mit Telefonnummer geliefert werden sollen. DEBUG bleibt normalerweise false. CONTACT_GROUPS ist in dieser Fassung zwar als Konfigurationsfeld vorhanden, wird beim Abruf aber nicht ausgewertet; es filtert deshalb keine Kontaktgruppen.
+MAX_CONTACTS ist auf **100** gesetzt und entspricht der Geräteanzeige. REQUIRE_PHONE kann auf true gestellt werden, wenn nur Kontakte mit Telefonnummer geliefert werden sollen. DEBUG bleibt normalerweise false. CONTACT_GROUPS ist in dieser Fassung zwar als Konfigurationsfeld vorhanden, wird beim Abruf aber nicht ausgewertet, es filtert deshalb keine Kontaktgruppen.
 
 Das Script liest eine Seite mit höchstens 1000 Kontakten aus der People API, sortiert sie nach Nachname beziehungsweise Vorname und liefert höchstens 100 davon an das Radio. Es ändert keine Kontakte. Die Hilfsfunktionen zur Auflistung schreiben Kontaktdaten in das Ausführungsprotokoll und werden für den normalen Betrieb nicht benötigt.
 
 ### Aufgaben
 
-USE_ALL_LISTS steht zunächst auf true. Damit werden die gefundenen Aufgabenlisten verwendet. Für eine feste Auswahl auf false stellen und die gewünschten IDs in TASK_LISTS eintragen; **@default** bezeichnet die Standardliste. Die Hilfsfunktion listTaskLists zeigt die IDs Deiner Listen im Ausführungsprotokoll.
+USE_ALL_LISTS steht zunächst auf true. Damit werden die gefundenen Aufgabenlisten verwendet. Für eine feste Auswahl auf false stellen und die gewünschten IDs in TASK_LISTS eintragen, **@default** bezeichnet die Standardliste. Die Hilfsfunktion listTaskLists zeigt die IDs Deiner Listen im Ausführungsprotokoll.
 
-LIST_PRIORITY legt eine bevorzugte Reihenfolge anhand der Listennamen fest. TITLE_PREFIXES kann Aufgaben anhand ihrer Titelanfänge filtern; eine leere Liste filtert nicht. MAX_TASKS ist auf **30** gesetzt und passt zur Firmware. Die Abrufe lesen je Aufgabenliste höchstens 100 Einträge; zusätzliche Ergebnisseiten werden in dieser Fassung nicht nachgeladen.
+LIST_PRIORITY legt eine bevorzugte Reihenfolge anhand der Listennamen fest. TITLE_PREFIXES kann Aufgaben anhand ihrer Titelanfänge filtern, eine leere Liste filtert nicht. MAX_TASKS ist auf **30** gesetzt und passt zur Firmware. Die Abrufe lesen je Aufgabenliste höchstens 100 Einträge, zusätzliche Ergebnisseiten werden in dieser Fassung nicht nachgeladen.
 
 Das Radio kann Aufgaben als erledigt oder wieder offen markieren. Eine solche Bestätigung verändert den Zustand der Aufgabe im Google-Konto. Das Script legt keine neuen Aufgaben an.
 
@@ -83,8 +85,8 @@ Zum Demomodus die betreffende Adresse im Radio leeren und speichern. Zum vollst�
 | People oder Tasks ist nicht definiert | Richtigen erweiterten Dienst im richtigen Script-Projekt hinzufügen. |
 | Anmeldeseite statt Daten | Bereitstellung, Zugriff ohne Anmeldung und Ausführung als Eigentümer prüfen. |
 | Änderungen am Code wirken nicht | Neue Version der bestehenden Bereitstellung aktivieren. |
-| Leerer Kalender | Konto, Kalender-ID und Zugriffsrecht prüfen; Zusatzkalender müssen abonniert sein. |
-| Keine Kontakte | People API und erteilte Berechtigungen prüfen; REQUIRE_PHONE kann Einträge ausfiltern. |
+| Leerer Kalender | Konto, Kalender-ID und Zugriffsrecht prüfen, Zusatzkalender müssen abonniert sein. |
+| Keine Kontakte | People API und erteilte Berechtigungen prüfen, REQUIRE_PHONE kann Einträge ausfiltern. |
 | Aufgaben fehlen | Ausgewählte Listen, Titelpräfixe und die beschriebenen Mengenbegrenzungen prüfen. |
 | Gerät meldet ungültige Adresse | Vollständige Adresse mit https://script.google.com/ und /exec verwenden. |
 | Falscher Tag oder Zeitversatz | Zeitzone des Script-Projekts und Zeiteinstellung des Radios abgleichen. |
@@ -92,3 +94,5 @@ Zum Demomodus die betreffende Adresse im Radio leeren und speichern. Zum vollst�
 Die Einrichtung neuer Bereitstellungen muss in Deinem eigenen Konto durchgeführt werden. Die lokale Prüfung der mitgelieferten Dateien ersetzt keine erfolgreiche Autorisierung und keinen Abruf in diesem Konto.
 
 Auch die Abfrage der Aufgabenlisten erfolgt einmalig ohne Folgeseiten. Falls nicht alle Listen erscheinen, die Auswahl und die Script-Ausführungen prüfen.
+
+[RetroRadio](../../../README.md) > [Dokumentation](../../../README.md#dokumentation) > [Internetdienste](../README.md) > Google-Kalender, Kontakte und Aufgaben

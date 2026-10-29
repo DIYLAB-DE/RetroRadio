@@ -1,6 +1,6 @@
 # RC/RL-Filter
 
-[Werkstattübersicht](README.md) | Kategorie: Elektronik
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Elektronik](README.md#elektronik) > RC/RL-Filter
 
 Wähle RC oder RL sowie tiefpass oder hochpass. Gib die angezeigten Bauteilwerte ein. Das Werkzeug zeigt Grenzfrequenz, Schaltung und Frequenzgang eines Filters erster Ordnung. Bei einem Wechsel der Schaltung die Einheiten des Kondensators beziehungsweise der Spule beachten.
 
@@ -17,3 +17,5 @@ Wähle RC oder RL sowie tiefpass oder hochpass. Gib die angezeigten Bauteilwerte
 **RL-Tiefpass**
 
 [![RL-Tiefpass](../bilder/werkstatt/werkstatt-rc-rl-filter-calculator-rl-tiefpass-klein.png)](../bilder/werkstatt/werkstatt-rc-rl-filter-calculator-rl-tiefpass.png)
+
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Elektronik](README.md#elektronik) > RC/RL-Filter

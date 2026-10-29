@@ -1,6 +1,8 @@
 # Aufbaufotos
 
-Die Vorschaubilder öffnen beim Anklicken das große Foto. Hauptvariante ist Rev.2 mit Visaton BF 37; ausdrücklich als Rev.1 bezeichnete Bilder dokumentieren den früheren Aufbau. Die Flashgrößen 8 und 16 MB sind davon unabhängig.
+[RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > Aufbaufotos
+
+Die Vorschaubilder öffnen beim Anklicken das große Foto. Hauptvariante ist Rev.2 mit Visaton BF 37, als Rev.1 bezeichnete Bilder zeigen den früheren Aufbau. Die Flashgrößen 8 und 16 MB sind davon unabhängig.
 
 Die Originale bleiben privat erhalten. Diese Veröffentlichungskopien sind richtig ausgerichtet, auf höchstens 2400 Pixel verkleinert und ohne Standortdaten oder eingebettete Kommentare gespeichert. Sichtbare Netzwerkangaben sind unscharf gemacht. Bildinhalte wurden nicht ergänzt.
 
@@ -12,7 +14,7 @@ Die Originale bleiben privat erhalten. Diese Veröffentlichungskopien sind richt
 | F04 | [![Displayeinheit mit Platine auf der Rückseite.](bilder/aufbau/20260529_212225-klein.jpg)](bilder/aufbau/20260529_212225.jpg) | Displayeinheit mit Platine auf der Rückseite. |
 | F05 | [![I2C-Kabel zur RTC: Die Adern müssen wie gezeigt umgesetzt werden, damit Versorgung und Masse stimmen.](bilder/aufbau/20260530_205745-klein.jpg)](bilder/aufbau/20260530_205745.jpg) | I2C-Kabel zur RTC: Die Adern müssen wie gezeigt umgesetzt werden, damit Versorgung und Masse stimmen. |
 | F06 | [![Gedruckte Aufsteller.](bilder/aufbau/20260607_141526-klein.jpg)](bilder/aufbau/20260607_141526.jpg) | Gedruckte Aufsteller. |
-| F07 | [![Zwei fertige RetroRadios. Beide Aufbauversionen haben dieselbe Frontansicht; fotografiert ist Rev.1.](bilder/gerät/20260607_141617-klein.jpg)](bilder/gerät/20260607_141617.jpg) | Zwei fertige RetroRadios. Beide Aufbauversionen haben dieselbe Frontansicht; fotografiert ist Rev.1. |
+| F07 | [![Zwei fertige RetroRadios. Beide Aufbauversionen haben dieselbe Frontansicht, fotografiert ist Rev.1.](bilder/gerät/20260607_141617-klein.jpg)](bilder/gerät/20260607_141617.jpg) | Zwei fertige RetroRadios. Beide Aufbauversionen haben dieselbe Frontansicht, fotografiert ist Rev.1. |
 | F08 | [![Lautsprechereinsätze für Visaton BF 37 in Rev.2.](bilder/aufbau/20260822_135305-klein.jpg)](bilder/aufbau/20260822_135305.jpg) | Lautsprechereinsätze für Visaton BF 37 in Rev.2. |
 | F09 | [![UV-Resin und UV-Lampe für die Verklebung der Einsätze.](bilder/aufbau/20260822_140909-klein.jpg)](bilder/aufbau/20260822_140909.jpg) | UV-Resin und UV-Lampe für die Verklebung der Einsätze. |
 | F10 | [![Ausgehärtete Klebenaht am Lautsprechereinsatz.](bilder/aufbau/20260822_141135-klein.jpg)](bilder/aufbau/20260822_141135.jpg) | Ausgehärtete Klebenaht am Lautsprechereinsatz. |
@@ -42,3 +44,5 @@ Die Originale bleiben privat erhalten. Diese Veröffentlichungskopien sind richt
 | F34 | [![Herausgeführte 3,5-mm-Buchse für den Line-Out.](bilder/aufbau/20261007_200803-klein.jpg)](bilder/aufbau/20261007_200803.jpg) | Herausgeführte 3,5-mm-Buchse für den Line-Out. |
 | F35 | [![Verdrahtung der Line-Out-Buchse im offenen Aufbau.](bilder/aufbau/20261007_202331-klein.jpg)](bilder/aufbau/20261007_202331.jpg) | Verdrahtung der Line-Out-Buchse im offenen Aufbau. |
 | F36 | [![Befestigungsbolzen: links original, rechts gekürzte Außengewinde. Die Bolzenkörper bleiben 4 mm beziehungsweise 15 mm lang.](bilder/aufbau/20261028_213523-klein.jpg)](bilder/aufbau/20261028_213523.jpg) | Befestigungsbolzen: links original, rechts gekürzte Außengewinde. Die Bolzenkörper bleiben 4 mm beziehungsweise 15 mm lang. |
+
+[RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > Aufbaufotos

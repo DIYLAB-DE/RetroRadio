@@ -1,6 +1,6 @@
 # UKW-Schwingkreis
 
-[Werkstattübersicht](README.md) | Kategorie: Elektronik
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Elektronik](README.md#elektronik) > UKW-Schwingkreis
 
 Gib die im Werkzeug angebotenen Spulen- und Kondensatorwerte ein und wähle den Drahtdurchmesser. Die Anzeige berechnet den Schwingkreis und zeigt eine Skizze der Luftspule. Warnungen zu überlappenden Windungen oder Werten außerhalb des Bereichs beachten. Die angezeigte Güte ist als Näherung gekennzeichnet.
 
@@ -17,3 +17,5 @@ Gib die im Werkzeug angebotenen Spulen- und Kondensatorwerte ein und wähle den 
 **Drahtdurchmesser 1,5 mm mit Überlappungswarnung**
 
 [![Drahtdurchmesser 1,5 mm mit Überlappungswarnung](../bilder/werkstatt/werkstatt-ukw-resonator-draht-15-klein.png)](../bilder/werkstatt/werkstatt-ukw-resonator-draht-15.png)
+
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Elektronik](README.md#elektronik) > UKW-Schwingkreis

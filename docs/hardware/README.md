@@ -1,5 +1,7 @@
 # Gehäuse, Druckdateien und Befestigung
 
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Aufbau](../Aufbau.md) > Gehäuse, Druckdateien und Befestigung
+
 Die Konstruktion besteht aus Gehäuse, Lautsprecherabdeckung, Lautsprechereinsätzen, einer Grundplatte für die Baugruppen und einem Aufsteller. Die Rev.2 verwendet Visaton BF 37 mit 4 Ohm. Für die frühere Rev.1 ist zusätzlich der Einsatz für Visaton SC 4.9 FL enthalten. Die Aufbauversion ist unabhängig von der Flashgröße des Displayboards.
 
 ## Dateien
@@ -17,7 +19,7 @@ Die Lautsprechergitter hat **Frank alias Tubefan aus dem RBF (Radio-Bastler-Foru
 
 ## Druckmaterial
 
-Für den aktuellen Aufbau verwendet Bruno **funkelndes TINMORRY PETG Filament von Amazon**. Die folgenden Angaben beschreiben die in den Projektdateien gespeicherten Profile. Materialname und Profilbezeichnung sind getrennt zu betrachten; für das eigene Filament Temperatur, Kühlung und Druckvorschau prüfen.
+Die Bauteile werden mit **funkelndem TINMORRY PETG Filament von Amazon** gedruckt. Die Druckprofile der 3MF-Projekte verwenden teilweise andere Materialbezeichnungen. Passe Temperatur und Kühlung an Dein Filament an und prüfe die Druckvorschau.
 
 ## Druckprojekte verwenden
 
@@ -42,18 +44,20 @@ Die Vorschauen stammen unmittelbar aus den mitgelieferten Druckprojekten:
 
 ## Befestigungsmittel
 
-Die kleinen Schrauben zur Befestigung von Verstärkern, RTC und DAC auf der Grundplatte stammen aus einem Sortiment mit der Bezeichnung **Black Zinc-Plated Carbon Steel Pan Flat Head Self Tapping Screws Metric**. Im Sortiment heißen sie **M2*5**. Nach Angabe des Erbauers sind es selbstschneidende Schrauben und keine metrischen M2-Maschinenschrauben. Die Sortimentsbezeichnung allein ist daher keine Gewindeangabe nach metrischer Norm.
+Die kleinen Schrauben zur Befestigung von Verstärkern, RTC und DAC auf der Grundplatte stammen aus einem Sortiment mit der Bezeichnung **Black Zinc-Plated Carbon Steel Pan Flat Head Self Tapping Screws Metric**. Im Sortiment heißen sie **M2*5**. Es sind selbstschneidende Schrauben und keine metrischen M2-Maschinenschrauben. Die Sortimentsbezeichnung allein ist daher keine Gewindeangabe nach metrischer Norm.
 
 Für die übrigen Verbindungen werden Schrauben in M2,5 und M3 aus dem Sortiment **Alloy Steel Grade 10.9 Button Flat Socket Head Screws** verwendet. Wähle Länge und Ausführung passend zum jeweiligen Bauteil und zur tatsächlich verfügbaren Einschraubtiefe. Die Sortimentskästen sind in den Aufbaufotos zu sehen und dienen der Zuordnung der verwendeten Teile.
 
-Für die Befestigung sind außerdem **vier Bolzen mit M2,5-Gewinde und 4 mm langem Körper** sowie **zwei Bolzen mit M3-Gewinde und 15 mm langem Körper** angegeben.
+Für die Befestigung brauchst Du außerdem **vier Bolzen mit M2,5-Gewinde und 4 mm langem Körper** sowie **zwei Bolzen mit M3-Gewinde und 15 mm langem Körper**.
 
-> **Nur die außenliegenden Gewinde kürzen.** Die Bolzenkörper bleiben 4 mm beziehungsweise 15 mm lang. Zu lange Gewinde können bis an das Display reichen und es beschädigen. Prüfe die verfügbare Einschraubtiefe vor der Montage und gleiche die Gewindelänge mit der gezeigten gekürzten Ausführung ab. Die kurzen Bolzen halten die Grundplatte. Die zwei langen M3-Bolzen sitzen diagonal am Display an den konstruktiv vorgesehenen Punkten. Eine verbindliche Restlänge der Gewinde ist in den vorliegenden Angaben nicht beziffert.
+> **Nur die außenliegenden Gewinde kürzen.** Die Bolzenkörper bleiben 4 mm beziehungsweise 15 mm lang. Zu lange Gewinde können bis an das Display reichen und es beschädigen. Prüfe die verfügbare Einschraubtiefe vor der Montage und gleiche die Gewindelänge mit der gezeigten gekürzten Ausführung ab. Die kurzen Bolzen halten die Grundplatte. Die zwei langen M3-Bolzen sitzen diagonal am Display an den konstruktiv vorgesehenen Punkten.
 
-Die bearbeiteten Bolzen sind im Montagefoto links als Ausgangsteile und rechts mit gekürzten Außengewinden dargestellt. Eine im Foto-Kommentar erwähnte Lötbefestigung der kurzen Bolzen ist eine Ausführung des Erbauers; sie ersetzt keine Prüfung des jeweiligen Befestigungspunkts am eigenen Board.
+Die bearbeiteten Bolzen sind im Montagefoto links als Ausgangsteile und rechts mit gekürzten Außengewinden dargestellt. Die kurzen Bolzen können bei Bedarf direkt an der Platine festgelötet werden, falls die Gewinde im Display sie nicht halten.
 
 | Selbstschneidende Schrauben | Metrische Schrauben | Bolzen mit gekürzten Außengewinden |
 | --- | --- | --- |
 | [![Schraubensortiment](../bilder/aufbau/20260822_193423-klein.jpg)](../bilder/aufbau/20260822_193423.jpg) | [![Metrisches Sortiment](../bilder/aufbau/20260822_193522-klein.jpg)](../bilder/aufbau/20260822_193522.jpg) | [![Befestigungsbolzen](../bilder/aufbau/20261028_213523-klein.jpg)](../bilder/aufbau/20261028_213523.jpg) |
 
 Weiter mit der [Aufbauanleitung](../Aufbau.md) oder der vollständigen [Fotogalerie](../Fotogalerie.md).
+
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Aufbau](../Aufbau.md) > Gehäuse, Druckdateien und Befestigung

@@ -1,10 +1,12 @@
 # Radio und Musik
 
+[RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > Radio und Musik
+
 [Zur allgemeinen Bedienung](Bedienung.md)
 
 ## Internetradio
 
-Öffne im Hauptmenü das Radiosymbol. Die große Analogskala zeigt die Sender; der rote Zeiger bewegt sich zum ausgewählten Eintrag. Ein Tipp auf einen Sender wählt ihn aus. Unten stehen Lautstärke, Balance und die drei Klangregler. Die Pfeiltasten wechseln zum vorherigen oder nächsten Sender. Der Stern öffnet die Favoriten.
+Öffne im Hauptmenü das Radiosymbol. Die große Analogskala zeigt die Sender, der rote Zeiger bewegt sich zum ausgewählten Eintrag. Ein Tipp auf einen Sender wählt ihn aus. Unten stehen Lautstärke, Balance und die drei Klangregler. Die Pfeiltasten wechseln zum vorherigen oder nächsten Sender. Der Stern öffnet die Favoriten.
 
 | Radio | Favoriten | Ausschalt- und Sleep-Timer |
 | --- | --- | --- |
@@ -12,7 +14,7 @@
 
 Der Lautstärkeknopf reagiert auf eine Drehbewegung am äußeren Bereich. Ein Tipp in die Mitte schaltet stumm beziehungsweise hebt die Stummschaltung auf. Balance, Tiefen, Mitten und Höhen werden an den zugehörigen Reglern eingestellt. Sendernamen, Streamadressen und Favoriten lassen sich in der [Weboberfläche](Weboberfläche.md) pflegen.
 
-Der Ausschaltknopf öffnet den Sleep-Timer mit **5, 15, 25, 45 und 60 Minuten** sowie dem Symbol für sofortiges Beenden. **Abbruch** schließt den Dialog. Nach Auswahl einer Zeit läuft die Wiedergabe bis zum Ablauf weiter. **Reset** öffnet einen eigenen Bestätigungsdialog; die Funktion nicht mit dem normalen Beenden verwechseln.
+Der Ausschaltknopf öffnet den Sleep-Timer mit **5, 15, 25, 45 und 60 Minuten** sowie dem Symbol für sofortiges Beenden. **Abbruch** schließt den Dialog. Nach Auswahl einer Zeit läuft die Wiedergabe bis zum Ablauf weiter. **Reset** öffnet einen eigenen Bestätigungsdialog, die Funktion nicht mit dem normalen Beenden verwechseln.
 
 ## Alle acht Visualisierungen
 
@@ -49,15 +51,15 @@ Der SD-Player verbindet eine animierte Kassette, Coveranzeige, Titelinformatione
 
 ### Musik auswählen
 
-**Durchs.** öffnet die Dateiauswahl. Ein kurzer Tipp öffnet einen Ordner; **..** führt eine Ebene zurück. Dateien beziehungsweise ein ganzer Ordner lassen sich durch längeres Drücken auswählen. Die Auswahl wird unten zusammengefasst. **OK** übernimmt sie in die Titelliste, **Abbruch** schließt den Dialog ohne Übernahme. Bereits enthaltene Dateien werden beim Hinzufügen übersprungen.
+**Durchs.** öffnet die Dateiauswahl. Ein kurzer Tipp öffnet einen Ordner, **..** führt eine Ebene zurück. Dateien beziehungsweise ein ganzer Ordner lassen sich durch längeres Drücken auswählen. Die Auswahl wird unten zusammengefasst. **OK** übernimmt sie in die Titelliste, **Abbruch** schließt den Dialog ohne Übernahme. Bereits enthaltene Dateien werden beim Hinzufügen übersprungen.
 
 | Dateiauswahl | Musikordner | Albumordner | Ordner ausgewählt |
 | --- | --- | --- | --- |
 | [![Dateiauswahl](bilder/bedienung/sdplayer-dateiauswahl-klein.png)](bilder/bedienung/sdplayer-dateiauswahl.png) | [![Musikordner](bilder/bedienung/sdplayer-musikordner-klein.png)](bilder/bedienung/sdplayer-musikordner.png) | [![Albumordner](bilder/bedienung/sdplayer-albumauswahl-klein.png)](bilder/bedienung/sdplayer-albumauswahl.png) | [![Ausgewählter Ordner](bilder/bedienung/sdplayer-ordner-ausgewaehlt-klein.png)](bilder/bedienung/sdplayer-ordner-ausgewaehlt.png) |
 
-Die Titel werden über die Wiedergabetaste gestartet. Die Coveranzeige hängt von den Metadaten der Musikdatei ab; ohne lesbares Cover erscheint der Platzhalter. **Leeren** entfernt die Titelliste, nicht die Musikdateien auf der SD-Karte. Der Ausschaltknopf öffnet den Sleep-Timer. Lautstärke, Balance, Klang und Visualisierungswechsel funktionieren wie im Radio.
+Die Titel werden über die Wiedergabetaste gestartet. Die Coveranzeige hängt von den Metadaten der Musikdatei ab, ohne lesbares Cover erscheint der Platzhalter. **Leeren** entfernt die Titelliste, nicht die Musikdateien auf der SD-Karte. Der Ausschaltknopf öffnet den Sleep-Timer. Lautstärke, Balance, Klang und Visualisierungswechsel funktionieren wie im Radio.
 
-Die Abbildungen zeigen die Wiedergabe einer vorhandenen Musikdatei zur Demonstration. Titel, Künstlernamen und eingeblendetes Albumcover gehören zum dargestellten Musikinhalt; Musikdateien sind nicht Bestandteil des Repositorys.
+Die Abbildungen zeigen die Wiedergabe einer vorhandenen Musikdatei zur Demonstration. Titel, Künstlernamen und eingeblendetes Albumcover gehören zum dargestellten Musikinhalt, Musikdateien sind nicht Bestandteil des Repositorys.
 
 ### Kassetten wechseln
 
@@ -74,3 +76,5 @@ Ein Tipp auf die Kassette wechselt zur nächsten der acht Gestaltungen. Die Wick
 ## Dateien übertragen und Lautsprecher abschalten
 
 Musik kann über einen Kartenleser auf die SD-Karte kopiert werden. Bei eingelegter Karte stehen zusätzlich die [Web-Dateiverwaltung und FTP](Weboberfläche.md#dateien-auf-der-sd-karte) zur Verfügung. Über **Einstellungen -> Klang -> Lautsprecher** lassen sich die beiden eingebauten Lautsprecher abschalten, während der Stereo-Line-Out weiterläuft.
+
+[RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > Radio und Musik

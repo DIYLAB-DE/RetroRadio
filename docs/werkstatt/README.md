@@ -1,6 +1,8 @@
 # Werkstatt
 
-38 Werkzeuge in sieben Kategorien. Im linken Menü nach oben oder unten wischen und das gewünschte Werkzeug antippen. Rechts stehen Inhalt und Eingaben; die Tasten am unteren Rand gehören zum gewählten Werkzeug. Die Taste ganz rechts verlässt die Werkstatt.
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > Werkstatt
+
+38 Werkzeuge in sieben Kategorien. Im linken Menü nach oben oder unten wischen und das gewünschte Werkzeug antippen. Rechts stehen Inhalt und Eingaben, die Tasten am unteren Rand gehören zum gewählten Werkzeug. Die Taste ganz rechts verlässt die Werkstatt.
 
 Die kleinen Vorschaubilder öffnen die vollständigen Screenshots mit 800 x 480 Pixeln. Jede Werkzeugseite erklärt Zweck und Bedienung.
 
@@ -78,3 +80,5 @@ Die kleinen Vorschaubilder öffnen die vollständigen Screenshots mit 800 x 480 
 | [Metronom](metronome.md) | [![Metronom](../bilder/werkstatt/werkstatt-metronome-klein.png)](metronome.md) |
 
 [Zur allgemeinen Bedienung](../Bedienung.md)
+
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > Werkstatt

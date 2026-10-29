@@ -1,5 +1,7 @@
 # RetroRadio bedienen
 
+[RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > RetroRadio bedienen
+
 Nach der [Erstinstallation](RetroRadio-Ersteinrichtung.md) öffnet das Hauptmenü die Anwendungen über die großen Symbole rechts. Die Uhr und die Netzwerkangaben stehen links. Zum Verlassen einer Anwendung dient die Taste mit dem Ein-/Aus-Symbol unten rechts. Bei Radio und SD-Player öffnet sie zunächst den Ausschalt- beziehungsweise Sleep-Timer-Dialog.
 
 [![Hauptmenü](bilder/bedienung/hauptmenue-klein.png)](bilder/bedienung/hauptmenue.png)
@@ -11,7 +13,7 @@ Nach der [Erstinstallation](RetroRadio-Ersteinrichtung.md) öffnet das Hauptmen�
 | 3 | Wetter | Pomodoro / Timer | Auszeit |
 | 4 | Einstellungen | Werkstatt | Ausschalten |
 
-Ein kurzer Tipp wählt eine Taste oder ein Feld. Listen lassen sich mit dem Finger verschieben. Ein längerer Druck oder Wischen hat nur an den jeweils beschriebenen Stellen eine Zusatzfunktion. Eingabedialoge besitzen eigene Bestätigungs- und Abbruchmöglichkeiten. Beim Bearbeiten von Einstellungen auf die angezeigte Speichern-Taste achten; das Verlassen kann bei ungespeicherten Änderungen eine Rückfrage auslösen.
+Ein kurzer Tipp wählt eine Taste oder ein Feld. Listen lassen sich mit dem Finger verschieben. Ein längerer Druck oder Wischen hat nur an den jeweils beschriebenen Stellen eine Zusatzfunktion. Eingabedialoge besitzen eigene Bestätigungs- und Abbruchmöglichkeiten. Beim Bearbeiten von Einstellungen auf die angezeigte Speichern-Taste achten, das Verlassen kann bei ungespeicherten Änderungen eine Rückfrage auslösen.
 
 ## Radio, SD-Player und Werkstatt
 
@@ -21,23 +23,23 @@ Ein kurzer Tipp wählt eine Taste oder ein Feld. Listen lassen sich mit dem Fing
 
 ## Tagesansicht
 
-Die Tagesansicht verbindet Uhr, Datum, Wetter, kommende Termine, Aufgaben und Geburtstage. Am unteren Rand liegen die Radio- und SD-Bedienelemente. Favoriten und Senderwechsel sind links angeordnet; daneben folgen die Lautstärke-Tasten und die SD-Aktionen. Die kleine Anzeige zwischen Minus und Plus zeigt die Lautstärke. Die Laufzeile darüber zeigt Nachrichten beziehungsweise Informationen zur Wiedergabe.
+Die Tagesansicht verbindet Uhr, Datum, Wetter, kommende Termine, Aufgaben und Geburtstage. Am unteren Rand liegen die Radio- und SD-Bedienelemente. Favoriten und Senderwechsel sind links angeordnet, daneben folgen die Lautstärke-Tasten und die SD-Aktionen. Die kleine Anzeige zwischen Minus und Plus zeigt die Lautstärke. Die Laufzeile darüber zeigt Nachrichten beziehungsweise Informationen zur Wiedergabe.
 
 [![Tagesansicht mit Demodaten](bilder/bedienung/tagesansicht-demo-klein.png)](bilder/bedienung/tagesansicht-demo.png)
 
-Radio-Favoriten öffnen die Senderauswahl. Die Pfeile wechseln den Sender; die Wiedergabetaste startet beziehungsweise unterbricht die entsprechende Audioquelle. Über das Ordnersymbol lassen sich SD-Titel auswählen. Die SD-Gruppe bietet außerdem Wiedergabe, nächsten Titel und das Leeren der Liste. Die beiden Audioquellen werden nicht gleichzeitig abgespielt.
+Radio-Favoriten öffnen die Senderauswahl. Die Pfeile wechseln den Sender, die Wiedergabetaste startet beziehungsweise unterbricht die entsprechende Audioquelle. Über das Ordnersymbol lassen sich SD-Titel auswählen. Die SD-Gruppe bietet außerdem Wiedergabe, nächsten Titel und das Leeren der Liste. Die beiden Audioquellen werden nicht gleichzeitig abgespielt.
 
-Kalender und Aufgaben verwenden die in der [Google-Anbindung](dienste/google/README.md) gespeicherten Adressen. Ohne die jeweilige Verbindung erscheint eine als **DEMO** gekennzeichnete Auswahl. Das Wetter verwendet den eingestellten Wetterstandort. Die Abbildung zeigt eingebaute Beispieldaten; Termine, Aufgaben und Geburtstage stammen nicht aus einem persönlichen Konto.
+Kalender und Aufgaben verwenden die in der [Google-Anbindung](dienste/google/README.md) gespeicherten Adressen. Ohne die jeweilige Verbindung erscheint eine als **DEMO** gekennzeichnete Auswahl. Das Wetter verwendet den eingestellten Wetterstandort. Die Abbildung zeigt die eingebauten Demodaten.
 
 ## Kalender
 
-Links steht die Liste der kommenden Termine, rechts stehen der aktuelle und der nächste Monat. Der heutige Tag ist hervorgehoben; Markierungen kennzeichnen Tage mit Terminen. Wische in der Terminliste, um weitere Einträge zu sehen. Ganztägige Einträge und Termine mit Uhrzeit werden unterschiedlich dargestellt.
+Links steht die Liste der kommenden Termine, rechts stehen der aktuelle und der nächste Monat. Der heutige Tag ist hervorgehoben, Markierungen kennzeichnen Tage mit Terminen. Wische in der Terminliste, um weitere Einträge zu sehen. Ganztägige Einträge und Termine mit Uhrzeit werden unterschiedlich dargestellt.
 
 | Übersicht | Weitere Termine |
 | --- | --- |
 | [![Kalenderübersicht](bilder/bedienung/kalender-demo-klein.png)](bilder/bedienung/kalender-demo.png) | [![Terminliste](bilder/bedienung/kalender-demo-termine-klein.png)](bilder/bedienung/kalender-demo-termine.png) |
 
-Termine werden in Google Kalender gepflegt. Die Geräteansicht zeigt sie an; sie ist kein Editor zum Anlegen neuer Termine. Die zugehörige Web-App und die eingebundenen Kalender werden in der [Google-Anleitung](dienste/google/README.md) eingerichtet. Die Abbildungen zeigen die eingebauten Demotermine.
+Termine werden in Google Kalender gepflegt. Die Geräteansicht zeigt sie an, sie ist kein Editor zum Anlegen neuer Termine. Die zugehörige Web-App und die eingebundenen Kalender werden in der [Google-Anleitung](dienste/google/README.md) eingerichtet. Die Abbildungen zeigen die eingebauten Demotermine.
 
 ## Aufgaben
 
@@ -51,7 +53,7 @@ Tippe das Kästchen vor einer Aufgabe an. Der Dialog nennt die betroffene Aufgab
 
 ## Kontakte
 
-Die linke Liste zeigt die Kontakte. Die Buchstabenleiste springt zum jeweiligen Anfangsbuchstaben; Wischen bewegt die Liste. Ein Tipp auf einen Namen zeigt rechts Telefonnummern, E-Mail, Adresse, Organisation und Geburtstag, soweit diese Angaben vorhanden sind.
+Die linke Liste zeigt die Kontakte. Die Buchstabenleiste springt zum jeweiligen Anfangsbuchstaben, Wischen bewegt die Liste. Ein Tipp auf einen Namen zeigt rechts Telefonnummern, E-Mail, Adresse, Organisation und Geburtstag, soweit diese Angaben vorhanden sind.
 
 | Kontakt und Details | Suche | Suchergebnis |
 | --- | --- | --- |
@@ -69,7 +71,7 @@ Den Ort unter **Einstellungen -> Wetter** über die deutsche Postleitzahl einste
 
 ## Pomodoro und Kurzzeitmesser
 
-Im Pomodoro-Modus startet **Start** einen Arbeitsabschnitt. Während des Laufs wird daraus die Pausenfunktion; ein weiterer Druck setzt den Abschnitt fort. **Stop** bricht ihn ab. Der Kreis und die Restzeit zeigen den Fortschritt. Rechts stehen die Sitzung innerhalb des Viererblocks und die heute abgeschlossenen Pomodoros.
+Im Pomodoro-Modus startet **Start** einen Arbeitsabschnitt. Während des Laufs wird daraus die Pausenfunktion, ein weiterer Druck setzt den Abschnitt fort. **Stop** bricht ihn ab. Der Kreis und die Restzeit zeigen den Fortschritt. Rechts stehen die Sitzung innerhalb des Viererblocks und die heute abgeschlossenen Pomodoros.
 
 | Bereit | Laufend | Unterbrochen |
 | --- | --- | --- |
@@ -104,27 +106,29 @@ Links den Einstellbereich auswählen, rechts dessen Felder bearbeiten. Längere 
 | Bereich | Bedienung | Beispiel |
 | --- | --- | --- |
 | WLAN | Profile einzeln aktivieren, Netze suchen, Passwort eingeben, Verbindung testen und Netzwerknamen ändern. | [![WLAN](bilder/bedienung/einstellungen-wlan-klein.png)](bilder/bedienung/einstellungen-wlan.png) |
-| Zeit & Zeitserver | Zeitzone, Zeitserver und Synchronisation einstellen; bei Bedarf Uhrzeit manuell setzen. | [![Zeit](bilder/bedienung/einstellungen-zeit-klein.png)](bilder/bedienung/einstellungen-zeit.png) |
+| Zeit & Zeitserver | Zeitzone, Zeitserver und Synchronisation einstellen, bei Bedarf Uhrzeit manuell setzen. | [![Zeit](bilder/bedienung/einstellungen-zeit-klein.png)](bilder/bedienung/einstellungen-zeit.png) |
 | Zeitfenster | Betriebszeiten des Displays über die angebotene Wochenübersicht festlegen. | [![Zeitfenster](bilder/bedienung/einstellungen-zeitfenster-klein.png)](bilder/bedienung/einstellungen-zeitfenster.png) |
-| Wetter | Deutsche Postleitzahl eingeben; Ort und Koordinaten werden ermittelt. | [![Wetter einstellen](bilder/bedienung/einstellungen-wetter-klein.png)](bilder/bedienung/einstellungen-wetter.png) |
+| Wetter | Deutsche Postleitzahl eingeben, Ort und Koordinaten werden ermittelt. | [![Wetter einstellen](bilder/bedienung/einstellungen-wetter-klein.png)](bilder/bedienung/einstellungen-wetter.png) |
 | Nachrichten | Gewünschtes Nachrichtenressort für die Laufzeile auswählen. | [![Nachrichten](bilder/bedienung/einstellungen-nachrichten-klein.png)](bilder/bedienung/einstellungen-nachrichten.png) |
-| Cloud-Anbindung | Eigene Google-Web-App-Adressen und OpenSky-Zugang eintragen; [Dienste einrichten](dienste/README.md). | [![Cloud-Anbindung](bilder/bedienung/einstellungen-cloud-klein.png)](bilder/bedienung/einstellungen-cloud.png) |
+| Cloud-Anbindung | Eigene Google-Web-App-Adressen und OpenSky-Zugang eintragen, [Dienste einrichten](dienste/README.md). | [![Cloud-Anbindung](bilder/bedienung/einstellungen-cloud-klein.png)](bilder/bedienung/einstellungen-cloud.png) |
 | Sprache | Deutsch oder Englisch auswählen. | [![Sprache](bilder/bedienung/einstellungen-sprache-klein.png)](bilder/bedienung/einstellungen-sprache.png) |
 | Sicherheit | Vierstelligen Code für den Sperrbildschirm ändern. | [![Sicherheit](bilder/bedienung/einstellungen-sicherheit-klein.png)](bilder/bedienung/einstellungen-sicherheit.png) |
 | Klang | Lautstärke, Balance, Tiefen, Mitten, Höhen und Lautsprecherfreigabe einstellen. | [![Klang](bilder/bedienung/einstellungen-klang-klein.png)](bilder/bedienung/einstellungen-klang.png) |
 | Anzeige | Die angebotenen Darstellungs- und Anzeigeoptionen wählen. | [![Anzeige](bilder/bedienung/einstellungen-anzeige-klein.png)](bilder/bedienung/einstellungen-anzeige.png) |
-| Info & Neustart | Netzwerk- und Geräteinformationen lesen; Neustart oder Zurücksetzen gezielt auslösen. | [![Informationen](bilder/bedienung/einstellungen-info-klein.png)](bilder/bedienung/einstellungen-info.png) |
+| Info & Neustart | Netzwerk- und Geräteinformationen lesen, Neustart oder Zurücksetzen gezielt auslösen. | [![Informationen](bilder/bedienung/einstellungen-info-klein.png)](bilder/bedienung/einstellungen-info.png) |
 
-Unter **Klang -> Lautsprecher** schaltet Minus die beiden eingebauten Lautsprecher aus, Plus schaltet sie ein. Die Änderung wirkt sofort. **Speichern** übernimmt sie dauerhaft; beim Verwerfen wird der gespeicherte Zustand wiederhergestellt. Der Stereo-Line-Out bleibt bei abgeschalteten Lautsprechern aktiv. Diese Funktion ist unabhängig von Mute und von der gewählten Wiedergabelautstärke.
+Unter **Klang -> Lautsprecher** schaltet Minus die beiden eingebauten Lautsprecher aus, Plus schaltet sie ein. Die Änderung wirkt sofort. **Speichern** übernimmt sie dauerhaft, beim Verwerfen wird der gespeicherte Zustand wiederhergestellt. Der Stereo-Line-Out bleibt bei abgeschalteten Lautsprechern aktiv. Diese Funktion ist unabhängig von Mute und von der gewählten Wiedergabelautstärke.
 
-**Alle löschen** im Cloud-Bereich betrifft sämtliche dortigen Werte, einschließlich OpenSky. Für den Demomodus einzelner Google-Anwendungen nur die zugehörigen Adressen leeren. **Zurücksetzen** und **Werkseinstellungen** sind keine normalen Beenden-Tasten; sie verändern gespeicherte Einstellungen.
+**Alle löschen** im Cloud-Bereich betrifft sämtliche dortigen Werte, einschließlich OpenSky. Für den Demomodus einzelner Google-Anwendungen nur die zugehörigen Adressen leeren. **Zurücksetzen** und **Werkseinstellungen** sind keine normalen Beenden-Tasten, sie verändern gespeicherte Einstellungen.
 
 ## Sperren und Ausschalten
 
-Das Hauptmenü bietet den Ausschaltknopf unten rechts. Die Sperr- und Aufweckansicht wird über den vierstelligen Code freigegeben. Der Code ist in den Sicherheitseinstellungen änderbar. Die Netzwerkverbindung des Geräts und die Weboberfläche sind getrennt vom sichtbaren Display zu betrachten; Details zu deren Zugriff stehen in der [Webanleitung](Weboberfläche.md).
+Das Hauptmenü bietet den Ausschaltknopf unten rechts. Die Sperr- und Aufweckansicht wird über den vierstelligen Code freigegeben. Der Code ist in den Sicherheitseinstellungen änderbar. Die Netzwerkverbindung des Geräts und die Weboberfläche sind getrennt vom sichtbaren Display zu betrachten, Details zu deren Zugriff stehen in der [Webanleitung](Weboberfläche.md).
 
 | Gesperrt | Code eingeben |
 | --- | --- |
 | [![Sperrbildschirm](bilder/bedienung/geraet-sperrbildschirm-klein.png)](bilder/bedienung/geraet-sperrbildschirm.png) | [![Sperrcode](bilder/bedienung/geraet-sperrcode-klein.png)](bilder/bedienung/geraet-sperrcode.png) |
 
 Bei unerwartetem Verhalten hilft die [Fehlerhilfe](Fehlerhilfe.md). Aufbau und Firmwareauswahl stehen in der [Hardwareanleitung](Aufbau.md) und der [Erstinstallation](RetroRadio-Ersteinrichtung.md).
+
+[RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > RetroRadio bedienen

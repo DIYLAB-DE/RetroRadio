@@ -1,5 +1,7 @@
 # RetroRadio
 
+[Dokumentation](#dokumentation) | [Aufbau](docs/Aufbau.md) | [Erstinstallation](docs/RetroRadio-Ersteinrichtung.md) | [Bedienung](docs/Bedienung.md) | [Werkstatt](docs/werkstatt/README.md)
+
 Ein selbst gebautes Internetradio mit dem Aussehen eines klassischen Tischradios und einem 7-Zoll-Touchdisplay. Analogskala, magisches Auge und Musik von der SD-Karte treffen auf Wetter, Kalender und einen Werkzeugkasten mit 38 kleinen Helfern.
 
 ![Zwei fertig aufgebaute RetroRadio-Geräte](docs/bilder/gerät/20260607_141617.jpg)
@@ -30,9 +32,9 @@ Eine besondere Herausforderung waren die wenigen noch freien Ein- und Ausgänge 
 
 ## Radio und Musik
 
-Das Internetradio zeigt die Sender auf einer nachgebildeten Analogskala mit beweglichem Zeiger. Senderspeicher erleichtern die Auswahl der Lieblingssender. Verschiedene magische Augen und Visualisierungen begleiten die Wiedergabe; Lautstärke, Balance und Klang lassen sich am Gerät einstellen.
+Das Internetradio zeigt die Sender auf einer nachgebildeten Analogskala mit beweglichem Zeiger. Senderspeicher erleichtern die Auswahl der Lieblingssender. Verschiedene magische Augen und Visualisierungen begleiten die Wiedergabe. Lautstärke, Balance und Klang lassen sich am Gerät einstellen.
 
-Der SD-Player spielt Musik von der eingelegten Karte. Ordnerauswahl, Playlist, Coveranzeige und die Kassettenansicht gehören zur Bedienoberfläche. Die Lautsprecher können in den Klangeinstellungen abgeschaltet werden; der Line-Out bleibt dabei aktiv.
+Der SD-Player spielt Musik von der eingelegten Karte. Ordnerauswahl, Playlist, Coveranzeige und die Kassettenansicht gehören zur Bedienoberfläche. Die Lautsprecher können in den Klangeinstellungen abgeschaltet werden, der Line-Out bleibt dabei aktiv.
 
 Über die Weboberfläche im lokalen Netzwerk lassen sich das Radio bedienen, Sender pflegen und Einstellungen bearbeiten. Zur Dateiübertragung auf die SD-Karte steht auch FTP zur Verfügung.
 
@@ -102,10 +104,12 @@ Nach dem ersten Start richtest Du WLAN, Uhrzeit und die gewünschten Dienste ein
 
 ## Lizenz und Herkunft
 
-Der eigene RetroRadio-Quellcode steht unter der [GPL-3.0](LICENSE). Enthaltene Bibliotheken, Schriften, Symbole und Bilder haben eigene Herkunfts- und Lizenzvermerke; die Übersicht steht in [LIZENZEN.md](docs/LIZENZEN.md).
+Der eigene RetroRadio-Quellcode steht unter der [GPL-3.0](LICENSE). Enthaltene Bibliotheken, Schriften, Symbole und Bilder haben eigene Herkunfts- und Lizenzvermerke, die Übersicht steht in [LIZENZEN.md](docs/LIZENZEN.md).
 
 Ein besonderer Dank geht an **Frank alias Tubefan aus dem RBF (Radio-Bastler-Forum)**. Er hat die Lautsprechergitter im CAD erstellt.
 
 Danke an Wolle alias schreibfaul1 für ESP32-audioI2S als Grundlage der modifizierten Audio-Bibliothek `audio-lite`, an N. Waldt für den EM34-Emulator sowie an die Projekte Phosphor Icons und Lucide für die verwendeten Symbole.
 
 Die Wetter- und Ortsdaten stammen von Open-Meteo beziehungsweise OpenStreetMap und Nominatim. Die Flugdaten liefert das OpenSky Network. Die zugehörigen Hinweise und Bedingungen stehen unter [Datenquellen](docs/Datenquellen.md).
+
+[Dokumentation](#dokumentation) | [Aufbau](docs/Aufbau.md) | [Erstinstallation](docs/RetroRadio-Ersteinrichtung.md) | [Bedienung](docs/Bedienung.md) | [Werkstatt](docs/werkstatt/README.md)

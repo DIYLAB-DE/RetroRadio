@@ -1,6 +1,6 @@
 # ASCII-Tabelle
 
-[Werkstattübersicht](README.md) | Kategorie: Digital
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Digital](README.md#digital) > ASCII-Tabelle
 
 Tippe ein Zeichen an. Die Detailanzeige zeigt seine Zahlenwerte in Dezimal-, Hexadezimal-, Oktal- und Binärdarstellung. Zwischen dem Grundbereich und dem erweiterten Bereich 128 bis 255 wechseln. Die erweiterten Zeichen gehören zur dargestellten Zeichentabelle und sind keine allgemeine Unicode-Liste.
 
@@ -13,3 +13,5 @@ Tippe ein Zeichen an. Die Detailanzeige zeigt seine Zahlenwerte in Dezimal-, Hex
 **Zeichendetails**
 
 [![Zeichendetails](../bilder/werkstatt/werkstatt-ascii-table-zeichen-klein.png)](../bilder/werkstatt/werkstatt-ascii-table-zeichen.png)
+
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Digital](README.md#digital) > ASCII-Tabelle

@@ -1,6 +1,6 @@
 # Logikgatter
 
-[Werkstattübersicht](README.md) | Kategorie: Digital
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Digital](README.md#digital) > Logikgatter
 
 Wähle AND, OR, XOR, NAND, NOR oder NOT und schalte die Eingänge um. Das Gatterbild und der Ausgang zeigen das Ergebnis. Die Wahrheitstabelle ordnet die möglichen Eingangskombinationen zu. NOT besitzt nur einen Eingang.
 
@@ -29,3 +29,5 @@ Wähle AND, OR, XOR, NAND, NOR oder NOT und schalte die Eingänge um. Das Gatter
 **XOR**
 
 [![XOR](../bilder/werkstatt/werkstatt-logic-gate-sim-xor-klein.png)](../bilder/werkstatt/werkstatt-logic-gate-sim-xor.png)
+
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Digital](README.md#digital) > Logikgatter

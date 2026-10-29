@@ -1,6 +1,8 @@
 # RetroRadio aufbauen
 
-Diese Anleitung beschreibt die Rev.2 mit zwei Visaton BF 37. Die frühere Rev.1 verwendet andere Lautsprecher und passende Einsätze; sie ist in der [Fotogalerie](Fotogalerie.md) gekennzeichnet. Beide Aufbauversionen sehen von vorn gleich aus. Die Wahl zwischen 8 und 16 MB Flash betrifft die Firmwareumgebung, nicht die hier beschriebene Verdrahtung.
+[RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > RetroRadio aufbauen
+
+Diese Anleitung beschreibt die Rev.2 mit zwei Visaton BF 37. Die frühere Rev.1 verwendet andere Lautsprecher und passende Einsätze, sie ist in der [Fotogalerie](Fotogalerie.md) gekennzeichnet. Beide Aufbauversionen sehen von vorn gleich aus. Die Wahl zwischen 8 und 16 MB Flash betrifft die Firmwareumgebung, nicht die hier beschriebene Verdrahtung.
 
 [![Fertige Geräte](bilder/gerät/20260607_141617-klein.jpg)](bilder/gerät/20260607_141617.jpg)
 
@@ -30,13 +32,13 @@ Das Waveshare-Display trägt die Hauptplatine auf seiner Rückseite. Die Fotos z
 
 Benötigt werden vier Bolzen mit M2,5-Gewinde und **4 mm langem Körper** sowie zwei Bolzen mit M3-Gewinde und **15 mm langem Körper**. Die kurzen Bolzen halten die Grundplatte für die Baugruppen. Die beiden 15-mm-M3-Bolzen sitzen diagonal am Display an den in den STEP-/Druckdateien vorgesehenen Punkten. Die unterschiedlichen Befestigungen sind an der Konstruktion zuzuordnen.
 
-> **Nur die Außengewinde kürzen.** Die Bolzenkörper selbst bleiben 4 mm beziehungsweise 15 mm lang. Links im Foto liegen die Ausgangsteile, rechts die Teile mit gekürzten Gewinden. Zu weit eingeschraubte Gewinde können das Display beschädigen. Vor dem Einschrauben die verfügbare Tiefe prüfen; eine feste Restlänge ist für die verschiedenen Befestigungspunkte nicht angegeben.
+> **Nur die Außengewinde kürzen.** Die Bolzenkörper selbst bleiben 4 mm beziehungsweise 15 mm lang. Links im Foto liegen die Ausgangsteile, rechts die Teile mit gekürzten Gewinden. Zu weit eingeschraubte Gewinde können das Display beschädigen. Prüfe vor dem Einschrauben die verfügbare Tiefe und kürze die Außengewinde passend zur jeweiligen Befestigung.
 
 ## Gehäuse und Lautsprecher
 
 Drucke Gehäuse, Abdeckung, Grundplatte, Aufsteller und die zum Lautsprecher passenden Einsätze aus den [bereitgestellten Projekten](hardware/README.md). Die Rev.2 verwendet **Visaton BF 37 mit 4 Ohm**. Für die frühere Rev.1 ist der Einsatz für **Visaton SC 4.9 FL mit 8 Ohm** enthalten.
 
-Die fotografierten Einsätze werden mit UV-Resin in das Gehäuse geklebt und ausgehärtet. Achte beim Einpassen auf die Ausrichtung der Lautsprecher und die spätere Leitungsführung. Die Fotos dokumentieren Brunos Montageverfahren.
+Klebe die Lautsprechereinsätze mit UV-Resin in das Gehäuse und härte die Klebenähte aus. Achte beim Einpassen auf die Ausrichtung der Lautsprecher und die spätere Leitungsführung.
 
 | Einsätze BF 37 | Verklebung | Lautsprecher | Einbau |
 | --- | --- | --- | --- |
@@ -44,7 +46,7 @@ Die fotografierten Einsätze werden mit UV-Resin in das Gehäuse geklebt und aus
 
 ## Baugruppen auf der Grundplatte
 
-Auf der Grundplatte sitzen ein PCM5102-DAC, zwei MAX98357A-Verstärker und die RTC. Die kleinen selbstschneidenden Schrauben heißen im verwendeten Sortiment **M2*5**; sie sind laut Erbauer keine metrischen M2-Maschinenschrauben. Die übrigen Schrauben sind M2,5 und M3. Wähle ihre Länge passend zur verfügbaren Einschraubtiefe. Die vollständigen Sortimentsbezeichnungen und Druckdateien stehen in der [Hardwareübersicht](hardware/README.md).
+Auf der Grundplatte sitzen ein PCM5102-DAC, zwei MAX98357A-Verstärker und die RTC. Die kleinen selbstschneidenden Schrauben heißen im verwendeten Sortiment **M2*5**, sie sind keine metrischen M2-Maschinenschrauben. Die übrigen Schrauben sind M2,5 und M3. Wähle ihre Länge passend zur verfügbaren Einschraubtiefe. Die vollständigen Sortimentsbezeichnungen und Druckdateien stehen in der [Hardwareübersicht](hardware/README.md).
 
 [![Bestückte Grundplatte](bilder/aufbau/20260923_120917-klein.jpg)](bilder/aufbau/20260923_120917.jpg)
 
@@ -93,7 +95,7 @@ Jeder Lautsprecher wird ausschließlich zwischen die beiden Lautsprecherausgäng
 
 ## Lautsprecherabschaltung
 
-Je Verstärker zieht ein N-Kanal-FET dessen SD-Pin auf GND, wenn die Lautsprecher abgeschaltet werden. Die Bilder zeigen zwei ausgeführte Varianten mit **2N7000** und **AO3400**. Prüfe die tatsächliche Anschlussfolge von Gate, Drain und Source am verwendeten Bauteil; die Gehäuse sind nicht allgemein anschlussgleich.
+Je Verstärker zieht ein N-Kanal-FET dessen SD-Pin auf GND, wenn die Lautsprecher abgeschaltet werden. Die Bilder zeigen zwei ausgeführte Varianten mit **2N7000** und **AO3400**. Prüfe die tatsächliche Anschlussfolge von Gate, Drain und Source am verwendeten Bauteil, die Gehäuse sind nicht allgemein anschlussgleich.
 
 | Anschluss | Verbindung |
 | --- | --- |
@@ -104,7 +106,7 @@ Je Verstärker zieht ein N-Kanal-FET dessen SD-Pin auf GND, wenn die Lautspreche
 | 47-kΩ-Widerstand | Zwischen gemeinsamem Gate-Knoten und GND |
 | RS485 A / TX+ | unbenutzt |
 
-**Den 120-Ω-Abschluss am RS485-Anschluss ausschalten.** Die 47 kΩ liegen als Pulldown an GND, nicht in Reihe zur Steuerleitung. Der RS485-Anschluss wird hier als Schaltausgang benutzt; es läuft darüber keine serielle Kommunikation.
+**Den 120-Ω-Abschluss am RS485-Anschluss ausschalten.** Die 47 kΩ liegen als Pulldown an GND, nicht in Reihe zur Steuerleitung. Der RS485-Anschluss wird hier als Schaltausgang benutzt, es läuft darüber keine serielle Kommunikation.
 
 | FET 2N7000 | Eingebaute Variante 2N7000 | Eingebaute Variante AO3400 |
 | --- | --- | --- |
@@ -129,13 +131,13 @@ Verwendet wird ein Tiny-RTC-Modul mit DS1307, Platinenaufdruck HW-111 und einer 
 
 Die Spannungswahl der Displaybuchse bleibt auf **3V3**. DS bleibt frei. Prüfe jede Ader beidseitig: Beim fotografierten Kabel müssen die Adern wie gezeigt umgesetzt werden, sonst stimmen VCC und GND nicht. Verlasse Dich nicht allein auf die Kabelfarben. Der Bus arbeitet mit 100 kHz.
 
-Der beschriebene DS1307-Betrieb an 3,3 V liegt außerhalb seiner spezifizierten Versorgung von 4,5 bis 5,5 V. Die Fotos dokumentieren diesen bestehenden Aufbau; daraus ergibt sich keine zugesicherte Funktion jedes DS1307-Moduls an 3,3 V. Die RTC wird nicht an die 5-V-Audioversorgung angeschlossen. Siehe [DS1307-Datenblatt](https://www.analog.com/media/en/technical-documentation/data-sheets/DS1307.pdf).
+Der beschriebene DS1307-Betrieb an 3,3 V liegt außerhalb seiner spezifizierten Versorgung von 4,5 bis 5,5 V. Die RTC wird nicht an die 5-V-Audioversorgung angeschlossen. Siehe [DS1307-Datenblatt](https://www.analog.com/media/en/technical-documentation/data-sheets/DS1307.pdf).
 
-Das Foto der Bestückungsseite zeigt einen Zwischenstand: D1 ist bereits entfernt, U3 ist dort noch bestückt. Im fertigen Aufbau wird auch U3 entfernt. Die Batterieseite belegt diesen zweiten Schritt nicht. Vor dem Einbau die Bestückungsseite kontrollieren.
+Auf dem Foto der Bestückungsseite ist D1 bereits entfernt, U3 ist noch bestückt. Entferne vor dem Einbau auch U3 und kontrolliere die Bestückungsseite.
 
 ## Stereo-Line-Out
 
-Am PCM5102 wird **Lout über 1 kΩ an Tip**, **Rout über 1 kΩ an Ring** und **G direkt an Sleeve** einer Stereo-Klinkenverbindung geführt. Die tatsächlich fotografierte Buchse hat vier Kontakte; der zusätzliche Kontakt bleibt unbenutzt. Ermittle die Lötfahnen mit einem eingesteckten Stecker und einem Durchgangsprüfer. Eine universelle Zuordnung nach der äußeren Form der Buchse ist nicht möglich.
+Am PCM5102 wird **Lout über 1 kΩ an Tip**, **Rout über 1 kΩ an Ring** und **G direkt an Sleeve** einer Stereo-Klinkenverbindung geführt. Die verwendete Buchse hat vier Kontakte, der zusätzliche Kontakt bleibt unbenutzt. Ermittle die Lötfahnen mit einem eingesteckten Stecker und einem Durchgangsprüfer. Eine universelle Zuordnung nach der äußeren Form der Buchse ist nicht möglich.
 
 | Buchse | Verdrahtung |
 | --- | --- |
@@ -151,8 +153,10 @@ Prüfe bei abgeschalteter Versorgung die Polarität der Elkos, 5 V und GND, die 
 | --- | --- | --- |
 | [![Gesamtaufbau](bilder/aufbau/20260925_202741-klein.jpg)](bilder/aufbau/20260925_202741.jpg) | [![Module montiert](bilder/aufbau/20261003_133322-klein.jpg)](bilder/aufbau/20261003_133322.jpg) | [![Gehäuse](bilder/aufbau/20261003_134104-klein.jpg)](bilder/aufbau/20261003_134104.jpg) |
 
-Brunos Geräte laufen bei moderater Lautstärke an Rechner-USB-Buchsen. Als separates Netzteil empfiehlt er das offizielle Raspberry-Pi-USB-C-Netzteil mit **5,1 V / 3,0 A**, erhältlich in Schwarz oder Weiß. Die erreichbare Lautstärke hängt auch von der Versorgung ab. Danach helfen [Erstinstallation](RetroRadio-Ersteinrichtung.md) und [Bedienung](Bedienung.md) weiter.
+Bei moderater Lautstärke lassen sich die Geräte an Rechner-USB-Buchsen betreiben. Als separates Netzteil empfiehlt sich das offizielle Raspberry-Pi-USB-C-Netzteil mit **5,1 V / 3,0 A**, erhältlich in Schwarz oder Weiß. Die erreichbare Lautstärke hängt auch von der Versorgung ab. Danach helfen [Erstinstallation](RetroRadio-Ersteinrichtung.md) und [Bedienung](Bedienung.md) weiter.
 
 ## Technische Quellen
 
-[MAX98357A-Anschlüsse von Adafruit](https://learn.adafruit.com/adafruit-max98357-i2s-class-d-mono-amp/pinouts), [PCM510x-Anschlüsse von Adafruit](https://learn.adafruit.com/adafruit-pcm510x-i2s-dac/pinouts) und [Waveshare-Schaltplan Rev.1.2](https://files.waveshare.com/wiki/ESP32-S3-Touch-LCD-7/ESP32-S3-Touch-LCD-7-Sch.pdf). Die fotografierte Displayplatine trägt VER1.1; die verlinkte Schaltplanrevision ist eine technische Referenz.
+[MAX98357A-Anschlüsse von Adafruit](https://learn.adafruit.com/adafruit-max98357-i2s-class-d-mono-amp/pinouts), [PCM510x-Anschlüsse von Adafruit](https://learn.adafruit.com/adafruit-pcm510x-i2s-dac/pinouts) und [Waveshare-Schaltplan Rev.1.2](https://files.waveshare.com/wiki/ESP32-S3-Touch-LCD-7/ESP32-S3-Touch-LCD-7-Sch.pdf). Die Displayplatine auf den Fotos trägt VER1.1. Der verlinkte Waveshare-Schaltplan beschreibt Rev.1.2.
+
+[RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > RetroRadio aufbauen

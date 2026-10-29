@@ -1,6 +1,6 @@
 # Bit-Editor
 
-[Werkstattübersicht](README.md) | Kategorie: Digital
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Digital](README.md#digital) > Bit-Editor
 
 Wähle 8, 16 oder 32 Bit. Tippe einzelne Bits an, um sie umzuschalten, und beobachte die zugehörigen Zahlendarstellungen. Das Werkzeug eignet sich zum Zusammensetzen und Prüfen von Bitmustern. Die gewählte Breite bestimmt, wie viele Bitpositionen angezeigt werden.
 
@@ -17,3 +17,5 @@ Wähle 8, 16 oder 32 Bit. Tippe einzelne Bits an, um sie umzuschalten, und beoba
 **Invertiertes Bitmuster**
 
 [![Invertiertes Bitmuster](../bilder/werkstatt/werkstatt-bit-editor-invertiert-klein.png)](../bilder/werkstatt/werkstatt-bit-editor-invertiert.png)
+
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Digital](README.md#digital) > Bit-Editor

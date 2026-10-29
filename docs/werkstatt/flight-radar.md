@@ -1,6 +1,6 @@
 # Flugradar
 
-[Werkstattübersicht](README.md) | Kategorie: Werkzeuge
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Werkzeuge](README.md#werkzeuge) > Flugradar
 
 Das Radar zeigt Flugzeuge im Umkreis des eingestellten Wetterstandorts. Unten den Suchradius wählen. Die Ringtaste wechselt zwischen Kennung mit Höhe und Tempo, nur Kennung und nur Symbol. Ein Tipp auf eine Zeile der Flugzeugliste öffnet die Details. Der Balken am rechten Rand zeigt die Zeit bis zum nächsten Abruf. Standort und OpenSky-Zugang werden in den [Dienste-Einstellungen](../dienste/Flugradar.md) eingerichtet.
 
@@ -17,3 +17,5 @@ Das Radar zeigt Flugzeuge im Umkreis des eingestellten Wetterstandorts. Unten de
 **Nur Flugzeugsymbole**
 
 [![Nur Flugzeugsymbole](../bilder/werkstatt/werkstatt-flight-radar-symbole-klein.png)](../bilder/werkstatt/werkstatt-flight-radar-symbole.png)
+
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Werkzeuge](README.md#werkzeuge) > Flugradar

@@ -1,8 +1,8 @@
 # Metronom
 
-[Werkstattübersicht](README.md) | Kategorie: Musik
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Musik](README.md#musik) > Metronom
 
-Mit - und + das Tempo ändern oder mit tap mehrfach im gewünschten Tempo tippen. Die Taktwahl wechselt zwischen 2/4, 3/4, 4/4 und 6/8. Start beziehungsweise Stop schaltet den Lauf um; auch ein Tipp auf die große Anzeige startet und stoppt. Die Punkte zeigen die Schläge, der erste Schlag ist hervorgehoben. In der Mitte stehen Tempo und italienische Tempobezeichnung.
+Mit - und + das Tempo ändern oder mit tap mehrfach im gewünschten Tempo tippen. Die Taktwahl wechselt zwischen 2/4, 3/4, 4/4 und 6/8. Start beziehungsweise Stop schaltet den Lauf um, auch ein Tipp auf die große Anzeige startet und stoppt. Die Punkte zeigen die Schläge, der erste Schlag ist hervorgehoben. In der Mitte stehen Tempo und italienische Tempobezeichnung.
 
 [![Metronom](../bilder/werkstatt/werkstatt-metronome-klein.png)](../bilder/werkstatt/werkstatt-metronome.png)
 
@@ -13,3 +13,5 @@ Mit - und + das Tempo ändern oder mit tap mehrfach im gewünschten Tempo tippen
 **Taktart 6/8**
 
 [![Taktart 6/8](../bilder/werkstatt/werkstatt-metronome-weiterer-takt-klein.png)](../bilder/werkstatt/werkstatt-metronome-weiterer-takt.png)
+
+[RetroRadio](../../README.md) > [Dokumentation](../../README.md#dokumentation) > [Werkstatt](README.md) > [Musik](README.md#musik) > Metronom

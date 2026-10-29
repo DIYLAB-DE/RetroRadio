@@ -1,10 +1,12 @@
 # RetroRadio: Erste Inbetriebnahme
 
+[RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > RetroRadio: Erste Inbetriebnahme
+
 Diese Anleitung führt Dich vom fabrikneuen Waveshare-Display zum gestarteten RetroRadio. Du bereitest das Projekt unter Windows, Linux oder macOS in Visual Studio Code mit PlatformIO vor, überträgst die Firmware zunächst über UART1 und wechselst anschließend auf die USB-Buchse. Danach kannst Du denselben Projektordner zum Lesen und Bearbeiten des Quellcodes und für spätere Aktualisierungen verwenden.
 
-**Stand: 29.10.2026.** Der vollständige Installationsablauf wurde am 23.09.2026 unter Linux mit einem ESP32-S3-Touch-LCD-7, PCB 1.1, 8 MB Flash und 8 MB PSRAM praktisch bestätigt: Erstinstallation über UART1, Wechsel auf USB und erneuter erfolgreicher Upload. Die Schritte für Windows und macOS stützen sich auf die offiziellen Software- und Treiberunterlagen; eigene Durchläufe auf diesen Systemen stehen noch aus. Die 16-MB-Projektumgebung ist vorhanden, eine Erstinstallation auf dieser Boardvariante ist noch nicht praktisch bestätigt.
+**Stand: 29.10.2026.** Der vollständige Installationsablauf wurde am 23.09.2026 unter Linux mit einem ESP32-S3-Touch-LCD-7, PCB 1.1, 8 MB Flash und 8 MB PSRAM praktisch bestätigt: Erstinstallation über UART1, Wechsel auf USB und erneuter erfolgreicher Upload. Die Schritte für Windows und macOS stützen sich auf die offiziellen Software- und Treiberunterlagen, eigene Durchläufe auf diesen Systemen stehen noch aus. Die 16-MB-Projektumgebung ist vorhanden, eine Erstinstallation auf dieser Boardvariante ist noch nicht praktisch bestätigt.
 
-> Beginne mit dem Displayboard ohne angeschlossene Audio-Hardware und weitere externe Module. RetroRadio aktiviert den USB-Anschluss selbst. Eine Zwischen-Firmware ist nicht erforderlich; die ab Werk installierte Demo kann direkt ersetzt werden.
+> Beginne mit dem Displayboard ohne angeschlossene Audio-Hardware und weitere externe Module. RetroRadio aktiviert den USB-Anschluss selbst. Eine Zwischen-Firmware ist nicht erforderlich, die ab Werk installierte Demo kann direkt ersetzt werden.
 
 ## 1. Was Du brauchst
 
@@ -24,7 +26,7 @@ Installiere die Desktop-Ausgabe von [Visual Studio Code](https://code.visualstud
 | Betriebssystem | Vorbereitung |
 | --- | --- |
 | Windows | Verwende das zu Deinem Rechner passende [VS-Code-Installationsprogramm](https://code.visualstudio.com/docs/setup/windows). Die Variante **User Setup** installiert VS Code für Dein Benutzerkonto. |
-| Linux | Installiere das passende Paket gemäß der [VS-Code-Anleitung für Linux](https://code.visualstudio.com/docs/setup/linux), beispielsweise DEB unter Debian/Ubuntu oder RPM unter Fedora. Für PlatformIO werden Python 3 und die Unterstützung für virtuelle Python-Umgebungen benötigt; unter Debian/Ubuntu heißt das Zusatzpaket `python3-venv`. Installiere diese bei Bedarf über die Paketverwaltung Deiner Distribution. |
+| Linux | Installiere das passende Paket gemäß der [VS-Code-Anleitung für Linux](https://code.visualstudio.com/docs/setup/linux), beispielsweise DEB unter Debian/Ubuntu oder RPM unter Fedora. Für PlatformIO werden Python 3 und die Unterstützung für virtuelle Python-Umgebungen benötigt, unter Debian/Ubuntu heißt das Zusatzpaket `python3-venv`. Installiere diese bei Bedarf über die Paketverwaltung Deiner Distribution. |
 | macOS | Lade die passende Ausgabe für Deinen Mac herunter und verschiebe **Visual Studio Code.app** nach **Programme / Applications**. Die [VS-Code-Anleitung für macOS](https://code.visualstudio.com/docs/setup/mac) beschreibt die Installation. |
 
 Für das Klonen des Projekts und spätere Git-Aktualisierungen benötigst Du zusätzlich [Git für Dein Betriebssystem](https://git-scm.com/install/). Falls Du Git gerade installiert hast, starte VS Code anschließend neu. In Abschnitt 3 ist auch die Beschaffung als ZIP-Datei beschrieben.
@@ -37,7 +39,7 @@ Für das Klonen des Projekts und spätere Git-Aktualisierungen benötigst Du zus
 
 PlatformIO bringt seine Kommandozeilenwerkzeuge bereits mit. Für diesen Weg brauchst Du keine zusätzliche PlatformIO-Installation per `pip` oder Betriebssystempaket. Unter Linux nennt die [offizielle PlatformIO-Installationsanleitung](https://docs.platformio.org/en/latest/integration/ide/vscode.html#installation) außerdem `python3-venv` als Voraussetzung.
 
-Die Menüs von VS Code können deutsch oder englisch heißen. PlatformIO verwendet überwiegend englische Bezeichnungen; diese sind hier so angegeben, wie sie in der Erweiterung stehen.
+Die Menüs von VS Code können deutsch oder englisch heißen. PlatformIO verwendet überwiegend englische Bezeichnungen, diese sind hier so angegeben, wie sie in der Erweiterung stehen.
 
 ## 3. Das vollständige Projekt öffnen
 
@@ -68,7 +70,7 @@ Im Explorer von VS Code müssen unter anderem diese Einträge sichtbar sein:
 
 Öffne den vollständigen Projektordner, nicht nur eine einzelne Quelldatei oder den Unterordner `src`. Bestätige eine Vertrauensabfrage von VS Code nur für die von Dir bezogene und geprüfte Projektquelle. Warte anschließend, bis PlatformIO das Projekt erkannt und vorbereitet hat. Beim ersten Öffnen und Bauen werden weitere Pakete heruntergeladen.
 
-Zum Lesen oder Bearbeiten öffnest Du eine Datei im Explorer. Änderungen speicherst Du wie gewohnt in VS Code; danach kannst Du die Firmware erneut bauen und übertragen. Für die Erstinstallation sind keine Änderungen am Quellcode, an den Bibliotheken oder an `platformio.ini` nötig.
+Zum Lesen oder Bearbeiten öffnest Du eine Datei im Explorer. Änderungen speicherst Du wie gewohnt in VS Code. Danach kannst Du die Firmware erneut bauen und übertragen. Für die Erstinstallation sind keine Änderungen am Quellcode, an den Bibliotheken oder an `platformio.ini` nötig.
 
 ## 4. Die passende Flashvariante auswählen
 
@@ -79,17 +81,17 @@ Entscheidend ist die Flashgröße Deines Boards. Beide Varianten haben 8 MB PSRA
 | 8 MB Flash, 8 MB PSRAM | `waveshare_esp32s3_lcd7_8mb` |
 | 16 MB Flash, 8 MB PSRAM | `waveshare_esp32s3_lcd7_16mb` |
 
-Öffne die Befehlspalette und wähle **PlatformIO: Pick Project Environment**. Wähle den Eintrag mit der zu Deinem Board passenden Umgebung. Die mitgelieferte Voreinstellung ist die 8-MB-Variante; für ein 16-MB-Board wählst Du ausdrücklich die 16-MB-Umgebung.
+Öffne die Befehlspalette und wähle **PlatformIO: Pick Project Environment**. Wähle den Eintrag mit der zu Deinem Board passenden Umgebung. Die mitgelieferte Voreinstellung ist die 8-MB-Variante, für ein 16-MB-Board wählst Du ausdrücklich die 16-MB-Umgebung.
 
-Klicke links auf das PlatformIO-Symbol und öffne **Project Tasks**. Die ausgewählte Umgebung enthält unter **General** die Einträge **Build** und **Upload**. Falls nur eine Umgebung angezeigt wird, kannst Du über die Befehlsauswahl die andere wählen. Die [Befehlsbezeichnungen der Erweiterung](https://github.com/platformio/platformio-vscode-ide/blob/develop/package.json) nennen die Umgebungs- und Portauswahl; die [PlatformIO-Dokumentation](https://docs.platformio.org/en/latest/integration/ide/vscode.html#project-tasks) beschreibt die Projektaufgaben.
+Klicke links auf das PlatformIO-Symbol und öffne **Project Tasks**. Die ausgewählte Umgebung enthält unter **General** die Einträge **Build** und **Upload**. Falls nur eine Umgebung angezeigt wird, kannst Du über die Befehlsauswahl die andere wählen. Die [Befehlsbezeichnungen der Erweiterung](https://github.com/platformio/platformio-vscode-ide/blob/develop/package.json) nennen die Umgebungs- und Portauswahl, die [PlatformIO-Dokumentation](https://docs.platformio.org/en/latest/integration/ide/vscode.html#project-tasks) beschreibt die Projektaufgaben.
 
 Verwende für alle folgenden Schritte dieselbe, zu Deiner Flashgröße passende Umgebung. Ihre Auswahl in VS Code erfordert keine Änderung an `platformio.ini`.
 
 ## 5. Die Firmware zunächst bauen
 
-Starte unter **Project Tasks > Deine Umgebung > General > Build** den Build. Dabei wird aus dem Quellcode die Firmware erstellt; das Board muss hierfür noch nicht angeschlossen sein. PlatformIO lädt die in der Projektkonfiguration festgelegten Werkzeuge und Abhängigkeiten. Der erste Durchlauf kann deshalb deutlich länger dauern als spätere Builds.
+Starte unter **Project Tasks > Deine Umgebung > General > Build** den Build. Dabei wird aus dem Quellcode die Firmware erstellt. Das Board muss hierfür noch nicht angeschlossen sein. PlatformIO lädt die in der Projektkonfiguration festgelegten Werkzeuge und Abhängigkeiten. Der erste Durchlauf kann deshalb deutlich länger dauern als spätere Builds.
 
-Warte auf **SUCCESS**. Bei einem Fehler behebst Du zuerst dessen Ursache anhand der Ausgabe im Terminalbereich von VS Code; fahre erst nach einem erfolgreichen Build mit der Übertragung fort.
+Warte auf **SUCCESS**. Bei einem Fehler behebst Du zuerst dessen Ursache anhand der Ausgabe im Terminalbereich von VS Code. Fahre erst nach einem erfolgreichen Build mit der Übertragung fort.
 
 ## 6. Für die Erstinstallation UART1 anschließen
 
@@ -136,7 +138,7 @@ Fahre erst nach diesem erfolgreichen Start mit dem Wechsel zur anderen Buchse fo
 5. Öffne die Portauswahl aus Abschnitt 6 erneut und wähle den jetzt erkannten Anschluss der USB-Buchse. Ein zuvor fest ausgewählter UART-Port muss gegebenenfalls ersetzt werden.
 6. Starte **Upload** in derselben PlatformIO-Umgebung wie zuvor. Prüfe wieder **SUCCESS** und den anschließenden Start von RetroRadio. Falls nötig, drücke einmal **RESET**.
 
-Für den nativen USB-Anschluss wird **USB JTAG/serial debug unit** mit der Kennung **303A:1001** erwartet. Beschreibung und Portname hängen vom Betriebssystem ab. Der Port kann sich beim Buchsenwechsel ändern oder gleich bleiben; beim geprüften Linux-Gerät hieß er vorher und nachher `/dev/ttyACM0`. Verlasse Dich deshalb nicht allein auf einen unveränderten Portnamen.
+Für den nativen USB-Anschluss wird **USB JTAG/serial debug unit** mit der Kennung **303A:1001** erwartet. Beschreibung und Portname hängen vom Betriebssystem ab. Der Port kann sich beim Buchsenwechsel ändern oder gleich bleiben. Beim geprüften Linux-Gerät hieß er vorher und nachher `/dev/ttyACM0`. Verlasse Dich deshalb nicht allein auf einen unveränderten Portnamen.
 
 > Wenn auch die zweite Übertragung erfolgreich ist und RetroRadio startet, ist die Installation samt USB-Upload abgeschlossen. Für spätere Aktualisierungen bleiben das Kabel in **USB** und der UART-Umschalter auf **UART2**.
 
@@ -210,7 +212,7 @@ Prüfe Datenkabel, Buchse und UART-Umschalter anhand der Tabelle in Abschnitt 6.
 
 ### Unter Linux wird der Zugriff verweigert
 
-Bei `Permission denied` richte die [PlatformIO-Geräteberechtigungen unter Linux](https://docs.platformio.org/en/latest/core/installation/udev-rules.html) für Deine Distribution ein. Die offizielle Anleitung beschreibt udev-Regeln und alternativ die passende Gruppenmitgliedschaft. Nach geänderten Regeln das Board abziehen und neu verbinden; nach einer Änderung der Gruppenmitgliedschaft zusätzlich ab- und wieder anmelden. Starte VS Code oder PlatformIO nicht ersatzweise mit `sudo`.
+Bei `Permission denied` richte die [PlatformIO-Geräteberechtigungen unter Linux](https://docs.platformio.org/en/latest/core/installation/udev-rules.html) für Deine Distribution ein. Die offizielle Anleitung beschreibt udev-Regeln und alternativ die passende Gruppenmitgliedschaft. Nach geänderten Regeln das Board abziehen und neu verbinden. Nach einer Änderung der Gruppenmitgliedschaft zusätzlich ab- und wieder anmelden. Starte VS Code oder PlatformIO nicht ersatzweise mit `sudo`.
 
 ### Der Upload bleibt bei der Verbindungsaufnahme hängen
 
@@ -226,12 +228,14 @@ Verwende das in Abschnitt 10 beschriebene PlatformIO-Terminal in VS Code und war
 
 ### Der Build schlägt beim Download von Paketen fehl
 
-Prüfe die Internetverbindung und die Fehlermeldung im Terminalbereich. Bei einem verwalteten Rechner können ein Proxy oder eingeschränkte Downloadrechte die Einrichtung verhindern. Die benötigten Bibliotheks- und Plattformversionen stehen bereits in `platformio.ini`; ersetze sie nicht pauschal durch andere Versionen.
+Prüfe die Internetverbindung und die Fehlermeldung im Terminalbereich. Bei einem verwalteten Rechner können ein Proxy oder eingeschränkte Downloadrechte die Einrichtung verhindern. Die benötigten Bibliotheks- und Plattformversionen stehen bereits in `platformio.ini`. Ersetze sie nicht pauschal durch andere Versionen.
 
 ## Technischer Hintergrund und Prüfstand
 
 RetroRadio setzt beim Start den USB/CAN-Umschalter über `expanderPins::USB_SEL` auf USB und aktiviert USB-CDC über die Build-Einstellungen. Der [Waveshare-Hinweis zur USB-Umschaltung und den UART-Anschlüssen](https://docs.waveshare.com/ESP32-S3-Touch-LCD-7/FAQ) erklärt die Boardfunktion. Für den beschriebenen RetroRadio-Ablauf gelten zusätzlich die [Projektkonfiguration](../platformio.ini), die [Initialisierung](../src/main.cpp) und die [Pinzuordnung](../include/Pins.h).
 
-Die dokumentierte Geräteprüfung vom 23.09.2026 betrifft PCB 1.1 mit 8 MB Flash und 8 MB PSRAM unter Linux. Die redaktionelle Überarbeitung vom 28.10.2026 ergänzt den grafischen Ablauf und die Hinweise für Windows und macOS; sie ist kein neuer Build-, Upload- oder Gerätetest.
+Die Erstinstallation wurde unter Linux mit einem ESP32-S3-Touch-LCD-7, PCB 1.1, 8 MB Flash und 8 MB PSRAM geprüft. Die Hinweise für Windows und macOS basieren auf den offiziellen Software- und Treiberunterlagen. Ein vollständiger Installationsdurchlauf unter diesen Systemen und auf dem 16-MB-Board steht noch aus.
 
 Am 29.10.2026 wurden die bereinigten Umgebungen für 8 und 16 MB Flash erfolgreich gebaut. Die 8-MB-Fassung wurde über die native USB-Buchse auf das angeschlossene Radio übertragen und ihr Start kontrolliert. Zusätzlich wurde die ausgewählte Veröffentlichungskopie eigenständig für 8 MB gebaut. Diese Prüfungen ersetzen keinen vollständigen Erstinstallationsdurchlauf unter Windows oder macOS und keinen Hardwaretest auf einem 16-MB-Board.
+
+[RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > RetroRadio: Erste Inbetriebnahme
