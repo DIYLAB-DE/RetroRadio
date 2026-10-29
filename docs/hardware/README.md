@@ -13,6 +13,8 @@ Die Konstruktion besteht aus Gehäuse, Lautsprecherabdeckung, Lautsprechereinsä
 | Grundplatte für die Baugruppen | [3MF](3d-druck/H2C_PETG_Base_Plate.3mf) | [STEP](cad/H2C_PETG_Base_Plate.step) |
 | Aufsteller | [3MF](3d-druck/H2C_PETG_Stand.3mf) | [STEP](cad/H2C_PETG_Stand.step) |
 
+Die Lautsprechergitter hat **Frank alias Tubefan aus dem RBF (Radio-Bastler-Forum)** im CAD erstellt. Herzlichen Dank für diesen Beitrag!
+
 ## Druckmaterial
 
 Für den aktuellen Aufbau verwendet Bruno **funkelndes TINMORRY PETG Filament von Amazon**. Die folgenden Angaben beschreiben die in den Projektdateien gespeicherten Profile. Materialname und Profilbezeichnung sind getrennt zu betrachten; für das eigene Filament Temperatur, Kühlung und Druckvorschau prüfen.

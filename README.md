@@ -104,6 +104,8 @@ Nach dem ersten Start richtest Du WLAN, Uhrzeit und die gewünschten Dienste ein
 
 Der eigene RetroRadio-Quellcode steht unter der [GPL-3.0](LICENSE). Enthaltene Bibliotheken, Schriften, Symbole und Bilder haben eigene Herkunfts- und Lizenzvermerke; die Übersicht steht in [LIZENZEN.md](docs/LIZENZEN.md).
 
+Ein besonderer Dank geht an **Frank alias Tubefan aus dem RBF (Radio-Bastler-Forum)**. Er hat die Lautsprechergitter im CAD erstellt.
+
 Danke an Wolle alias schreibfaul1 für ESP32-audioI2S als Grundlage der modifizierten Audio-Bibliothek `audio-lite`, an N. Waldt für den EM34-Emulator sowie an die Projekte Phosphor Icons und Lucide für die verwendeten Symbole.
 
 Die Wetter- und Ortsdaten stammen von Open-Meteo beziehungsweise OpenStreetMap und Nominatim. Die Flugdaten liefert das OpenSky Network. Die zugehörigen Hinweise und Bedingungen stehen unter [Datenquellen](docs/Datenquellen.md).
