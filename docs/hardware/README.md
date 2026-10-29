@@ -17,6 +17,10 @@ Die Konstruktion besteht aus Gehäuse, Lautsprecherabdeckung, Lautsprechereinsä
 
 Die Lautsprechergitter hat **Frank alias Tubefan aus dem RBF (Radio-Bastler-Forum)** im CAD erstellt. Herzlichen Dank für diesen Beitrag!
 
+## Lizenz
+
+Alle bereitgestellten 3MF-Druckprojekte und STEP-CAD-Dateien stehen unter **CC BY-NC-SA 4.0**. Teilen und Bearbeiten sind für nichtkommerzielle Zwecke erlaubt. Die Urheber müssen genannt und Bearbeitungen unter gleichen Lizenzbedingungen weitergegeben werden. Kommerzielle Nutzung ist nicht gestattet. Die [Zuordnung zu den Dateien und Urhebern](LIZENZ.txt) und der [vollständige Lizenztext](../lizenzen/CC-BY-NC-SA-4.0.txt) liegen bei. Diese Lizenz betrifft ausschließlich die CAD- und Druckdateien.
+
 ## Druckmaterial
 
 Die Bauteile werden mit **funkelndem TINMORRY PETG Filament von Amazon** gedruckt. Die Druckprofile der 3MF-Projekte verwenden teilweise andere Materialbezeichnungen. Passe Temperatur und Kühlung an Dein Filament an und prüfe die Druckvorschau.

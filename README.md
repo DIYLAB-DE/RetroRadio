@@ -106,6 +106,8 @@ Nach dem ersten Start richtest Du WLAN, Uhrzeit und die gewünschten Dienste ein
 
 Der eigene RetroRadio-Quellcode steht unter der [GPL-3.0](LICENSE). Enthaltene Bibliotheken, Schriften, Symbole und Bilder haben eigene Herkunfts- und Lizenzvermerke, die Übersicht steht in [LIZENZEN.md](docs/LIZENZEN.md).
 
+Die [CAD- und Druckdateien](docs/hardware/LIZENZ.txt) stehen unter **CC BY-NC-SA 4.0**. Sie dürfen für nichtkommerzielle Zwecke geteilt und bearbeitet werden. Namensnennung und Weitergabe von Bearbeitungen unter gleichen Lizenzbedingungen sind erforderlich. Kommerzielle Nutzung ist nicht gestattet.
+
 Ein besonderer Dank geht an **Frank alias Tubefan aus dem RBF (Radio-Bastler-Forum)**. Er hat die Lautsprechergitter im CAD erstellt.
 
 Danke an Wolle alias schreibfaul1 für ESP32-audioI2S als Grundlage der modifizierten Audio-Bibliothek `audio-lite`, an N. Waldt für den EM34-Emulator sowie an die Projekte Phosphor Icons und Lucide für die verwendeten Symbole.

@@ -41,6 +41,12 @@ Die öffentlich belegbaren Stationen der Herkunft sind:
 
 Die separat beigelegten ursprünglichen Helix-Hinweise stammen aus der erhaltenen Fassung unter [ESP8266Audio/libhelix-mp3](https://github.com/earlephilhower/ESP8266Audio/tree/master/src/libhelix-mp3) und nennen Copyright 1995-2004 RealNetworks sowie RPSL/RCSL. Damit sind die Herkunft aus ESP32-audioI2S und dessen GPLv3-Angabe nachvollziehbar belegt. Die genaue Zuordnung der ursprünglichen Helix-Lizenzbedingungen zum übernommenen Decoder und eine zusätzliche GPL-Lizenzoption für dessen RealNetworks-Anteile sind damit noch nicht abschließend geklärt.
 
+## CAD- und Druckdateien
+
+Die 3MF-Dateien unter `docs/hardware/3d-druck/` und die STEP-Dateien unter `docs/hardware/cad/` stehen unter **Creative Commons Namensnennung-Nicht kommerziell-Share Alike 4.0 International (CC BY-NC-SA 4.0)**. Teilen und Bearbeiten sind für nichtkommerzielle Zwecke erlaubt. Die Urheber müssen genannt und Bearbeitungen unter gleichen Lizenzbedingungen weitergegeben werden. Kommerzielle Nutzung ist nicht gestattet.
+
+Die Konstruktion stammt von Bruno / DIYLAB-DE. Die Lautsprechergitter hat Frank alias Tubefan aus dem Radio-Bastler-Forum im CAD erstellt. Die [Dateizuordnung und Urheberangaben](hardware/LIZENZ.txt), der [vollständige Lizenztext](lizenzen/CC-BY-NC-SA-4.0.txt) und die [deutsche Zusammenfassung bei Creative Commons](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de) beschreiben die Bedingungen. Diese Lizenz gilt ausschließlich für die CAD- und Druckdateien. Für den RetroRadio-Quellcode gilt weiterhin die GPLv3.
+
 ## Schriften und Symbole
 
 Comfortaa Bold, Atkinson Hyperlegible Next Medium und League Gothic stehen unter SIL OFL 1.1. Die vollständigen Texte und Urheberangaben stehen unter [Schriftarten](fonts/README.md). Die Webschrift ist lokal im HTML eingebettet, dort ist ihr Lizenztext beigefügt. Die PDF-Anleitung verwendet DejaVu Sans und DejaVu Sans Mono, die [zugehörigen Lizenzvermerke](lizenzen/DejaVu-Lizenz.txt) liegen ebenfalls bei.

@@ -1,0 +1,29 @@
+RetroRadio - Lizenz der CAD- und Druckdateien
+
+Die folgenden Dateien stehen unter Creative Commons Namensnennung-Nicht kommerziell-Share Alike 4.0 International (CC BY-NC-SA 4.0):
+
+docs/hardware/3d-druck/H2C_PETG_Base_Plate.3mf
+docs/hardware/3d-druck/H2C_PETG_Case.3mf
+docs/hardware/3d-druck/H2C_PETG_Speaker_Grille.3mf
+docs/hardware/3d-druck/H2C_PETG_Speaker_Mounting_Insert_BF37.3mf
+docs/hardware/3d-druck/H2C_PETG_Speaker_Mounting_Insert_SC_49_20FL.3mf
+docs/hardware/3d-druck/H2C_PETG_Stand.3mf
+docs/hardware/cad/H2C_PETG_Base_Plate.step
+docs/hardware/cad/H2C_PETG_Case.step
+docs/hardware/cad/H2C_PETG_Speaker_Grille.step
+docs/hardware/cad/H2C_PETG_Speaker_Mounting_Insert_BF37.step
+docs/hardware/cad/H2C_PETG_Speaker_Mounting_Insert_SC_49_20FL.step
+docs/hardware/cad/H2C_PETG_Stand.step
+
+Urheberangaben:
+Konstruktion: Bruno / DIYLAB-DE.
+Lautsprechergitter: Frank alias Tubefan aus dem RBF (Radio-Bastler-Forum).
+Projekt: https://github.com/DIYLAB-DE/RetroRadio
+
+Teilen und Bearbeiten sind für nichtkommerzielle Zwecke erlaubt. Die Urheber sind zu nennen, ein Lizenzverweis ist beizufügen und Änderungen sind kenntlich zu machen. Bearbeitungen dürfen nur unter gleichen Lizenzbedingungen weitergegeben werden. Kommerzielle Nutzung ist nicht gestattet.
+
+Diese Zusammenfassung ersetzt nicht den vollständigen Lizenztext. Dieser liegt unter docs/lizenzen/CC-BY-NC-SA-4.0.txt bei und ist außerdem unter https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode abrufbar.
+
+Deutsche Zusammenfassung: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de
+
+Diese Lizenzangabe betrifft ausschließlich die aufgeführten CAD- und Druckdateien. Für den RetroRadio-Quellcode gilt weiterhin die GNU GPL Version 3. Andere Bestandteile behalten ihre jeweiligen Lizenz- und Herkunftsangaben.
