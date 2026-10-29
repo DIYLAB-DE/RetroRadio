@@ -12,7 +12,7 @@ RetroRadio läuft auf dem Waveshare ESP32-S3-Touch-LCD-7 mit 800 x 480 Pixeln. D
 | --- | --- |
 | Nachbauen | [Bauteile](docs/Bauteile.md), [Aufbau](docs/Aufbau.md), [Fotogalerie](docs/Fotogalerie.md) |
 | Drucken und bearbeiten | [3MF-Projekte und STEP-Dateien](docs/hardware/README.md) |
-| Installieren | [Windows, Linux und macOS mit VS Code/PlatformIO](docs/RetroRadio-Ersteinrichtung.md) |
+| Installieren | [Windows, Linux und macOS mit VS Code/PlatformIO](docs/RetroRadio-Ersteinrichtung.md), [PDF herunterladen](docs/RetroRadio-Ersteinrichtung.pdf) |
 | Benutzen | [Gerätebedienung](docs/Bedienung.md), [Radio und SD-Player](docs/Radio-und-Musik.md), [Weboberfläche](docs/Weboberfläche.md) |
 | Werkzeuge | [Alle 38 Werkzeuge mit Bildern](docs/werkstatt/README.md) |
 | Externe Dienste | [Google und Flugradar](docs/dienste/README.md), [Datenquellen](docs/Datenquellen.md) |

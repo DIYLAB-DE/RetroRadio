@@ -1,5 +1,6 @@
 .pio/
 .vscode/
+intern/
 __pycache__/
 *.pyc
 *.bin
