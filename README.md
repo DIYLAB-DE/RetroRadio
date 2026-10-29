@@ -4,7 +4,7 @@
 
 Ein selbst gebautes Internetradio mit dem Aussehen eines klassischen Tischradios und einem 7-Zoll-Touchdisplay. Analogskala, magisches Auge und Musik von der SD-Karte treffen auf Wetter, Kalender und einen Werkzeugkasten mit 38 kleinen Helfern.
 
-![Zwei fertig aufgebaute RetroRadio-Geräte](docs/bilder/gerät/20260607_141617.jpg)
+<img src="docs/bilder/gerät/20260607_141617.jpg" alt="Zwei fertig aufgebaute RetroRadio-Geräte" width="800" height="450">
 
 RetroRadio läuft auf dem Waveshare ESP32-S3-Touch-LCD-7 mit 800 x 480 Pixeln. Die Oberfläche wird direkt am Gerät bedient. Ein gedrucktes Gehäuse mit eingebauten Stereo-Lautsprechern macht aus der Displayplatine ein eigenständiges Tischgerät. Für den Anschluss an eine vorhandene Anlage steht zusätzlich ein Stereo-Line-Out zur Verfügung.
 
