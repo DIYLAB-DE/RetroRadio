@@ -27,7 +27,17 @@ Die PlatformIO-Abhängigkeiten werden anhand der Projektkonfiguration bezogen. D
 
 ### Helix-Herkunft
 
-Der Dateikopf des übernommenen MP3-Decoders nennt Helix als Grundlage. Das Herkunftsprojekt [ESP32-audioI2S 3.4.7](https://github.com/schreibfaul1/ESP32-audioI2S/tree/3.4.7) veröffentlicht seine Bibliothek unter GPLv3. Die hier separat beigelegten ursprünglichen Helix-Hinweise stammen aus [ESP8266Audio/libhelix-mp3](https://github.com/earlephilhower/ESP8266Audio/tree/master/src/libhelix-mp3) und nennen Copyright 1995-2004 RealNetworks sowie RPSL/RCSL. Diese Hinweise ersetzen keinen Nachweis einer zusätzlichen Lizenzoption für den übernommenen Decoder.
+audio-lite übernimmt den MP3-Decoder aus [ESP32-audioI2S 3.4.7, Commit 59bf36b](https://github.com/schreibfaul1/ESP32-audioI2S/tree/59bf36b214580ad2d1157748cd0268c9376d6640). Der [Dateikopf dieses Stands](https://github.com/schreibfaul1/ESP32-audioI2S/blob/59bf36b214580ad2d1157748cd0268c9376d6640/src/mp3_decoder/mp3_decoder.h) nennt Helix als Grundlage. Die Änderungen für RetroRadio sind unter [audio-lite](../lib/audio-lite/README.md) beschrieben.
+
+Die öffentlich belegbaren Stationen der Herkunft sind:
+
+| Stand | Beleg |
+| --- | --- |
+| 15. Januar 2019 | Der [Import 2d96710](https://github.com/schreibfaul1/ESP32-audioI2S/commit/2d96710ebfd1e80899bee8aaae1edb6e9d45b98e) enthält den MP3-Decoder; die [damalige README](https://github.com/schreibfaul1/ESP32-audioI2S/blob/2d96710ebfd1e80899bee8aaae1edb6e9d45b98e/README.md) nennt den enthaltenen Helix-MP3-Decoder. |
+| 5. September 2019 | Wolle/schreibfaul1 fügt mit [Commit 2e43c40 die GPLv3](https://github.com/schreibfaul1/ESP32-audioI2S/blob/2e43c4089fd571d776e95d2a9f625eb4d7a80e16/LICENSE) hinzu und bestätigt die ergänzte Lizenz in [Issue 5](https://github.com/schreibfaul1/ESP32-audioI2S/issues/5#issuecomment-528328654). |
+| Übernahme für RetroRadio | Grundlage ist ESP32-audioI2S 3.4.7. Herkunft, Änderungen und die GPLv3 des Herkunftsprojekts bleiben in audio-lite dokumentiert. |
+
+Die separat beigelegten ursprünglichen Helix-Hinweise stammen aus der erhaltenen Fassung unter [ESP8266Audio/libhelix-mp3](https://github.com/earlephilhower/ESP8266Audio/tree/master/src/libhelix-mp3) und nennen Copyright 1995-2004 RealNetworks sowie RPSL/RCSL. Damit sind die Herkunft aus ESP32-audioI2S und dessen GPLv3-Angabe nachvollziehbar belegt. Die genaue Zuordnung der ursprünglichen Helix-Lizenzbedingungen zum übernommenen Decoder und eine zusätzliche GPL-Lizenzoption für dessen RealNetworks-Anteile sind damit noch nicht abschließend geklärt.
 
 ## Schriften und Symbole
 
