@@ -29,6 +29,8 @@ Die Bauteile werden mit **funkelndem TINMORRY PETG Filament von Amazon** gedruck
 
 Die 3MF-Dateien sind vollständige Druckprojekte mit Profilen für einen Bambu Lab H2C mit 0,4-mm-Düse. In den bereitgestellten Projekten sind 0,2 mm Schichthöhe eingestellt. Die Materialprofile umfassen PETG und bei den Lautsprechereinsätzen auch PETG-CF. Übernimm für Deinen Drucker dessen eigenes Drucker- und Materialprofil und prüfe die Druckvorschau. Die gespeicherten Profile sind kein universeller Druckauftrag für andere Maschinen.
 
+Das Gehäuse benötigt den Bauraum eines H2C oder eines ähnlich großen Bambu-Druckers. Alle übrigen Teile passen auch auf kleinere Drucker. Alle sechs bereitgestellten Druckprojekte wurden für die gezeigten Bauteile verwendet.
+
 | Bauteil | Wandlinien | Fülldichte | Stützmaterial im Projekt |
 | --- | --- | --- | --- |
 | Gehäuse | 3 | 15 % | aus |
