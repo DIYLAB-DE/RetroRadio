@@ -1718,14 +1718,13 @@ void RetroRadio::drawTracks(bool init, int8_t balance, int8_t gainLowPass, int8_
 // ===================================================================
 
 /**
- * @brief Berechnet den Wert für das magische Auge basierend auf Nadelposition
+ * @brief Berechnet die WLAN-Anzeige des magischen Auges mit Übergang während der Zeigerfahrt
  */
 int32_t RetroRadio::calculateMagicEyeValue()
 {
-    constexpr int32_t VALUE_MIN = 35;                 // Minimaler Wert (kein Signal/Bewegung)
-    constexpr int32_t VALUE_MAX = 100;                // Maximaler Wert (perfekte Abstimmung)
-    constexpr int32_t TRANSITION_RANGE_APPROACH = 30; // Übergangsbereich beim Ankommen (graduell)
-    constexpr int32_t TRANSITION_RANGE_LEAVE = 6;     // Übergangsbereich beim Wegfahren (schnell)
+    constexpr int32_t VALUE_MIN = 0;                  ///< Minimaler Ausschlag des magischen Auges
+    constexpr int32_t TRANSITION_RANGE_APPROACH = 30; ///< Übergangsbereich beim Ankommen in Bildpunkten
+    constexpr int32_t TRANSITION_RANGE_LEAVE = 6;     ///< Übergangsbereich beim Wegfahren in Bildpunkten
 
     // Kein gültiger Zeigerwert
     if (m_handCounter < 0)
@@ -1738,6 +1737,7 @@ int32_t RetroRadio::calculateMagicEyeValue()
 
     const int32_t targetPos = m_stationList[target].x;
     const int32_t currentPos = m_handCounter;
+    const int32_t signalPercent = APP_STATE.getWifiConnected() ? APP_STATE.getWifiSignalPercent() : VALUE_MIN;
 
     // Distanz zur neuen Zielposition berechnen
     const int32_t distanceToTarget = abs(currentPos - targetPos);
@@ -1766,19 +1766,16 @@ int32_t RetroRadio::calculateMagicEyeValue()
         transitionRange = TRANSITION_RANGE_LEAVE;
     }
 
-    // Nadel exakt am Ziel
+    // An der alten oder neuen Senderposition entspricht der Ausschlag der WLAN-Signalstärke.
     if (distance == 0)
-        return VALUE_MAX;
+        return signalPercent;
 
     // Außerhalb des Übergangsbereichs
     if (distance >= transitionRange)
         return VALUE_MIN;
 
-    // Innerhalb des Übergangsbereichs: linear interpolieren
-    const int32_t valueRange = VALUE_MAX - VALUE_MIN;
-    const int32_t interpolatedValue = VALUE_MIN + (valueRange * (transitionRange - distance)) / transitionRange;
-
-    return interpolatedValue;
+    // Während der Zeigerfahrt zwischen minimalem Ausschlag und aktuellem WLAN-Wert interpolieren.
+    return (signalPercent * (transitionRange - distance)) / transitionRange;
 }
 
 /**
@@ -1795,7 +1792,6 @@ void RetroRadio::drawMagicEye(bool init, int32_t x, int32_t y, int32_t value)
     constexpr int SPRITE_WIDTH = RRLayout::MagicEye::WIDTH;
     constexpr int SPRITE_HEIGHT = RRLayout::MagicEye::HEIGHT;
     constexpr float RING_THICKNESS = 5.0f;
-    constexpr float EYE_VALUE_MIN = 35.0f;
     constexpr float EYE_VALUE_MAX = 100.0f;
     const float roundCenter = SPRITE_WIDTH / 2.0f;
     const float roundRadius = roundCenter - 1.0f;
@@ -1814,8 +1810,7 @@ void RetroRadio::drawMagicEye(bool init, int32_t x, int32_t y, int32_t value)
 
     m_sprMagicEye->clear(RRColors::BACKGROUND);
 
-    // calculateMagicEyeValue liefert nur den oberen Teil des Zahlenbereichs, deshalb wird er auf den vollen Pegelhub der Röhre gespreizt.
-    float level = (static_cast<float>(value) - EYE_VALUE_MIN) / (EYE_VALUE_MAX - EYE_VALUE_MIN);
+    float level = static_cast<float>(value) / EYE_VALUE_MAX;
     level = constrain(level, 0.0f, 1.0f);
 
     const uint8_t style = APP_STATE.getMagicEyeStyle();

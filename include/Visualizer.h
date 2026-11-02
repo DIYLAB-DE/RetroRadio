@@ -78,7 +78,7 @@ enum class WaveformStyle
 };
 
 /**
- * @brief Enumeration für die Stile der Goniometer-Anzeige
+ * @brief Farbvarianten der VU-Balken neben dem Goniometer
  */
 enum class GonioStyle
 {
@@ -252,8 +252,8 @@ public:
     WaveformStyle getWaveformStyle() const { return m_waveformStyle; }
 
     /**
-     * @brief Gibt den aktuellen Goniometer-Style zurück
-     * @return Aktueller GonioStyle
+     * @brief Gibt die aktuelle Farbvariante der Goniometer-VU-Balken zurück
+     * @return Aktueller GonioStyle der VU-Balken
      */
     GonioStyle getGonioStyle() const { return m_gonioStyle; }
 
@@ -348,7 +348,7 @@ private:
     AuroraStyle m_auroraStyle = AuroraStyle::COOL; ///< Gespeicherte Ziel-Farbwelt des Nordlichts
     DigitalVUStyle m_digitalVUStyle = DigitalVUStyle::CLASSIC; ///< Aktueller Style für die digitale VU-Anzeige
     WaveformStyle m_waveformStyle = WaveformStyle::OVERLAY;    ///< Aktueller Style für die Wellenform Anzeige
-    GonioStyle m_gonioStyle = GonioStyle::CLASSIC;             ///< Aktueller Style für die Goniometer-Anzeige
+    GonioStyle m_gonioStyle = GonioStyle::CLASSIC;             ///< Aktuelle Farbvariante der VU-Balken neben dem Goniometer
     AppModule m_activeModule = AppModule::NONE;                ///< Aktuelles Modul für modulspezifische Konfiguration
 
     // Analoge VU-Meter

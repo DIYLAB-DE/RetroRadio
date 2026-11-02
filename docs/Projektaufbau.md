@@ -12,7 +12,7 @@ RetroRadio ist ein PlatformIO-Projekt mit Arduino-ESP32 für den ESP32-S3. Das D
 | `lib/kissfft/` | FFT-Bibliothek für die Audioauswertung |
 | `boards/` | Boardbeschreibungen für 8 und 16 MB Flash |
 | `webui/index.html` | Quelltext der eingebetteten Weboberfläche |
-| `scripts/` | Erzeugen des Web-Headers und der Firmware-Versionsangaben |
+| `scripts/` | Erzeugen des Web-Headers und Bereitstellen der festen Firmware-Versionsangaben |
 | `platformio.ini` | Gemeinsame Build-Einstellungen und die beiden Umgebungen |
 | `partitions_8mb.csv`, `partitions_16mb.csv` | Partitionierung der jeweiligen Flashgröße |
 | `docs/` | Aufbau, Bedienung, Dienste, Hardwaredateien, Abbildungen und Lizenzbeilagen |
@@ -26,6 +26,12 @@ RetroRadio ist ein PlatformIO-Projekt mit Arduino-ESP32 für den ESP32-S3. Das D
 `Gfx` erweitert LovyanGFX um die gemeinsamen Zeichenfunktionen. Größere Bildbereiche werden in PSRAM-Zeichenflächen vorbereitet. Die Schrift- und Bilddaten sind Bestandteil der Firmware. Die Weboberfläche wird beim Build aus ihrem HTML-Quelltext komprimiert und als Header eingebettet, Änderungen gehören deshalb in `webui/index.html`.
 
 `AppState` hält gemeinsame Einstellungen und Laufzeitzustände. Dauerhafte Werte verwenden die vorhandenen Speichermechanismen einschließlich Preferences und RTC-NVRAM. `HttpService` übernimmt gemeinsame Netzabrufe. Kalender, Kontakte, Aufgaben und Tagesansicht verarbeiten die jeweils eingerichteten Datenquellen, die Google-Web-Apps liegen unter [docs/dienste/google/apps-script](dienste/google/apps-script/).
+
+## Firmware-Version
+
+Die Firmware-Version wird pro Release festgelegt und bleibt bei späteren Builds desselben Quellcodestands unverändert. Ein Eigenbau von `v26.11.2` zeigt daher auch an einem späteren Tag weiterhin `v26.11.2` an.
+
+In `scripts/fw_version.py` stehen die feste Version `fw_version` und das Veröffentlichungsdatum `fw_date`. Vor einem neuen Release werden beide Angaben auf dessen Veröffentlichungsdatum gesetzt. Das Versionsformat bleibt `v<JJ>.<M>.<T>` mit zweistelligem Jahr sowie Monat und Tag ohne führende Null. Der GitHub-Release-Tag erhält dieselbe Versionsnummer.
 
 ## Öffnen und übersetzen
 

@@ -8,6 +8,8 @@ Ein selbst gebautes Internetradio mit dem Aussehen eines klassischen Tischradios
 
 RetroRadio läuft auf dem Waveshare ESP32-S3-Touch-LCD-7 mit 800 x 480 Pixeln. Die Oberfläche wird direkt am Gerät bedient. Ein gedrucktes Gehäuse mit eingebauten Stereo-Lautsprechern macht aus der Displayplatine ein eigenständiges Tischgerät. Für den Anschluss an eine vorhandene Anlage steht zusätzlich ein Stereo-Line-Out zur Verfügung.
 
+> **Display beim Kauf prüfen:** Benötigt wird das [Waveshare ESP32-S3-Touch-LCD-7](https://docs.waveshare.com/ESP32-S3-Touch-LCD-7) mit **800 x 480 Pixeln** und **SKU 27078**. Das ähnlich aussehende [ESP32-S3-Touch-LCD-7B](https://docs.waveshare.com/ESP32-S3-Touch-LCD-7B) mit **1024 x 600 Pixeln** ist für RetroRadio **nicht geeignet**. Achte auf die Modellbezeichnung ohne das abschließende **B**.
+
 ## Dokumentation
 
 | Thema | Anleitung |
@@ -73,15 +75,17 @@ Die Werkstatt enthält 38 Werkzeuge in sieben Kategorien. Dazu gehören Rechner,
 
 ## Hardware
 
-Die aktuelle Aufbauversion verwendet:
+Der gezeigte Vollausbau verwendet:
 
-- Ein Waveshare ESP32-S3-Touch-LCD-7 mit 8 oder 16 MB Flash.
+- Ein Waveshare ESP32-S3-Touch-LCD-7, SKU 27078, mit 800 x 480 Pixeln, 8 oder 16 MB Flash und 8 MB PSRAM.
 - Zwei Adafruit-MAX98357A-Verstärkermodule mit zwei Visaton BF 37 / 4 Ohm.
-- Einen Adafruit PCM5102 für den analogen Stereo-Line-Out.
+- Einen Adafruit PCM5102 für den analogen Stereo-Line-Out. Eine [alternative PCM5102A-Modulbauform](docs/Aufbau.md#alternatives-pcm5102a-modul) ist mit Anschlüssen, Lötbrücken und ihrem noch offenen Gerätetest separat beschrieben.
 - Eine RTC mit DS1307 und CR2032.
 - Eine Schaltung zum Abschalten der beiden Lautsprecher.
 - Ein Gehäuse, Lautsprechereinsätze und Baugruppenträger aus dem 3D-Drucker.
 - Eine MicroSD-Karte für die Musikwiedergabe von der Karte.
+
+**Die Audio-Baugruppen kannst Du nach Bedarf bestücken:** Für die internen Lautsprecher genügen die beiden Verstärkermodule. Für einen ausschließlich analogen Stereo-Line-Out genügt das DAC-Modul. Für beide Ausgänge werden DAC und beide Verstärkermodule eingebaut. Die zugehörigen Bauteile und Verdrahtung stehen bei den [Audio-Ausbauvarianten](docs/Aufbau.md#audio-ausbauvarianten).
 
 Die Nachbauanleitung beschreibt die Aufbauversion Rev.2. Die frühere Rev.1 verwendet andere Lautsprecher und wird als Vorgängervariante gezeigt. Von vorn sehen beide Versionen gleich aus. Die Aufbauversion ist unabhängig davon, ob das Displayboard 8 oder 16 MB Flash besitzt.
 
@@ -91,12 +95,12 @@ Die Verdrahtung ist als [Gesamtübersicht](docs/hardware/pläne/RetroRadio-Verdr
 
 ## Nachbau und Inbetriebnahme
 
-Das Projekt lässt sich in Visual Studio Code mit PlatformIO öffnen, bearbeiten, bauen und auf das Gerät übertragen. Für die beiden Flashgrößen stehen passende Projektumgebungen bereit:
+Das Projekt lässt sich in Visual Studio Code mit PlatformIO öffnen, bearbeiten, bauen und auf das Gerät übertragen. Die PCB-Revision erkennst Du am Versionsaufdruck auf der Displayplatine. Beide Revisionen haben dieselbe SKU **27078**. Für die beiden Speicherbestückungen stehen passende Projektumgebungen bereit:
 
-| Flashgröße | PlatformIO-Umgebung |
-| --- | --- |
-| 8 MB | `waveshare_esp32s3_lcd7_8mb` |
-| 16 MB | `waveshare_esp32s3_lcd7_16mb` |
+| PCB-Revision | Flash / PSRAM | PlatformIO-Umgebung |
+| --- | --- | --- |
+| v1.1 | 8 MB / 8 MB | `waveshare_esp32s3_lcd7_8mb` |
+| v1.2 | 16 MB / 8 MB | `waveshare_esp32s3_lcd7_16mb` |
 
 Die [Anleitung zur ersten Inbetriebnahme](docs/RetroRadio-Ersteinrichtung.md) führt durch die Erstinstallation über UART1 und den anschließenden Wechsel auf USB. Beginne mit dem Displayboard ohne angeschlossene Audio-Hardware. Der UART-Umschalter und die beiden USB-Buchsen sind in der Anleitung beschrieben.
 

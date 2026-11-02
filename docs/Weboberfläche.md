@@ -2,7 +2,7 @@
 
 [RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > Weboberfläche
 
-Verbinde Rechner und Radio mit demselben erreichbaren Netzwerk. Die Adresse des Radios steht im Hauptmenü und unter **Einstellungen -> Info**. Öffne diese Adresse im Browser mit `http://` davor. Gib den am Radio eingestellten vierstelligen Sperrcode ein. Die Oberfläche funktioniert im Browser unter Windows, Linux und macOS, für die Bedienung ist kein serieller Monitor erforderlich.
+Verbinde Rechner und Radio mit demselben erreichbaren Netzwerk. Die Adresse des Radios steht im Hauptmenü und unter **Einstellungen -> Info**. Öffne diese Adresse im Browser mit `http://` davor. Gib den am Radio eingestellten vierstelligen Sperrcode ein. Die voreingestellte Start-PIN lautet **`0000`**. Falls Du den Sperrcode bereits geändert hast, verwende Deinen eigenen Code. Die Oberfläche funktioniert im Browser unter Windows, Linux und macOS, für die Bedienung ist kein serieller Monitor erforderlich.
 
 [![Weboberfläche entsperren](bilder/web/sperre-klein.png)](bilder/web/sperre.png)
 

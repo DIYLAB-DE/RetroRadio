@@ -17,6 +17,12 @@ Die Konstruktion besteht aus Gehäuse, Lautsprecherabdeckung, Lautsprechereinsä
 
 Die Lautsprechergitter hat **Frank alias Tubefan aus dem RBF (Radio-Bastler-Forum)** im CAD erstellt. Herzlichen Dank für diesen Beitrag!
 
+## CAD-Dateien anpassen
+
+Für eigene konstruktive Anpassungen an Gehäuse, Grundplatte oder Befestigungspunkten verwendest Du die bereitgestellten STEP-Dateien. CAD-Programme mit STEP-Import sind beispielsweise [SolidCraft](https://docs.solidcraft.io/guide/files.html) und [FreeCAD](https://github.com/FreeCAD/FreeCAD-documentation/blob/main/wiki/Part_Import.md). Nach dem Import arbeitest Du mit der vorhandenen Bauteilgeometrie weiter. Der ursprüngliche Konstruktionsverlauf ist in den STEP-Dateien nicht enthalten. Die 3MF-Dateien sind die vorbereiteten Druckprojekte für die gezeigten Teile.
+
+Die Grundplatte und die zugehörigen 3MF- und STEP-Dateien sind für die Bestückung mit Adafruit-Audio-Modulen ausgelegt. Für das [alternative PCM5102A-Modul](../Aufbau.md#alternatives-pcm5102a-modul) müssen Befestigung und gegebenenfalls der Zugang zur Klinkenbuchse individuell angepasst werden. Eine dafür angepasste Druck- oder CAD-Datei ist noch nicht enthalten.
+
 ## Lizenz
 
 Alle bereitgestellten 3MF-Druckprojekte und STEP-CAD-Dateien stehen unter **CC BY-NC-SA 4.0**. Teilen und Bearbeiten sind für nichtkommerzielle Zwecke erlaubt. Die Urheber müssen genannt und Bearbeitungen unter gleichen Lizenzbedingungen weitergegeben werden. Kommerzielle Nutzung ist nicht gestattet. Die [Zuordnung zu den Dateien und Urhebern](LIZENZ.txt) und der [vollständige Lizenztext](../lizenzen/CC-BY-NC-SA-4.0.txt) liegen bei. Diese Lizenz betrifft ausschließlich die CAD- und Druckdateien.
@@ -49,6 +55,8 @@ Die Vorschauen stammen unmittelbar aus den mitgelieferten Druckprojekten:
 | [![Abdeckung](../bilder/aufbau/H2C_PETG_Speaker_Grille.png)](3d-druck/H2C_PETG_Speaker_Grille.3mf) | [![Einsatz BF 37](../bilder/aufbau/H2C_PETG_Speaker_Mounting_Insert_BF37.png)](3d-druck/H2C_PETG_Speaker_Mounting_Insert_BF37.3mf) | [![Einsatz SC 4.9 FL](../bilder/aufbau/H2C_PETG_Speaker_Mounting_Insert_SC_49_20FL.png)](3d-druck/H2C_PETG_Speaker_Mounting_Insert_SC_49_20FL.3mf) |
 
 ## Befestigungsmittel
+
+> **Display ohne Verklebung montieren:** Die beiden Befestigungsschrauben reichen zum sicheren Halt im Gehäuse aus. Die Abdeckfolie auf der Glasrückseite bleibt angebracht, nur ihre Abziehlasche wird abgeschnitten. Die beiden Schutzfolien der Vorderseite werden entfernt. Die genaue Zuordnung der Folien steht in der [Aufbauanleitung](../Aufbau.md#display-und-befestigungsbolzen).
 
 Die kleinen Schrauben zur Befestigung von Verstärkern, RTC und DAC auf der Grundplatte stammen aus einem Sortiment mit der Bezeichnung **Black Zinc-Plated Carbon Steel Pan Flat Head Self Tapping Screws Metric**. Im Sortiment heißen sie **M2*5**. Es sind selbstschneidende Schrauben und keine metrischen M2-Maschinenschrauben. Die Sortimentsbezeichnung allein ist daher keine Gewindeangabe nach metrischer Norm.
 

@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1180" viewBox="0 0 1600 1180" role="img" aria-labelledby="titel beschreibung">
+  <title id="titel">RetroRadio: alternatives PCM5102A-Modul anschließen</title>
+  <desc id="beschreibung">GPIO43 an DIN, GPIO44 an BCK, GPIO6 an LRCK, gemeinsame Masse und 5 V an VIN eines Moduls mit 3,3-V-Regelung. SCK wird mit GND verbunden. H1L, H2L und H4L auf Low, H3L auf High mit 3,3 V.</desc>
+  <style>
+    text { font-family: "DejaVu Sans", Arial, sans-serif; fill: #152e43; }
+    .titel { font-size: 38px; font-weight: 700; }
+    .kopf { font-size: 23px; font-weight: 700; }
+    .text { font-size: 22px; }
+    .klein { font-size: 18px; fill: #52677b; }
+    .fuss { font-size: 16px; fill: #52677b; }
+    .rahmen { fill: #f7f9fa; stroke: #cbd6dc; stroke-width: 2; }
+    .leitung { fill: none; stroke-width: 6; stroke-linecap: round; }
+  </style>
+  <rect width="1600" height="1180" fill="#ffffff"/>
+  <rect x="40" y="32" width="7" height="115" fill="#258439"/>
+  <text x="68" y="60" class="kopf" fill="#52677b">RETRO RADIO</text>
+  <text x="68" y="112" class="titel">Alternatives PCM5102A-Modul</text>
+  <text x="68" y="151" class="text" fill="#52677b">DIN, BCK und LRCK - Betrieb ohne externen Mastertakt</text>
+
+  <rect x="50" y="214" width="570" height="496" rx="8" class="rahmen"/>
+  <text x="80" y="252" class="kopf">Waveshare ESP32-S3-Touch-LCD-7</text>
+  <text x="80" y="282" class="klein">PCB v1.1 / v1.2 | Schalter auf UART2</text>
+  <line x1="80" y1="298" x2="590" y2="298" stroke="#cbd6dc"/>
+  <rect x="1000" y="214" width="550" height="496" rx="8" class="rahmen"/>
+  <text x="1024" y="252" class="kopf">PCM5102A mit 3,3-V-Regelung</text>
+  <text x="1024" y="282" class="klein">Funktionsschema, keine Platinenansicht</text>
+  <line x1="1024" y1="298" x2="1524" y2="298" stroke="#cbd6dc"/>
+
+  <g id="gpio43-din">
+    <text x="80" y="338" class="text">GPIO43 | UART2 TXD</text>
+    <text x="80" y="363" class="klein">Serielle Audiodaten</text>
+    <path d="M620 330 H1000" stroke="#c46a06" class="leitung"/>
+    <circle cx="620" cy="330" r="7" fill="#ffffff" stroke="#c46a06" stroke-width="3"/>
+    <circle cx="1000" cy="330" r="7" fill="#ffffff" stroke="#c46a06" stroke-width="3"/>
+    <text x="1024" y="338" class="text">DIN</text>
+    <text x="1130" y="338" class="klein">Audiodaten</text>
+  </g>
+  <g id="gpio44-bck">
+    <text x="80" y="408" class="text">GPIO44 | UART2 RXD</text>
+    <text x="80" y="433" class="klein">Bit-Takt, trotz der Beschriftung RXD ein Ausgang</text>
+    <path d="M620 400 H1000" stroke="#1b63c5" class="leitung"/>
+    <circle cx="620" cy="400" r="7" fill="#ffffff" stroke="#1b63c5" stroke-width="3"/>
+    <circle cx="1000" cy="400" r="7" fill="#ffffff" stroke="#1b63c5" stroke-width="3"/>
+    <text x="1024" y="408" class="text">BCK</text>
+    <text x="1130" y="408" class="klein">Bit-Takt</text>
+  </g>
+  <g id="gpio6-lrck">
+    <text x="80" y="478" class="text">GPIO6 | Sensor AD</text>
+    <text x="80" y="503" class="klein">Links-Rechts-Takt / Word-Select</text>
+    <path d="M620 470 H1000" stroke="#258439" class="leitung"/>
+    <circle cx="620" cy="470" r="7" fill="#ffffff" stroke="#258439" stroke-width="3"/>
+    <circle cx="1000" cy="470" r="7" fill="#ffffff" stroke="#258439" stroke-width="3"/>
+    <text x="1024" y="478" class="text">LRCK</text>
+    <text x="1130" y="478" class="klein">Links-Rechts-Takt</text>
+  </g>
+  <g id="masse">
+    <text x="80" y="548" class="text">GND</text>
+    <text x="80" y="573" class="klein">Gemeinsame Masse von Displayboard und DAC</text>
+    <path d="M620 540 H1000" stroke="#24313b" class="leitung"/>
+    <circle cx="620" cy="540" r="7" fill="#ffffff" stroke="#24313b" stroke-width="3"/>
+    <circle cx="1000" cy="540" r="7" fill="#ffffff" stroke="#24313b" stroke-width="3"/>
+    <text x="1024" y="548" class="text">GND</text>
+  </g>
+  <g id="versorgung">
+    <text x="80" y="618" class="text">5 V | U5 IN</text>
+    <text x="80" y="643" class="klein">5-V-Abgriff am Reglereingang des Displayboards</text>
+    <path d="M620 610 H1000" stroke="#d63232" class="leitung"/>
+    <circle cx="620" cy="610" r="7" fill="#ffffff" stroke="#d63232" stroke-width="3"/>
+    <circle cx="1000" cy="610" r="7" fill="#ffffff" stroke="#d63232" stroke-width="3"/>
+    <text x="1024" y="618" class="text">VIN</text>
+    <text x="1130" y="618" class="klein">5 V vor den Modulreglern</text>
+  </g>
+  <text x="80" y="685" class="klein">I2S-Signale: 3,3-V-Pegel</text>
+  <g id="sck-gnd" stroke="#24313b" stroke-width="3" fill="none">
+    <path d="M1100 668 H1150 V678"/>
+    <path d="M1132 680 H1168 M1139 688 H1161 M1146 696 H1154"/>
+  </g>
+  <text x="1024" y="676" class="text">SCK</text>
+  <text x="1190" y="676" class="klein">Brücke nach GND schließen</text>
+  <text x="1000" y="748" class="text" font-weight="700">Stereo-Klinke auf dem Modul: Line-Out</text>
+  <text x="1000" y="777" class="klein">Für externe Verstärker oder aktive Lautsprecher.</text>
+
+  <rect x="50" y="802" width="750" height="298" rx="8" class="rahmen"/>
+  <text x="74" y="838" class="kopf">Lötbrücken für diesen Betrieb</text>
+  <text x="74" y="873" class="klein">Gruppe / Funktion</text>
+  <text x="350" y="873" class="klein">Pegel</text>
+  <text x="520" y="873" class="klein">Bedeutung</text>
+  <line x1="74" y1="886" x2="776" y2="886" stroke="#cbd6dc"/>
+  <g id="bruecken" class="text">
+    <text x="74" y="921">H1L / FLT</text>
+    <text x="350" y="921">L / GND</text>
+    <text x="520" y="921">Normaler Filter</text>
+    <text x="74" y="966">H2L / DEMP</text>
+    <text x="350" y="966">L / GND</text>
+    <text x="520" y="966">De-Emphasis aus</text>
+    <text x="74" y="1011">H3L / XSMT</text>
+    <text x="350" y="1011" font-weight="700" fill="#258439">H / 3,3 V</text>
+    <text x="520" y="1011">Ausgang aktiv</text>
+    <text x="74" y="1056">H4L / FMT</text>
+    <text x="350" y="1056">L / GND</text>
+    <text x="520" y="1056">I2S-Format</text>
+  </g>
+  <text x="74" y="1084" class="fuss">Mittleres Pad jeweils nur mit H oder L verbinden.</text>
+  <rect x="840" y="802" width="710" height="298" rx="8" class="rahmen"/>
+  <text x="864" y="838" class="kopf">Versorgung und Verwendung</text>
+  <g font-size="20">
+    <text x="864" y="885">5 V ausschließlich an VIN vor der Modulregelung.</text>
+    <text x="864" y="928">DAC und Brücken-H-Pegel: 3,3 V.</text>
+    <text x="864" y="971">SCK an GND. BCK ist davon getrennt.</text>
+    <text x="864" y="1014">Die Klinke liefert Stereo-Line-Pegel.</text>
+    <text x="864" y="1057">Die Befestigung ist individuell anzupassen.</text>
+  </g>
+  <line x1="50" y1="1121" x2="1550" y2="1121" stroke="#cbd6dc"/>
+  <text x="50" y="1146" class="fuss">Stand 02.11.2026 | Eigene Anschlussübersicht nach MakerGuides und TI-Datenblatt</text>
+  <text x="50" y="1170" class="fuss">Funktionale Darstellung - keine maßstäbliche Platinenansicht</text>
+</svg>

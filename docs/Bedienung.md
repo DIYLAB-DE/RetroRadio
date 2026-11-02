@@ -123,7 +123,7 @@ Unter **Klang -> Lautsprecher** schaltet Minus die beiden eingebauten Lautsprech
 
 ## Sperren und Ausschalten
 
-Das Hauptmenü bietet den Ausschaltknopf unten rechts. Die Sperr- und Aufweckansicht wird über den vierstelligen Code freigegeben. Der Code ist in den Sicherheitseinstellungen änderbar. Die Netzwerkverbindung des Geräts und die Weboberfläche sind getrennt vom sichtbaren Display zu betrachten, Details zu deren Zugriff stehen in der [Webanleitung](Weboberfläche.md).
+Das Hauptmenü bietet den Ausschaltknopf unten rechts. Die Sperr- und Aufweckansicht wird über den vierstelligen Code freigegeben. Der voreingestellte Sperrcode (Start-PIN) lautet **`0000`**. Du kannst ihn unter **Einstellungen -> Sicherheit** ändern. Die Netzwerkverbindung des Geräts und die Weboberfläche sind getrennt vom sichtbaren Display zu betrachten, Details zu deren Zugriff stehen in der [Webanleitung](Weboberfläche.md).
 
 | Gesperrt | Code eingeben |
 | --- | --- |

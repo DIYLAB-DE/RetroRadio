@@ -555,7 +555,7 @@ private:
      * @param init true legt das Sprite an und zeichnet noch nichts, false baut die Anzeige auf
      * @param x X-Position des Sprites auf dem Display
      * @param y Y-Position des Sprites auf dem Display
-     * @param value Abstimmwert aus calculateMagicEyeValue im Bereich 35 bis 100
+     * @param value Ausschlag im Bereich 0 bis 100; an der Senderposition entspricht er der WLAN-Signalstärke in Prozent
      *
      * Zeichnet die in AppState hinterlegte Bauform: EM11, EM34, EM80 oder EM84. Die beiden runden füllen das quadratische Sprite aus, der Rundbogen der EM80 und das Leuchtband der EM84 stehen kleiner und mittig darin.
      */
@@ -569,14 +569,14 @@ private:
     void handleMagicEyeTouch();
 
     /**
-     * @brief Berechnet den Wert für das magische Auge basierend auf Nadelposition
-     * @return Wert zwischen 35 (kein Signal) und 100 (perfekte Abstimmung)
+     * @brief Berechnet die WLAN-Anzeige des magischen Auges mit Übergang während der Zeigerfahrt
+     * @return Ausschlag von 0 bis 100; ohne WLAN oder gültige Zeigerposition 0
      *
      * Die Berechnung berücksichtigt:
-     * - Keine gültige Nadel- oder Zielposition -> 35
-     * - Annäherung an das Ziel -> linear interpoliert über 30 Bildpunkte
-     * - Wegfahren von der letzten guten Position -> schneller Abfall über 6 Bildpunkte
-     * - Nadel am Ziel -> 100
+     * - Keine WLAN-Verbindung oder keine gültige Nadel- oder Zielposition -> 0
+     * - Annäherung an das Ziel -> linearer Anstieg zum aktuellen WLAN-Wert über 30 Bildpunkte
+     * - Wegfahren von der letzten guten Position -> Abfall vom aktuellen WLAN-Wert über 6 Bildpunkte
+     * - Nadel am Ziel -> aktuelle WLAN-Signalstärke in Prozent
      */
     int32_t calculateMagicEyeValue();
 

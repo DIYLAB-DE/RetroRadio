@@ -131,54 +131,6 @@ namespace
     // unruhig, deshalb wird ein langes Bildintervall in mehrere kleine zerlegt.
     constexpr float VU_MAX_STEP = 0.005f;
     constexpr int VU_MAX_STEPS = 32;
-
-    constexpr float GONIO_RAINBOW_DISTANCE_SPLIT_SQ = 0.0625f;
-    constexpr float GONIO_RAINBOW_DISTANCE_MAX_SQ = 1.44f;
-    constexpr uint16_t GONIO_RAINBOW_NEAR_LAST_INDEX = 127;
-    constexpr uint16_t GONIO_RAINBOW_FAR_FIRST_INDEX = 128;
-    constexpr float GONIO_RAINBOW_NEAR_INDEX_SCALE =
-        static_cast<float>(GONIO_RAINBOW_NEAR_LAST_INDEX) / GONIO_RAINBOW_DISTANCE_SPLIT_SQ;
-    constexpr float GONIO_RAINBOW_FAR_INDEX_SCALE =
-        static_cast<float>(GONIO_RAINBOW_NEAR_LAST_INDEX) / (GONIO_RAINBOW_DISTANCE_MAX_SQ - GONIO_RAINBOW_DISTANCE_SPLIT_SQ);
-    constexpr uint8_t GONIO_RAINBOW_COLOR_INDEX_LUT[256] = {
-        96, 94, 93, 92, 92, 92, 91, 91, 90, 90, 90, 90, 89, 89, 89, 89,
-        88, 88, 88, 88, 88, 87, 87, 87, 87, 87, 86, 86, 86, 86, 86, 86,
-        85, 85, 85, 85, 85, 85, 85, 84, 84, 84, 84, 84, 84, 84, 83, 83,
-        83, 83, 83, 83, 83, 83, 82, 82, 82, 82, 82, 82, 82, 82, 82, 81,
-        81, 81, 81, 81, 81, 81, 81, 81, 80, 80, 80, 80, 80, 80, 80, 80,
-        80, 80, 79, 79, 79, 79, 79, 79, 79, 79, 79, 79, 78, 78, 78, 78,
-        78, 78, 78, 78, 78, 78, 78, 77, 77, 77, 77, 77, 77, 77, 77, 77,
-        77, 77, 77, 76, 76, 76, 76, 76, 76, 76, 76, 76, 76, 76, 76, 76,
-        76, 74, 72, 71, 69, 68, 67, 66, 65, 63, 62, 61, 60, 59, 58, 58,
-        57, 56, 55, 54, 53, 52, 52, 51, 50, 49, 49, 48, 47, 46, 46, 45,
-        44, 44, 43, 42, 42, 41, 40, 40, 39, 39, 38, 37, 37, 36, 36, 35,
-        34, 34, 33, 33, 32, 32, 31, 31, 30, 29, 29, 28, 28, 27, 27, 26,
-        26, 25, 25, 24, 24, 23, 23, 23, 22, 22, 21, 21, 20, 20, 19, 19,
-        18, 18, 17, 17, 17, 16, 16, 15, 15, 14, 14, 14, 13, 13, 12, 12,
-        11, 11, 11, 10, 10, 9, 9, 9, 8, 8, 7, 7, 7, 6, 6, 5,
-        5, 5, 4, 4, 4, 3, 3, 2, 2, 2, 1, 1, 1, 0, 0, 0};
-
-    /**
-     * @brief Ermittelt den Rainbow-Farbindex aus dem quadrierten Goniometer-Abstand.
-     */
-    uint8_t gonioRainbowColorIndex(float distanceSquared)
-    {
-        if (distanceSquared >= GONIO_RAINBOW_DISTANCE_MAX_SQ)
-            return 0;
-
-        uint16_t lutIndex;
-        if (distanceSquared < GONIO_RAINBOW_DISTANCE_SPLIT_SQ)
-        {
-            lutIndex = static_cast<uint16_t>(distanceSquared * GONIO_RAINBOW_NEAR_INDEX_SCALE + 0.5f);
-        }
-        else
-        {
-            lutIndex = GONIO_RAINBOW_FAR_FIRST_INDEX +
-                       static_cast<uint16_t>((distanceSquared - GONIO_RAINBOW_DISTANCE_SPLIT_SQ) * GONIO_RAINBOW_FAR_INDEX_SCALE + 0.5f);
-        }
-
-        return GONIO_RAINBOW_COLOR_INDEX_LUT[lutIndex];
-    }
 }
 
 /**
@@ -2574,6 +2526,8 @@ void Visualizer::drawGonio(bool init, float peakLeft, float peakRight)
     if (!buffer)
         return;
 
+    const uint16_t pointColor = bswap16(Theme::ColorGreen);
+
     // Punkte zeichnen & Messwerte akkumulieren
     for (uint16_t i = 0; i < take; i++)
     {
@@ -2615,19 +2569,7 @@ void Visualizer::drawGonio(bool init, float peakLeft, float peakRight)
         if (x < 0 || x >= cfg.size || y < 0 || y >= cfg.size)
             continue;
 
-        // Farbe bestimmen
-        uint16_t color;
-        if (m_gonioStyle == GonioStyle::RAINBOW)
-        {
-            const float distanceSquared = xNorm * xNorm + yNorm * yNorm;
-            color = rainbowColors(gonioRainbowColorIndex(distanceSquared));
-        }
-        else
-        {
-            color = Theme::ColorGreen;
-        }
-
-        buffer[y * cfg.size + x] = bswap16(color);
+        buffer[y * cfg.size + x] = pointColor;
     }
 
     // Auto-Verstärkung für den nächsten Frame anpassen

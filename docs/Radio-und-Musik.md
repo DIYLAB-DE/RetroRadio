@@ -18,7 +18,7 @@ Der Ausschaltknopf öffnet den Sleep-Timer mit **5, 15, 25, 45 und 60 Minuten** 
 
 ## Alle acht Visualisierungen
 
-**Im Visualisierungsbereich waagerecht wischen**, um den Modus zu wechseln. **Länger als etwa eine Sekunde drücken**, um innerhalb des Modus die zweite Darstellung auszuwählen. Alle acht Modi bieten zwei Varianten. Die Galerie zeigt echte Aufnahmen der laufenden Wiedergabe mit Lautstärke 3 und ohne Stummschaltung. Ein Klick auf das Vorschaubild öffnet die volle Displayaufnahme.
+**Im Visualisierungsbereich waagerecht wischen**, um den Modus zu wechseln. **Länger als etwa eine Sekunde drücken**, um innerhalb des Modus die zweite Darstellung auszuwählen. Alle acht Modi bieten zwei Varianten. Beim Goniometer wechselt dabei nur die Farbgebung der VU-Balken zwischen klassisch und Regenbogen. Die Goniometer-Figur bleibt in beiden Varianten grün. Das gilt im Radio und im SD-Player. Die Galerie zeigt echte Aufnahmen der laufenden Wiedergabe mit Lautstärke 3 und ohne Stummschaltung. Ein Klick auf das Vorschaubild öffnet die volle Displayaufnahme.
 
 | Modus | Erste Variante | Zweite Variante |
 | --- | --- | --- |
@@ -26,7 +26,7 @@ Der Ausschaltknopf öffnet den Sleep-Timer mit **5, 15, 25, 45 und 60 Minuten** 
 | Digitales VU-Meter | [![Digitales VU-Meter](bilder/bedienung/radio-visualizer-digital-a-klein.png)](bilder/bedienung/radio-visualizer-digital-a.png) | [![Digitales VU-Meter, andere Farbgebung](bilder/bedienung/radio-visualizer-digital-b-klein.png)](bilder/bedienung/radio-visualizer-digital-b.png) |
 | Spektrumanalysator | [![Spektrumanalysator](bilder/bedienung/radio-visualizer-spektrum-a-klein.png)](bilder/bedienung/radio-visualizer-spektrum-a.png) | [![Spektrumanalysator, andere Farbgebung](bilder/bedienung/radio-visualizer-spektrum-b-klein.png)](bilder/bedienung/radio-visualizer-spektrum-b.png) |
 | Wellenform | [![Wellenform](bilder/bedienung/radio-visualizer-welle-a-klein.png)](bilder/bedienung/radio-visualizer-welle-a.png) | [![Wellenform, zweite Anordnung](bilder/bedienung/radio-visualizer-welle-b-klein.png)](bilder/bedienung/radio-visualizer-welle-b.png) |
-| Goniometer | [![Goniometer](bilder/bedienung/radio-visualizer-goniometer-a-klein.png)](bilder/bedienung/radio-visualizer-goniometer-a.png) | [![Goniometer, andere Farbgebung](bilder/bedienung/radio-visualizer-goniometer-b-klein.png)](bilder/bedienung/radio-visualizer-goniometer-b.png) |
+| Goniometer | [![Goniometer, klassische VU-Balken](bilder/bedienung/radio-visualizer-goniometer-a-klein.png)](bilder/bedienung/radio-visualizer-goniometer-a.png) | [![Goniometer, VU-Balken im Regenbogenstil](bilder/bedienung/radio-visualizer-goniometer-b-klein.png)](bilder/bedienung/radio-visualizer-goniometer-b.png) |
 | Mittiges Spektrum | [![Mittiges Spektrum](bilder/bedienung/radio-visualizer-mittig-a-klein.png)](bilder/bedienung/radio-visualizer-mittig-a.png) | [![Mittiges Spektrum, andere Farbgebung](bilder/bedienung/radio-visualizer-mittig-b-klein.png)](bilder/bedienung/radio-visualizer-mittig-b.png) |
 | Wasserfall | [![Wasserfall](bilder/bedienung/radio-visualizer-wasserfall-a-klein.png)](bilder/bedienung/radio-visualizer-wasserfall-a.png) | [![Wasserfall, andere Farbgebung](bilder/bedienung/radio-visualizer-wasserfall-b-klein.png)](bilder/bedienung/radio-visualizer-wasserfall-b.png) |
 | Nordlicht | [![Nordlicht, kühl](bilder/bedienung/radio-visualizer-nordlicht-a-klein.png)](bilder/bedienung/radio-visualizer-nordlicht-a.png) | [![Nordlicht, warm](bilder/bedienung/radio-visualizer-nordlicht-b-klein.png)](bilder/bedienung/radio-visualizer-nordlicht-b.png) |
@@ -36,6 +36,8 @@ Die Anzeigen folgen den Audiodaten. Bei angehaltener Wiedergabe oder sehr leisem
 ## Vier magische Augen
 
 Ein langer Druck auf das magische Auge oben rechts schaltet reihum durch **EM11, EM34, EM80 und EM84**. Es ist eine grafische Nachbildung, keine zusätzliche Röhre im Hardwareaufbau.
+
+Beim Senderwechsel begleitet das magische Auge weiterhin die Zeigerfahrt. Sobald der Zeiger seine Zielposition erreicht hat, zeigt es die aktuelle WLAN-Signalstärke an: Je stärker das Signal, desto weiter schließt sich das Auge beziehungsweise wächst das Leuchtband. Der Wert wird etwa alle 1,5 Sekunden aktualisiert, sodass auch Empfangsschwankungen bei laufendem Sender sichtbar werden. Ohne WLAN-Verbindung zeigt das Auge den minimalen Ausschlag. Angezeigt wird die Funkverbindung zum WLAN-Router.
 
 | EM11 | EM34 | EM80 | EM84 |
 | --- | --- | --- | --- |

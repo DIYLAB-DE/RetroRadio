@@ -4,16 +4,18 @@
 
 Diese Anleitung führt Dich vom fabrikneuen Waveshare-Display zum gestarteten RetroRadio. Du bereitest das Projekt unter Windows, Linux oder macOS in Visual Studio Code mit PlatformIO vor, überträgst die Firmware zunächst über UART1 und wechselst anschließend auf die USB-Buchse. Danach kannst Du denselben Projektordner zum Lesen und Bearbeiten des Quellcodes und für spätere Aktualisierungen verwenden.
 
-**Stand: 29.10.2026.** Der vollständige Installationsablauf wurde am 23.09.2026 unter Linux mit einem ESP32-S3-Touch-LCD-7, PCB 1.1, 8 MB Flash und 8 MB PSRAM praktisch bestätigt: Erstinstallation über UART1, Wechsel auf USB und erneuter erfolgreicher Upload. Die Schritte für Windows und macOS stützen sich auf die offiziellen Software- und Treiberunterlagen, eigene Durchläufe auf diesen Systemen stehen noch aus. Die 16-MB-Projektumgebung ist vorhanden, eine Erstinstallation auf dieser Boardvariante ist noch nicht praktisch bestätigt.
+**Stand: 02.11.2026.** Der vollständige Installationsablauf wurde am 23.09.2026 unter Linux mit einem ESP32-S3-Touch-LCD-7, PCB 1.1, 8 MB Flash und 8 MB PSRAM praktisch bestätigt: Erstinstallation über UART1, Wechsel auf USB und erneuter erfolgreicher Upload. Die Schritte für Windows und macOS stützen sich auf die offiziellen Software- und Treiberunterlagen, eigene Durchläufe auf diesen Systemen stehen noch aus. Die 16-MB-Projektumgebung ist vorhanden, eine Erstinstallation auf dieser Boardvariante ist noch nicht praktisch bestätigt.
 
 > Beginne mit dem Displayboard ohne angeschlossene Audio-Hardware und weitere externe Module. RetroRadio aktiviert den USB-Anschluss selbst. Eine Zwischen-Firmware ist nicht erforderlich, die ab Werk installierte Demo kann direkt ersetzt werden.
 
 ## 1. Was Du brauchst
 
-- Ein Waveshare **ESP32-S3-Touch-LCD-7 mit 800 x 480 Pixeln**, 8 oder 16 MB Flash und 8 MB PSRAM.
+- Ein Waveshare **ESP32-S3-Touch-LCD-7 mit 800 x 480 Pixeln**, **SKU 27078**, 8 oder 16 MB Flash und 8 MB PSRAM.
 - Ein USB-Datenkabel, passend zu Deinem Rechner und den USB-C-Buchsen des Boards. Ein reines Ladekabel reicht nicht.
 - Einen Rechner mit Windows, Linux oder macOS und Internetzugang für den Download der Entwicklungswerkzeuge und Projektabhängigkeiten.
 - Visual Studio Code mit der Erweiterung PlatformIO IDE sowie den vollständigen RetroRadio-Projektordner.
+
+> Das ähnlich aussehende [ESP32-S3-Touch-LCD-7B](https://docs.waveshare.com/ESP32-S3-Touch-LCD-7B) mit **1024 x 600 Pixeln** ist für RetroRadio **nicht geeignet**. Achte auf die Modellbezeichnung ohne das abschließende **B**.
 
 Für den ersten Start genügt die Versorgung über das USB-Datenkabel. Die Audio-Baugruppen schließt Du erst nach den beiden erfolgreichen Uploads an.
 
@@ -74,12 +76,12 @@ Zum Lesen oder Bearbeiten öffnest Du eine Datei im Explorer. Änderungen speich
 
 ## 4. Die passende Flashvariante auswählen
 
-Entscheidend ist die Flashgröße Deines Boards. Beide Varianten haben 8 MB PSRAM. Wähle nach der Speicherbestückung, nicht allein nach der PCB-Version oder der Aufbauversion des Gehäuses.
+Die PCB-Revision erkennst Du am Versionsaufdruck direkt auf der Displayplatine. Beim unterstützten **ESP32-S3-Touch-LCD-7** tragen beide Revisionen dieselbe **SKU 27078**. Wähle die Projektumgebung nach folgender Zuordnung. Die Aufbauversion des Gehäuses (Rev.1 oder Rev.2) ist davon unabhängig.
 
-| Flashgröße | PlatformIO-Umgebung |
-| --- | --- |
-| 8 MB Flash, 8 MB PSRAM | `waveshare_esp32s3_lcd7_8mb` |
-| 16 MB Flash, 8 MB PSRAM | `waveshare_esp32s3_lcd7_16mb` |
+| PCB-Revision | Flash / PSRAM | PlatformIO-Umgebung |
+| --- | --- | --- |
+| v1.1 | 8 MB / 8 MB | `waveshare_esp32s3_lcd7_8mb` |
+| v1.2 | 16 MB / 8 MB | `waveshare_esp32s3_lcd7_16mb` |
 
 Öffne die Befehlspalette und wähle **PlatformIO: Pick Project Environment**. Wähle den Eintrag mit der zu Deinem Board passenden Umgebung. Die mitgelieferte Voreinstellung ist die 8-MB-Variante, für ein 16-MB-Board wählst Du ausdrücklich die 16-MB-Umgebung.
 
