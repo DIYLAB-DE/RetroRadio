@@ -1723,6 +1723,9 @@ void RetroRadio::drawTracks(bool init, int8_t balance, int8_t gainLowPass, int8_
 int32_t RetroRadio::calculateMagicEyeValue()
 {
     constexpr int32_t VALUE_MIN = 0;                  ///< Minimaler Ausschlag des magischen Auges
+    constexpr int32_t VALUE_MAX = 100;                ///< Maximaler Ausschlag des magischen Auges
+    constexpr int32_t WIFI_PERCENT_OPEN = 30;         ///< WLAN-Prozentwert bei -85 dBm, Auge vollständig offen
+    constexpr int32_t WIFI_PERCENT_CLOSED = 90;       ///< WLAN-Prozentwert bei -55 dBm, Auge vollständig geschlossen
     constexpr int32_t TRANSITION_RANGE_APPROACH = 30; ///< Übergangsbereich beim Ankommen in Bildpunkten
     constexpr int32_t TRANSITION_RANGE_LEAVE = 6;     ///< Übergangsbereich beim Wegfahren in Bildpunkten
 
@@ -1737,7 +1740,8 @@ int32_t RetroRadio::calculateMagicEyeValue()
 
     const int32_t targetPos = m_stationList[target].x;
     const int32_t currentPos = m_handCounter;
-    const int32_t signalPercent = APP_STATE.getWifiConnected() ? APP_STATE.getWifiSignalPercent() : VALUE_MIN;
+    const int32_t mappedValue = map(APP_STATE.getWifiSignalPercent(), WIFI_PERCENT_OPEN, WIFI_PERCENT_CLOSED, VALUE_MIN, VALUE_MAX);
+    const int32_t eyeValue = APP_STATE.getWifiConnected() ? constrain(mappedValue, VALUE_MIN, VALUE_MAX) : VALUE_MIN;
 
     // Distanz zur neuen Zielposition berechnen
     const int32_t distanceToTarget = abs(currentPos - targetPos);
@@ -1766,16 +1770,16 @@ int32_t RetroRadio::calculateMagicEyeValue()
         transitionRange = TRANSITION_RANGE_LEAVE;
     }
 
-    // An der alten oder neuen Senderposition entspricht der Ausschlag der WLAN-Signalstärke.
+    // An der alten oder neuen Senderposition entspricht der Ausschlag der auf -85 bis -55 dBm skalierten WLAN-Signalstärke.
     if (distance == 0)
-        return signalPercent;
+        return eyeValue;
 
     // Außerhalb des Übergangsbereichs
     if (distance >= transitionRange)
         return VALUE_MIN;
 
-    // Während der Zeigerfahrt zwischen minimalem Ausschlag und aktuellem WLAN-Wert interpolieren.
-    return (signalPercent * (transitionRange - distance)) / transitionRange;
+    // Während der Zeigerfahrt zwischen minimalem Ausschlag und aktuellem Augenwert interpolieren.
+    return (eyeValue * (transitionRange - distance)) / transitionRange;
 }
 
 /**

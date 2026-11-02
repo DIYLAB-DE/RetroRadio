@@ -39,6 +39,16 @@ Ein langer Druck auf das magische Auge oben rechts schaltet reihum durch **EM11,
 
 Beim Senderwechsel begleitet das magische Auge weiterhin die Zeigerfahrt. Sobald der Zeiger seine Zielposition erreicht hat, zeigt es die aktuelle WLAN-Signalstärke an: Je stärker das Signal, desto weiter schließt sich das Auge beziehungsweise wächst das Leuchtband. Der Wert wird etwa alle 1,5 Sekunden aktualisiert, sodass auch Empfangsschwankungen bei laufendem Sender sichtbar werden. Ohne WLAN-Verbindung zeigt das Auge den minimalen Ausschlag. Angezeigt wird die Funkverbindung zum WLAN-Router.
 
+Für das magische Auge gilt folgende Anzeigeskala:
+
+| WLAN-Signalstärke | Ausschlag des magischen Auges |
+| --- | --- |
+| -55 dBm oder stärker | Vollständig geschlossen, 100 Prozent |
+| -70 dBm | Halber Ausschlag, 50 Prozent |
+| -85 dBm oder schwächer | Vollständig offen, 0 Prozent |
+
+Zwischen diesen Werten ändert sich der Ausschlag stufenlos. Die Prozentangaben beschreiben den Anzeigebereich des Auges. Die vier Bauformen behalten ihre jeweils typische Darstellung.
+
 | EM11 | EM34 | EM80 | EM84 |
 | --- | --- | --- | --- |
 | [![EM11](bilder/bedienung/radio-auge-1-klein.png)](bilder/bedienung/radio-auge-1.png) | [![EM34](bilder/bedienung/radio-auge-2-klein.png)](bilder/bedienung/radio-auge-2.png) | [![EM80](bilder/bedienung/radio-auge-3-klein.png)](bilder/bedienung/radio-auge-3.png) | [![EM84](bilder/bedienung/radio-auge-4-klein.png)](bilder/bedienung/radio-auge-4.png) |

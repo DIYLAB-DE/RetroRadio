@@ -555,7 +555,7 @@ private:
      * @param init true legt das Sprite an und zeichnet noch nichts, false baut die Anzeige auf
      * @param x X-Position des Sprites auf dem Display
      * @param y Y-Position des Sprites auf dem Display
-     * @param value Ausschlag im Bereich 0 bis 100; an der Senderposition entspricht er der WLAN-Signalstärke in Prozent
+     * @param value Ausschlag von 0 bis 100; an der Senderposition entsprechen 0 einem Signal bis -85 dBm und 100 einem Signal ab -55 dBm
      *
      * Zeichnet die in AppState hinterlegte Bauform: EM11, EM34, EM80 oder EM84. Die beiden runden füllen das quadratische Sprite aus, der Rundbogen der EM80 und das Leuchtband der EM84 stehen kleiner und mittig darin.
      */
@@ -574,9 +574,9 @@ private:
      *
      * Die Berechnung berücksichtigt:
      * - Keine WLAN-Verbindung oder keine gültige Nadel- oder Zielposition -> 0
-     * - Annäherung an das Ziel -> linearer Anstieg zum aktuellen WLAN-Wert über 30 Bildpunkte
-     * - Wegfahren von der letzten guten Position -> Abfall vom aktuellen WLAN-Wert über 6 Bildpunkte
-     * - Nadel am Ziel -> aktuelle WLAN-Signalstärke in Prozent
+     * - Annäherung an das Ziel -> linearer Anstieg zum aktuellen Augenwert über 30 Bildpunkte
+     * - Wegfahren von der letzten guten Position -> Abfall vom aktuellen Augenwert über 6 Bildpunkte
+     * - Nadel am Ziel -> WLAN-Anzeige von 0 bei -85 dBm bis 100 bei -55 dBm, dazwischen linear; -70 dBm ergibt 50
      */
     int32_t calculateMagicEyeValue();
 

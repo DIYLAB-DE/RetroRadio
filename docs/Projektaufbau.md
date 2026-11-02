@@ -29,9 +29,9 @@ RetroRadio ist ein PlatformIO-Projekt mit Arduino-ESP32 für den ESP32-S3. Das D
 
 ## Firmware-Version
 
-Die Firmware-Version wird pro Release festgelegt und bleibt bei späteren Builds desselben Quellcodestands unverändert. Ein Eigenbau von `v26.11.2` zeigt daher auch an einem späteren Tag weiterhin `v26.11.2` an.
+Die Firmware-Version wird pro Release festgelegt und bleibt bei späteren Builds desselben Quellcodestands unverändert. Ein Eigenbau von `v26.11.2.1` zeigt daher auch an einem späteren Tag weiterhin `v26.11.2.1` an.
 
-In `scripts/fw_version.py` stehen die feste Version `fw_version` und das Veröffentlichungsdatum `fw_date`. Vor einem neuen Release werden beide Angaben auf dessen Veröffentlichungsdatum gesetzt. Das Versionsformat bleibt `v<JJ>.<M>.<T>` mit zweistelligem Jahr sowie Monat und Tag ohne führende Null. Der GitHub-Release-Tag erhält dieselbe Versionsnummer.
+In `scripts/fw_version.py` stehen die feste Version `fw_version` und das Veröffentlichungsdatum `fw_date`. Vor einem neuen Release werden Versionsnummer und Datum fest eingetragen. Das Grundformat lautet `v<JJ>.<M>.<T>` mit zweistelligem Jahr sowie Monat und Tag ohne führende Null. Weitere Veröffentlichungen am selben Tag erhalten eine angehängte Revisionsnummer ab 1: Auf `v26.11.2` folgt beispielsweise `v26.11.2.1`, danach `v26.11.2.2`. An einem neuen Veröffentlichungstag beginnt die Kennung wieder ohne Revisionszusatz. Auch die Revision wird nur vor einer Veröffentlichung festgelegt und niemals beim Build hochgezählt. Der GitHub-Release-Tag erhält dieselbe Versionsnummer.
 
 ## Öffnen und übersetzen
 
