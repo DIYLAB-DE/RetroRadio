@@ -56,6 +56,16 @@ class NeaacDecoder {
     uint32_t __r1 __attribute__((unused)) = 1;
     uint32_t __r2 __attribute__((unused)) = 1;
 
+#if defined(SBR_DEC) && (defined(PS_DEC) || defined(DRM_PS))
+    struct PsWorkspace {
+        qmf_t left[38][64], right[38][64]; ///< Zeitfenster der beiden QMF-Kanäle
+#ifdef PS_DEC
+        qmf_t hybridLeft[32][32], hybridRight[32][32]; ///< Teilbänder der hybriden Filterbank
+        real_t energyRatio[34][32]; ///< Bandenergie, danach Transientenfaktor je Zeitschritt
+#endif
+    };
+    ps_ptr<PsWorkspace> m_psWorkspace; ///< Gemeinsamer Arbeitsbereich der nacheinander dekodierten PS-Elemente
+#endif
     ps_ptr<mdct_info>   m_mdct256;
     ps_ptr<mdct_info>   m_mdct1024;
     ps_ptr<mdct_info>   m_mdct2048;
@@ -189,7 +199,7 @@ class NeaacDecoder {
     int8_t    getbits_hcr(bits_t* ld, uint8_t n, uint32_t* result);
     void      cfftf(uint16_t mdct_len, complex_t* c);
     void      cfftb(uint16_t mdct_len, complex_t* c);
-    void      cffti(uint16_t mdct_len, uint16_t n);
+    complex_t* cffti(uint16_t mdct_len, uint16_t n);
     void*     aac_frame_decode(NeAACDecStruct* hDecoder, NeAACDecFrameInfo* hInfo, uint8_t* buffer, uint32_t buffer_size, void** sample_buffer2, uint32_t sample_buffer_size);
     void      create_channel_config(NeAACDecStruct* hDecoder, NeAACDecFrameInfo* hInfo);
     void      passf2pos(const uint16_t ido, const uint16_t l1, const complex_t* cc, complex_t* ch, const complex_t* wa);

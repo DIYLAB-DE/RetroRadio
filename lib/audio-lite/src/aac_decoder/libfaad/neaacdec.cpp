@@ -702,6 +702,9 @@ void NeaacDecoder::NeAACDecClose(NeAACDecHandle hpDecoder) {
         if (hDecoder->sbr[i]) sbrDecodeEnd(hDecoder->sbr[i], i);
     }
 #endif
+#if defined(SBR_DEC) && (defined(PS_DEC) || defined(DRM_PS))
+    m_psWorkspace.reset();
+#endif
     if (hDecoder) faad_free(&hDecoder);
 }
 // ===================================================================
@@ -1009,6 +1012,9 @@ void* NeaacDecoder::aac_frame_decode(NeAACDecStruct* hDecoder, NeAACDecFrameInfo
         adts_header adts;
         adts.old_format = hDecoder->config.useOldADTSFormat;
         if ((hInfo->error = adts_frame(&adts, &ld)) > 0) goto error;
+#ifdef PS_DEC
+        hDecoder->monoAdtsFrame = adts.channel_configuration == 1;
+#endif
         /* MPEG2 does byte_alignment() here,
          * but ADTS header is always multiple of 8 bits in MPEG2
          * so not needed to actually do it.
@@ -2253,24 +2259,28 @@ startloop:
 #endif
 }
 // ===================================================================
-void NeaacDecoder::cffti(uint16_t mdct_len, uint16_t n) {
+complex_t* NeaacDecoder::cffti(uint16_t mdct_len, uint16_t n) {
+    complex_t* work = nullptr;
     cfft_info* cfft_select = nullptr;
 
     switch (mdct_len) {
         case 256:
             m_ccft256.alloc("m_ccft256");
             cfft_select = m_ccft256.get();
-            m_work256.alloc_array(n * sizeof(complex_t), "m_work256");
+            m_work256.alloc_array(2 * n, "m_work256");
+            work = m_work256.get();
             break;
         case 1024:
             m_ccft1024.alloc("m_ccft1024");
             cfft_select = m_ccft1024.get();
-            m_work1024.alloc_array(n * sizeof(complex_t), "m_work1024");
+            m_work1024.alloc_array(2 * n, "m_work1024");
+            work = m_work1024.get();
             break;
         case 2048:
             m_ccft2048.alloc("m_ccft2048");
             cfft_select = m_ccft2048.get();
-            m_work2048.alloc_array(n * sizeof(complex_t), "m_work2048");
+            m_work2048.alloc_array(2 * n, "m_work2048");
+            work = m_work2048.get();
             break;
         default: AAC_LOG_ERROR("wrong length {}", mdct_len);
     }
@@ -2297,7 +2307,7 @@ void NeaacDecoder::cffti(uint16_t mdct_len, uint16_t n) {
         case 128: cfft_select->tab = (complex_t*)cfft_tab_128; break;
     }
 #endif
-    return;
+    return work ? work + n : nullptr;
 }
 // ===================================================================
 drc_info* NeaacDecoder::drc_init(real_t cut, real_t boost) {
@@ -2816,13 +2826,22 @@ real_t NeaacDecoder::get_sample(real_t** input, uint8_t channel, uint16_t sample
 void NeaacDecoder::to_PCM_16bit(NeAACDecStruct* hDecoder, real_t** input, uint8_t channels, uint16_t frame_len, int16_t** sample_buffer) {
     uint8_t  ch, ch1;
     uint16_t i;
+    const auto pcm16 = [](real_t sample) -> int16_t {
+        CLIP(sample, 32767.0f, -32768.0f);
+#if defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(USE_DOUBLE_PRECISION)
+        // Im verschobenen PCM16-Bereich beträgt der Abstand zweier float-Werte genau eins. Die FPU rundet bei der Addition auf den nächsten ganzzahligen Wert.
+        constexpr int32_t ROUNDING_OFFSET = 3 * (1 << 22);
+        return static_cast<int32_t>(sample + static_cast<float>(ROUNDING_OFFSET)) - ROUNDING_OFFSET;
+#else
+        return static_cast<int16_t>(lrintf(sample));
+#endif
+    };
     switch (CONV(channels, hDecoder->downMatrix)) {
         case CONV(1, 0):
         case CONV(1, 1):
             for (i = 0; i < frame_len; i++) {
                 real_t inp = input[hDecoder->internal_channel[0]][i];
-                CLIP(inp, 32767.0f, -32768.0f);
-                (*sample_buffer)[i] = (int16_t)lrintf(inp);
+                (*sample_buffer)[i] = pcm16(inp);
             }
             break;
         case CONV(2, 0):
@@ -2830,9 +2849,9 @@ void NeaacDecoder::to_PCM_16bit(NeAACDecStruct* hDecoder, real_t** input, uint8_
                 ch = hDecoder->internal_channel[0];
                 for (i = 0; i < frame_len; i++) {
                     real_t inp0 = input[ch][i];
-                    CLIP(inp0, 32767.0f, -32768.0f);
-                    (*sample_buffer)[(i * 2) + 0] = (int16_t)lrintf(inp0);
-                    (*sample_buffer)[(i * 2) + 1] = (int16_t)lrintf(inp0);
+                    const int16_t mono = pcm16(inp0);
+                    (*sample_buffer)[(i * 2) + 0] = mono;
+                    (*sample_buffer)[(i * 2) + 1] = mono;
                 }
             } else {
                 ch = hDecoder->internal_channel[0];
@@ -2840,10 +2859,8 @@ void NeaacDecoder::to_PCM_16bit(NeAACDecStruct* hDecoder, real_t** input, uint8_
                 for (i = 0; i < frame_len; i++) {
                     real_t inp0 = input[ch][i];
                     real_t inp1 = input[ch1][i];
-                    CLIP(inp0, 32767.0f, -32768.0f);
-                    CLIP(inp1, 32767.0f, -32768.0f);
-                    (*sample_buffer)[(i * 2) + 0] = (int16_t)lrintf(inp0);
-                    (*sample_buffer)[(i * 2) + 1] = (int16_t)lrintf(inp1);
+                    (*sample_buffer)[(i * 2) + 0] = pcm16(inp0);
+                    (*sample_buffer)[(i * 2) + 1] = pcm16(inp1);
                 }
             }
             break;
@@ -2851,8 +2868,7 @@ void NeaacDecoder::to_PCM_16bit(NeAACDecStruct* hDecoder, real_t** input, uint8_
             for (ch = 0; ch < channels; ch++) {
                 for (i = 0; i < frame_len; i++) {
                     real_t inp = get_sample(input, ch, i, hDecoder->downMatrix, hDecoder->internal_channel);
-                    CLIP(inp, 32767.0f, -32768.0f);
-                    (*sample_buffer)[(i * channels) + ch] = (int16_t)lrintf(inp);
+                    (*sample_buffer)[(i * channels) + ch] = pcm16(inp);
                 }
             }
             break;
@@ -3775,7 +3791,7 @@ void NeaacDecoder::faad_mdct_init(uint16_t mdct_len, uint16_t N) {
 #endif
     }
     /* initialise fft */
-    cffti(mdct_len, N / 4);
+    mdct_new->scratch = cffti(mdct_len, N / 4);
 #ifdef PROFILE
     mdct_new->cycles = 0;
     mdct_new->fft_cycles = 0;
@@ -3819,8 +3835,7 @@ void NeaacDecoder::faad_imdct(uint16_t mdct_len, real_t* X_in, real_t* X_out) {
     real_t scale, b_scale = 0;
     #endif
 #endif
-    // complex_t Z1[512];
-    complex_t* Z1 = (complex_t*)psram_malloc(512 * sizeof(complex_t));
+    complex_t* Z1 = mdct_select->scratch;
     complex_t* sincos = mdct_select->sincos;
     uint16_t   N = mdct_select->N;
     uint16_t   N2 = N >> 1;
@@ -3889,7 +3904,6 @@ void NeaacDecoder::faad_imdct(uint16_t mdct_len, real_t* X_in, real_t* X_out) {
     mdct_select->fft_cycles += count1;
     mdct_select->cycles += (count2 - count1);
 #endif
-    faad_free(&Z1);
 }
 // ===================================================================
 #ifdef LTP_DEC
@@ -3903,8 +3917,7 @@ void NeaacDecoder::faad_mdct(uint16_t mdct_len, real_t* X_in, real_t* X_out) {
     }
     uint16_t  k;
     complex_t x;
-    // complex_t Z1[512];
-    complex_t* Z1 = (complex_t*)psram_malloc(512 * sizeof(complex_t));
+    complex_t* Z1 = mdct_select->scratch;
     complex_t* sincos = mdct_select->sincos;
     uint16_t   N = mdct_select->N;
     uint16_t   N2 = N >> 1;
@@ -3950,7 +3963,6 @@ void NeaacDecoder::faad_mdct(uint16_t mdct_len, real_t* X_in, real_t* X_out) {
         X_out[N2 + n] = -IM(x);
         X_out[N - 1 - n] = RE(x);
     }
-    if (Z1) free(Z1);
 }
 #endif
 // ===================================================================
@@ -4036,8 +4048,7 @@ void NeaacDecoder::mdct_init(fb_info* fb, real_t* in_data, real_t* out_data, uin
 void NeaacDecoder::ifilter_bank(fb_info* fb, uint8_t window_sequence, uint8_t window_shape, uint8_t window_shape_prev, real_t* freq_in, real_t* time_out, real_t* overlap, uint8_t object_type,
                                 uint16_t frame_len) {
     int16_t i;
-    //    real_t transf_buf[2*1024] = {0};
-    real_t*       transf_buf = (real_t*)faad_calloc(2 * 1024, sizeof(real_t));
+    real_t* transf_buf = fb->transform;
     const real_t* window_long = NULL;
     const real_t* window_long_prev = NULL;
     const real_t* window_short = NULL;
@@ -4164,7 +4175,6 @@ void NeaacDecoder::ifilter_bank(fb_info* fb, uint8_t window_sequence, uint8_t wi
     count = faad_get_ts() - count;
     fb->cycles += count;
 #endif
-    faad_free(&transf_buf);
 }
 // ===================================================================
 #ifdef LTP_DEC
@@ -7073,14 +7083,13 @@ uint8_t NeaacDecoder::reconstruct_single_channel(NeAACDecStruct* hDecoder, ic_st
 #ifdef PROFILE
     int64_t count = faad_get_ts();
 #endif
-    /* always allocate 2 channels, PS can always "suddenly" turn up */
-#if ((defined(DRM) && defined(DRM_PS)))
+#if defined(DRM) && defined(DRM_PS)
     output_channels = 2;
 #elif defined(PS_DEC)
-    if (hDecoder->ps_used[hDecoder->fr_ch_ele])
-        output_channels = 2;
-    else
-        output_channels = 1;
+    // Beim Einstieg in einen Mono-ADTS-Stream mit implizitem SBR kann der erste PS-Header erst nach mehreren Blöcken eintreffen.
+    const bool implicitStereo = hDecoder->adts_header_present && hDecoder->monoAdtsFrame && hDecoder->forceUpSampling &&
+                                hDecoder->fr_ch_ele == 0 && hDecoder->element_id[0] == ID_SCE;
+    output_channels = (implicitStereo || hDecoder->ps_used[hDecoder->fr_ch_ele]) ? 2 : 1;
 #else
     output_channels = 1;
 #endif
@@ -10646,10 +10655,7 @@ void NeaacDecoder::ps_decorrelate(ps_info* ps, qmf_t X_left[38][64], qmf_t X_rig
     const complex_t* Phi_Fract_SubQmf;
     uint8_t          temp_delay_ser[NO_ALLPASS_LINKS] = {0};
     real_t           P_SmoothPeakDecayDiffNrg, nrg;
-    // real_t           P[32][34];
-    real_t(*P)[34] = (real_t(*)[34])faad_malloc(32 * sizeof(real_t[34]));
-    // real_t           G_TransientRatio[32][34] = {{0}};
-    real_t(*G_TransientRatio)[34] = (real_t(*)[34])faad_calloc(32, sizeof(real_t[34]));
+    auto& energyRatio = m_psWorkspace->energyRatio;
     complex_t inputLeft;
     /* chose hybrid filterbank: 20 or 34 band case */
     if (ps->use34hybrid_bands) {
@@ -10657,10 +10663,7 @@ void NeaacDecoder::ps_decorrelate(ps_info* ps, qmf_t X_left[38][64], qmf_t X_rig
     } else {
         Phi_Fract_SubQmf = Phi_Fract_SubQmf20;
     }
-    /* clear the energy values */
-    for (n = 0; n < 32; n++) {
-        for (bk = 0; bk < 34; bk++) { P[n][bk] = 0; }
-    }
+    memset(energyRatio, 0, sizeof(energyRatio));
     /* calculate the energy in each parameter band b(k) */
     for (gr = 0; gr < ps->num_groups; gr++) {
         /* select the parameter index b(k) to which this group belongs */
@@ -10687,9 +10690,9 @@ void NeaacDecoder::ps_decorrelate(ps_info* ps, qmf_t X_left[38][64], qmf_t X_rig
                  */
                 in_re = ((abs(RE(inputLeft)) + (1 << (REAL_BITS - 1))) >> REAL_BITS);
                 in_im = ((abs(IM(inputLeft)) + (1 << (REAL_BITS - 1))) >> REAL_BITS);
-                P[n][bk] += in_re * in_re + in_im * in_im;
+                energyRatio[bk][n] += in_re * in_re + in_im * in_im;
     #else
-                P[n][bk] += MUL_R(RE(inputLeft), RE(inputLeft)) + MUL_R(IM(inputLeft), IM(inputLeft));
+                energyRatio[bk][n] += MUL_R(RE(inputLeft), RE(inputLeft)) + MUL_R(IM(inputLeft), IM(inputLeft));
     #endif
             }
         }
@@ -10700,9 +10703,9 @@ void NeaacDecoder::ps_decorrelate(ps_info* ps, qmf_t X_left[38][64], qmf_t X_rig
         for (bk = 0; bk < 34; bk++)
         {
         #ifdef FIXED_POINT
-            printf("%d %d: %d\n", n, bk, P[n][bk] /*/(float)REAL_PRECISION*/);
+            printf("%d %d: %d\n", n, bk, energyRatio[bk][n] /*/(float)REAL_PRECISION*/);
         #else
-            printf("%d %d: %f\n", n, bk, P[n][bk]/1024.0);
+            printf("%d %d: %f\n", n, bk, energyRatio[bk][n]/1024.0);
         #endif
         }
     }
@@ -10712,20 +10715,20 @@ void NeaacDecoder::ps_decorrelate(ps_info* ps, qmf_t X_left[38][64], qmf_t X_rig
         for (n = ps->border_position[0]; n < ps->border_position[ps->num_env]; n++) {
             const real_t gamma = COEF_CONST(1.5);
             ps->P_PeakDecayNrg[bk] = MUL_F(ps->P_PeakDecayNrg[bk], ps->alpha_decay);
-            if (ps->P_PeakDecayNrg[bk] < P[n][bk]) ps->P_PeakDecayNrg[bk] = P[n][bk];
+            if (ps->P_PeakDecayNrg[bk] < energyRatio[bk][n]) ps->P_PeakDecayNrg[bk] = energyRatio[bk][n];
             /* apply smoothing filter to peak decay energy */
             P_SmoothPeakDecayDiffNrg = ps->P_SmoothPeakDecayDiffNrg_prev[bk];
-            P_SmoothPeakDecayDiffNrg += MUL_F((ps->P_PeakDecayNrg[bk] - P[n][bk] - ps->P_SmoothPeakDecayDiffNrg_prev[bk]), ps->alpha_smooth);
+            P_SmoothPeakDecayDiffNrg += MUL_F((ps->P_PeakDecayNrg[bk] - energyRatio[bk][n] - ps->P_SmoothPeakDecayDiffNrg_prev[bk]), ps->alpha_smooth);
             ps->P_SmoothPeakDecayDiffNrg_prev[bk] = P_SmoothPeakDecayDiffNrg;
             /* apply smoothing filter to energy */
             nrg = ps->P_prev[bk];
-            nrg += MUL_F((P[n][bk] - ps->P_prev[bk]), ps->alpha_smooth);
+            nrg += MUL_F((energyRatio[bk][n] - ps->P_prev[bk]), ps->alpha_smooth);
             ps->P_prev[bk] = nrg;
             /* calculate transient ratio */
             if (MUL_C(P_SmoothPeakDecayDiffNrg, gamma) <= nrg) {
-                G_TransientRatio[n][bk] = REAL_CONST(1.0);
+                energyRatio[bk][n] = REAL_CONST(1.0);
             } else {
-                G_TransientRatio[n][bk] = DIV_R(nrg, (MUL_C(P_SmoothPeakDecayDiffNrg, gamma)));
+                energyRatio[bk][n] = DIV_R(nrg, (MUL_C(P_SmoothPeakDecayDiffNrg, gamma)));
             }
         }
     }
@@ -10735,9 +10738,9 @@ void NeaacDecoder::ps_decorrelate(ps_info* ps, qmf_t X_left[38][64], qmf_t X_rig
         for (bk = 0; bk < 34; bk++)
         {
         #ifdef FIXED_POINT
-            printf("%d %d: %f\n", n, bk, G_TransientRatio[n][bk]/(float)REAL_PRECISION);
+            printf("%d %d: %f\n", n, bk, energyRatio[bk][n]/(float)REAL_PRECISION);
         #else
-            printf("%d %d: %f\n", n, bk, G_TransientRatio[n][bk]);
+            printf("%d %d: %f\n", n, bk, energyRatio[bk][n]);
         #endif
         }
     }
@@ -10861,8 +10864,8 @@ void NeaacDecoder::ps_decorrelate(ps_info* ps, qmf_t X_left[38][64], qmf_t X_rig
                 /* select b(k) for reading the transient ratio */
                 bk = (~NEGATE_IPD_MASK) & ps->map_group2bk[gr];
                 /* duck if a past transient is found */
-                RE(R0) = MUL_R(G_TransientRatio[n][bk], RE(R0));
-                IM(R0) = MUL_R(G_TransientRatio[n][bk], IM(R0));
+                RE(R0) = MUL_R(energyRatio[bk][n], RE(R0));
+                IM(R0) = MUL_R(energyRatio[bk][n], IM(R0));
                 if (gr < ps->num_hybrid_groups) {
                     /* hybrid */
                     QMF_RE(X_hybrid_right[n][sb]) = RE(R0);
@@ -10888,8 +10891,6 @@ void NeaacDecoder::ps_decorrelate(ps_info* ps, qmf_t X_left[38][64], qmf_t X_rig
     /* update delay indices */
     ps->saved_delay = temp_delay;
     for (m = 0; m < NO_ALLPASS_LINKS; m++) ps->delay_buf_index_ser[m] = temp_delay_ser[m];
-    if (P) free(P);
-    if (G_TransientRatio) free(G_TransientRatio);
 }
 #endif //  PS_DEC
 // ===================================================================
@@ -11335,10 +11336,8 @@ ps_info* NeaacDecoder::ps_init(uint8_t sr_index, uint8_t numTimeSlotsRate) {
 #ifdef PS_DEC
 /* main Parametric Stereo decoding function */
 uint8_t NeaacDecoder::ps_decode(ps_info* ps, qmf_t X_left[38][64], qmf_t X_right[38][64]) {
-    // qmf_t X_hybrid_left[32][32] = {{{0}}};
-    // qmf_t X_hybrid_right[32][32] = {{{0}}};
-    qmf_t(*X_hybrid_left)[32] = (qmf_t(*)[32])faad_calloc(32, 32 * sizeof(qmf_t));
-    qmf_t(*X_hybrid_right)[32] = (qmf_t(*)[32])faad_calloc(32, 32 * sizeof(qmf_t));
+    auto& X_hybrid_left = m_psWorkspace->hybridLeft;
+    auto& X_hybrid_right = m_psWorkspace->hybridRight;
     /* delta decoding of the bitstream data */
     ps_data_decode(ps);
     /* set up some parameters depending on filterbank type */
@@ -11350,6 +11349,9 @@ uint8_t NeaacDecoder::ps_decode(ps_info* ps, qmf_t X_left[38][64], qmf_t X_right
         ps->nr_par_bands = 34;
         ps->decay_cutoff = 5;
     } else {
+        // Im 20-Band-Modus fehlen die Bänder 4 und 5 in der Gruppenliste. Die Synthese summiert sie trotzdem.
+        for (uint8_t slot = 0; slot < ps->numTimeSlotsRate; ++slot)
+            memset(&X_hybrid_right[slot][4], 0, 2 * sizeof(qmf_t));
         ps->group_border = (uint8_t*)group_border20;
         ps->map_group2bk = (uint16_t*)map_group2bk20;
         ps->num_groups = 10 + 12;
@@ -11366,8 +11368,6 @@ uint8_t NeaacDecoder::ps_decode(ps_info* ps, qmf_t X_left[38][64], qmf_t X_right
     /* hybrid synthesis, to rebuild the SBR QMF matrices */
     hybrid_synthesis((hyb_info*)ps->hyb, X_left, X_hybrid_left, ps->use34hybrid_bands, ps->numTimeSlotsRate);
     hybrid_synthesis((hyb_info*)ps->hyb, X_right, X_hybrid_right, ps->use34hybrid_bands, ps->numTimeSlotsRate);
-    faad_free((void**)&X_hybrid_left);
-    faad_free((void**)&X_hybrid_right);
     return 0;
 }
 #endif //  PS_DEC
@@ -11768,9 +11768,9 @@ uint8_t NeaacDecoder::sbr_save_prev_data(sbr_info* sbr, uint8_t ch) {
 // ===================================================================
 #ifdef SBR_DEC
 void NeaacDecoder::sbr_save_matrix(sbr_info* sbr, uint8_t ch) {
-    uint8_t i;
-    for (i = 0; i < sbr->tHFGen; i++) { memmove(sbr->Xsbr[ch][i], sbr->Xsbr[ch][i + sbr->numTimeSlotsRate], 64 * sizeof(qmf_t)); }
-    for (i = sbr->tHFGen; i < MAX_NTSRHFG; i++) { memset(sbr->Xsbr[ch][i], 0, 64 * sizeof(qmf_t)); }
+    auto& rows = sbr->Xsbr[ch];
+    memmove(rows, rows + sbr->numTimeSlotsRate, sbr->tHFGen * sizeof(rows[0]));
+    memset(rows + sbr->tHFGen, 0, (MAX_NTSRHFG - sbr->tHFGen) * sizeof(rows[0]));
 }
 #endif // #ifdef SBR_DEC
 // ===================================================================
@@ -11849,18 +11849,9 @@ uint8_t NeaacDecoder::sbr_process_channel(sbr_info* sbr, real_t* channel_buf, qm
                 bsco_band = sbr->bsco;
             }
     #ifndef SBR_LOW_POWER
-            for (k = 0; k < kx_band + bsco_band; k++) {
-                QMF_RE(X[l][k]) = QMF_RE(sbr->Xsbr[ch][l + sbr->tHFAdj][k]);
-                QMF_IM(X[l][k]) = QMF_IM(sbr->Xsbr[ch][l + sbr->tHFAdj][k]);
-            }
-            for (k = kx_band + bsco_band; k < kx_band + M_band; k++) {
-                QMF_RE(X[l][k]) = QMF_RE(sbr->Xsbr[ch][l + sbr->tHFAdj][k]);
-                QMF_IM(X[l][k]) = QMF_IM(sbr->Xsbr[ch][l + sbr->tHFAdj][k]);
-            }
-            for (k = max(kx_band + bsco_band, kx_band + M_band); k < 64; k++) {
-                QMF_RE(X[l][k]) = 0;
-                QMF_IM(X[l][k]) = 0;
-            }
+            const int bands = min(64, kx_band + max(bsco_band, M_band));
+            memcpy(X[l], sbr->Xsbr[ch][l + sbr->tHFAdj], bands * sizeof(qmf_t));
+            memset(X[l] + bands, 0, (64 - bands) * sizeof(qmf_t));
     #else
             for (k = 0; k < kx_band + bsco_band; k++) { QMF_RE(X[l][k]) = QMF_RE(sbr->Xsbr[ch][l + sbr->tHFAdj][k]); }
             for (k = kx_band + bsco_band; k < min(kx_band + M_band, 63); k++) { QMF_RE(X[l][k]) = QMF_RE(sbr->Xsbr[ch][l + sbr->tHFAdj][k]); }
@@ -11999,19 +11990,19 @@ uint8_t NeaacDecoder::sbrDecodeSingleFramePS(sbr_info* sbr, real_t* left_channel
     uint8_t l, k;
     uint8_t dont_process = 0;
     uint8_t ret = 0;
-    // qmf_t X_left[38][64] = {{{0}}};
-    // qmf_t X_right[38][64] = {{{0}}}; /* must set this to 0 */
-    qmf_t(*X_left)[64] = (qmf_t(*)[64])faad_calloc(38, 64 * sizeof(qmf_t));
-    qmf_t(*X_right)[64] = (qmf_t(*)[64])faad_calloc(38, 64 * sizeof(qmf_t));
-    if (sbr == NULL) {
-        ret = 20;
-        goto exit;
-    }
-    /* case can occur due to bit errors */
-    if (sbr->id_aac != ID_SCE && sbr->id_aac != ID_LFE) {
-        ret = 21;
-        goto exit;
-    }
+    if (!sbr)
+        return 20;
+    if (sbr->id_aac != ID_SCE && sbr->id_aac != ID_LFE)
+        return 21;
+    if (!m_psWorkspace && !m_psWorkspace.calloc(1, "AAC PS"))
+        return 19;
+    auto& work = *m_psWorkspace.get();
+    auto& X_left = work.left;
+    auto& X_right = work.right;
+#ifdef DRM_PS
+    memset(X_left, 0, sizeof(X_left));
+    memset(X_right, 0, sizeof(X_right));
+#endif
     if (sbr->ret || (sbr->header_count == 0)) {
         /* don't process just upsample */
         dont_process = 1;
@@ -12064,8 +12055,6 @@ uint8_t NeaacDecoder::sbrDecodeSingleFramePS(sbr_info* sbr, real_t* left_channel
     sbr->frame++;
     ret = 0;
 exit:
-    faad_free((void**)&X_left);
-    faad_free((void**)&X_right);
     return ret;
 }
     #endif // (defined(PS_DEC) || defined(DRM_PS))
@@ -14323,32 +14312,33 @@ uint8_t NeaacDecoder::estimate_current_envelope(sbr_info* sbr, sbr_hfadj_info* a
             for (p = 0; p < sbr->n[sbr->f[ch][l]]; p++) {
                 k_l = sbr->f_table_res[sbr->f[ch][l]][p];
                 k_h = sbr->f_table_res[sbr->f[ch][l]][p + 1];
-                for (k = k_l; k < k_h; k++) {
-                    uint8_t i, l_i, u_i;
-                    nrg = 0;
-                    l_i = sbr->t_E[ch][l];
-                    u_i = sbr->t_E[ch][l + 1];
-                    div = (real_t)((u_i - l_i) * (k_h - k_l));
-                    if (div == 0) div = 1;
-                    for (i = l_i + sbr->tHFAdj; i < u_i + sbr->tHFAdj; i++) {
-                        for (j = k_l; j < k_h; j++) {
+                uint8_t i, l_i, u_i;
+                nrg = 0;
+                l_i = sbr->t_E[ch][l];
+                u_i = sbr->t_E[ch][l + 1];
+                div = (real_t)((u_i - l_i) * (k_h - k_l));
+                if (div == 0) div = 1;
+                for (i = l_i + sbr->tHFAdj; i < u_i + sbr->tHFAdj; i++) {
+                    for (j = k_l; j < k_h; j++) {
     #ifdef FIXED_POINT
         #ifdef SBR_LOW_POWER
-                            nrg += ((QMF_RE(Xsbr[i][j]) + (1 << (REAL_BITS - 1))) >> REAL_BITS) * ((QMF_RE(Xsbr[i][j]) + (1 << (REAL_BITS - 1))) >> REAL_BITS);
+                        nrg += ((QMF_RE(Xsbr[i][j]) + (1 << (REAL_BITS - 1))) >> REAL_BITS) * ((QMF_RE(Xsbr[i][j]) + (1 << (REAL_BITS - 1))) >> REAL_BITS);
         #else
-                            nrg += ((QMF_RE(Xsbr[i][j]) + (1 << (REAL_BITS - 1))) >> REAL_BITS) * ((QMF_RE(Xsbr[i][j]) + (1 << (REAL_BITS - 1))) >> REAL_BITS) +
-                                   ((QMF_IM(Xsbr[i][j]) + (1 << (REAL_BITS - 1))) >> REAL_BITS) * ((QMF_IM(Xsbr[i][j]) + (1 << (REAL_BITS - 1))) >> REAL_BITS);
+                        nrg += ((QMF_RE(Xsbr[i][j]) + (1 << (REAL_BITS - 1))) >> REAL_BITS) * ((QMF_RE(Xsbr[i][j]) + (1 << (REAL_BITS - 1))) >> REAL_BITS) +
+                               ((QMF_IM(Xsbr[i][j]) + (1 << (REAL_BITS - 1))) >> REAL_BITS) * ((QMF_IM(Xsbr[i][j]) + (1 << (REAL_BITS - 1))) >> REAL_BITS);
         #endif
     #else
-                            nrg += MUL_R(QMF_RE(Xsbr[i][j]), QMF_RE(Xsbr[i][j]))
+                        nrg += MUL_R(QMF_RE(Xsbr[i][j]), QMF_RE(Xsbr[i][j]))
         #ifndef SBR_LOW_POWER
-                                   + MUL_R(QMF_IM(Xsbr[i][j]), QMF_IM(Xsbr[i][j]))
+                               + MUL_R(QMF_IM(Xsbr[i][j]), QMF_IM(Xsbr[i][j]))
         #endif
-                                ;
+                            ;
     #endif
-                        }
                     }
-                    sbr->E_curr[ch][k - sbr->kx][l] = nrg / div;
+                }
+                const real_t bandEnergy = nrg / div;
+                for (k = k_l; k < k_h; k++) {
+                    sbr->E_curr[ch][k - sbr->kx][l] = bandEnergy;
     #ifdef SBR_LOW_POWER
         #ifdef FIXED_POINT
                     sbr->E_curr[ch][k - sbr->kx][l] <<= 1;

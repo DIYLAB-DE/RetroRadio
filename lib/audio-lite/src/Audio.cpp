@@ -57,6 +57,9 @@ constexpr size_t FRAME_SIZE_VORBIS = UINT16_MAX; ///< OGG-Seiten sind meist 4080
 constexpr size_t OUT_BUFF_SIZE = 4608 * 2;
 constexpr size_t RESAMPLES_BUFF_SIZE = OUT_BUFF_SIZE * 8; ///< kleinste Abtastrate 6 kHz auf größte 48 kHz
 
+constexpr size_t PCM_FRAME_BYTES = 2 * sizeof(int32_t);      ///< Zwei I2S-Slots je Stereo-Frame
+constexpr size_t AAC_PCM_CAPACITY = RESAMPLES_BUFF_SIZE / 2; ///< Stereo-Frames im ungenutzten Resampler-Puffer
+
 constexpr size_t AUDIO_STACK_SIZE = 4000;
 
 // statische Allokationen für den Audio-Task
@@ -99,6 +102,10 @@ Audio::~Audio() {
  * @brief Gibt den aktiven Decoder frei
  */
 void Audio::destroyDecoder() {
+    m_aacPcmTarget = 0;
+    m_aacPcmFrames = 0;
+    m_aacPcmRead = 0;
+    m_aacPcmReady = false;
     if (m_decoder && m_decoder->isValid()) {
         info(*this, evt_info, "{}Decoder has been destroyed", m_decoder->whoIsIt());
         m_decoder->reset();
@@ -3215,6 +3222,9 @@ bool Audio::pauseResume() {
         m_fRunning = !m_fRunning;
         retVal = true;
         if (!m_fRunning) {
+            m_aacPcmFrames = 0;
+            m_aacPcmRead = 0;
+            m_aacPcmReady = false;
             m_outBuff.clear();
             memset(m_resamplesBuff.get(), 0, RESAMPLES_BUFF_SIZE * sizeof(int16_t)); // Sample-Puffer leeren
             m_validSamples = 0;
@@ -3362,11 +3372,6 @@ void IRAM_ATTR Audio::playChunk() {
         return; // nichts zu tun
 
     bool continueI2S = true;
-    m_plCh.i2s_bytesConsumed = 0;
-    m_plCh.err = ESP_OK;
-
-    constexpr int BYTES_PER_SAMPLE = sizeof(int32_t);
-    constexpr int BYTES_PER_STEREOFRAME = 2 * BYTES_PER_SAMPLE;
 
     if (m_plCh.count > 0)
         goto i2swrite; // beim letzten Durchlauf konnten nicht alle Samples an I2S übergeben werden
@@ -3382,16 +3387,17 @@ void IRAM_ATTR Audio::playChunk() {
     }
     {
         const bool applyGain = settings.VOLUME_CONTROL && (m_audioItems.limiter[LEFTCHANNEL] != 1.0f || m_audioItems.limiter[RIGHTCHANNEL] != 1.0f);
+        int32_t* samples = m_outBuff.get();
         for (int i = 0; i < m_validSamples; i++) {
 #if AUDIO_FEATURE_VU || AUDIO_FEATURE_SPECTRUM
             if (settings.VU_LEVEL || settings.SPECTRUM)
-                calculateVUlevel(&m_outBuff[i * 2]);
+                calculateVUlevel(samples + 2 * i);
 #endif
             if (applyGain)
-                applyVolume(&m_outBuff[i * 2]);
-            if (settings.IIR_FILTER)
-                iirFilter(&m_outBuff[i * 2]);
+                applyVolume(samples + 2 * i);
         }
+        if (settings.IIR_FILTER)
+            iirFilter(samples, m_validSamples);
     }
 #if AUDIO_FEATURE_SPECTRUM
     if (settings.SPECTRUM)
@@ -3404,27 +3410,29 @@ void IRAM_ATTR Audio::playChunk() {
     if (m_outputSr && m_outputSr != m_i2sItems.sampleRate)
         m_validSamples = resampleI2Soutput(m_resampler, m_outBuff.get(), m_validSamples, m_resamplesBuff.get()); // neue Sample-Anzahl nach dem Resampling
 
-i2swrite:
-    if (m_outputSr && m_outputSr != m_i2sItems.sampleRate) { // mit Resampler
-        m_plCh.err = i2s_channel_write(m_i2sTxHandle, m_resamplesBuff.get() + m_plCh.count, m_validSamples * BYTES_PER_STEREOFRAME, &m_plCh.i2s_bytesConsumed, 5);
-    } else {                                                                                                                                                   // ohne Resampler
-        m_plCh.err = i2s_channel_write(m_i2sTxHandle, m_outBuff.get() + m_plCh.count, m_validSamples * BYTES_PER_STEREOFRAME, &m_plCh.i2s_bytesConsumed, 5); //
+    if (m_aacPcmTarget)
+    {
+        const size_t write = (m_aacPcmRead + m_aacPcmFrames) % AAC_PCM_CAPACITY;
+        const size_t frames = static_cast<size_t>(m_validSamples);
+        const size_t first = std::min(frames, AAC_PCM_CAPACITY - write);
+        memcpy(m_resamplesBuff.get() + 2 * write, m_outBuff.get(), first * PCM_FRAME_BYTES);
+        if (first < frames)
+            memcpy(m_resamplesBuff.get(), m_outBuff.get() + 2 * first, (frames - first) * PCM_FRAME_BYTES);
+        m_aacPcmFrames += frames;
+        m_validSamples = 0;
+        if (!m_aacPcmReady && m_aacPcmFrames >= m_aacPcmTarget)
+        {
+            constexpr size_t WARMUP_SECONDS = 10; ///< Dauer der erhöhten Reserve nach dem Senderstart
+            m_aacWarmupFrames = WARMUP_SECONDS * m_i2sItems.sampleRate;
+            m_aacPcmReady = true;
+        }
+        return;
     }
 
-
-
-    if (m_plCh.err == ESP_ERR_INVALID_ARG)
-        AUDIO_LOG_ERROR("NULL pointer or this handle is not tx handle");
-    if (m_plCh.err == ESP_ERR_INVALID_STATE)
-        AUDIO_LOG_ERROR("I2S is not ready to write");
-
-#if AUDIO_LITE_DIAG
-    m_diagI2sBytes += m_plCh.i2s_bytesConsumed;
-    if (m_plCh.err == ESP_ERR_TIMEOUT)
-        m_diagI2sTimeout++;
-#endif
-    m_validSamples -= m_plCh.i2s_bytesConsumed / BYTES_PER_STEREOFRAME;
-
+i2swrite:
+    const int32_t *samples = (m_outputSr && m_outputSr != m_i2sItems.sampleRate) ? m_resamplesBuff.get() : m_outBuff.get();
+    const size_t written = writePcm(samples + m_plCh.count, m_validSamples, 5);
+    m_validSamples -= written;
     if (m_validSamples < 0) {
         AUDIO_LOG_ERROR("valid samples counter is negative: {}", m_validSamples);
         m_validSamples = 0;
@@ -3433,13 +3441,48 @@ i2swrite:
     if (m_validSamples)
         AUDIO_LOG_DEBUG("m_validSamples {}", m_validSamples);
 
-    m_plCh.count += m_plCh.i2s_bytesConsumed / BYTES_PER_SAMPLE;
+    m_plCh.count += 2 * written;
 
-    if (m_validSamples == 0) {
+    if (m_validSamples == 0)
         m_plCh.count = 0;
-    }
 
     return;
+}
+
+/**
+ * @brief Übergibt Stereo-Frames an den I2S-Treiber und meldet die tatsächlich geschriebene Anzahl
+ */
+size_t Audio::writePcm(const int32_t *samples, size_t frames, uint32_t timeoutMs)
+{
+    size_t &bytes = m_plCh.i2s_bytesConsumed;
+    bytes = 0;
+    m_plCh.err = i2s_channel_write(m_i2sTxHandle, samples, frames * PCM_FRAME_BYTES, &bytes, timeoutMs);
+    const esp_err_t error = m_plCh.err;
+    if (error == ESP_ERR_INVALID_ARG || error == ESP_ERR_INVALID_STATE)
+        AUDIO_LOG_ERROR("I2S-Schreibfehler {}", error);
+#if AUDIO_LITE_DIAG
+    m_diagI2sBytes += m_plCh.i2s_bytesConsumed;
+    if (m_plCh.err == ESP_ERR_TIMEOUT)
+        m_diagI2sTimeout++;
+#endif
+    return bytes / PCM_FRAME_BYTES;
+}
+
+/**
+ * @brief Füllt freie DMA-Deskriptoren aus dem PCM-Vorrat, auch über das Ringende hinweg
+ */
+void Audio::drainAacPcm()
+{
+    while (m_aacPcmFrames)
+    {
+        const size_t frames = std::min(m_aacPcmFrames, AAC_PCM_CAPACITY - m_aacPcmRead);
+        const size_t written = writePcm(m_resamplesBuff.get() + 2 * m_aacPcmRead, frames, 0);
+        m_aacPcmRead = (m_aacPcmRead + written) % AAC_PCM_CAPACITY;
+        m_aacPcmFrames -= written;
+        m_aacWarmupFrames -= std::min(m_aacWarmupFrames, written);
+        if (written < frames)
+            break;
+    }
 }
 
 /**
@@ -4826,6 +4869,13 @@ void Audio::playAudioData() {
     xSemaphoreTake(m_mutexAudioTaskIsDecoding, 1 * configTICK_RATE_HZ);
     {
         m_pad.bytesDecoded = 0;
+        if (m_aacPcmReady)
+        {
+            drainAacPcm();
+            const size_t target = m_aacWarmupFrames ? m_aacPcmTarget : m_aacPcmTarget / 2;
+            if (m_aacPcmFrames >= target)
+                goto exit;
+        }
         if (isFile) {
             if (!m_audioDataSize)
                 goto exit; // bei Dateigröße 0 gibt es nichts zu dekodieren
@@ -5783,6 +5833,12 @@ void Audio::setDecoderItems() {
     setChannels(m_decoder->getChannels());
     setSampleRate(m_decoder->getSampleRate());
     setBitsPerSample(m_decoder->getBitsPerSample());
+    if (m_codec == CODEC_AAC && m_decoder->val2() && m_streamType == ST_WEBSTREAM && !m_fTts && m_playlistFormat != FORMAT_M3U8 && m_outputSr == SR_ORIGIN)
+    {
+        constexpr size_t DMA_RESERVES = 4; ///< Vier DMA-Umläufe beim Anlauf, anschließend zwei
+        const size_t dmaFrames = static_cast<size_t>(m_i2sChanCfg.dma_desc_num) * m_i2sChanCfg.dma_frame_num;
+        m_aacPcmTarget = std::min(DMA_RESERVES * dmaFrames, AAC_PCM_CAPACITY - OUT_BUFF_SIZE / 2);
+    }
     if (m_decoder->arg1())
         info(*this, evt_info, "{}", m_decoder->arg1());
     if (m_decoder->getAudioDataStart() > 0) { // nur FLAC im OGG-Container, natives FLAC setzt audioDataStart im Header-Parser
@@ -7453,31 +7509,32 @@ void Audio::updateEqHeadroom() {
 }
 
 /**
- * @brief Wendet die drei Klangregelungs-Filter auf ein Sample-Paar an
+ * @brief Verarbeitet verschachtelte Stereo-Frames mit den aktiven Klangfiltern.
  */
-void Audio::iirFilter(int32_t* sample) {
-
-    const auto saturateToInt32 = [](float value) -> int32_t {
-        if (value >= static_cast<float>(INT32_MAX))
-            return INT32_MAX;
-        if (value <= static_cast<float>(INT32_MIN))
-            return INT32_MIN;
-        return static_cast<int32_t>(value);
-    };
-
-    int32_t* s32 = sample;
-    float s[2];
-    s[LEFTCHANNEL] = (float)(s32[LEFTCHANNEL] * m_audioItems.pre_gain);
-    s[RIGHTCHANNEL] = (float)(s32[RIGHTCHANNEL] * m_audioItems.pre_gain);
-    if (m_audioItems.gain_ls_db != 0.0f)
-        dsps_biquad_sf32(s, s, 1, m_audioItems.coeffs[LOWSHELF], m_audioItems.state_biquad[LOWSHELF]);
-    if (m_audioItems.gain_peq_db != 0.0f)
-        dsps_biquad_sf32(s, s, 1, m_audioItems.coeffs[PEAKINGEQ], m_audioItems.state_biquad[PEAKINGEQ]);
-    if (m_audioItems.gain_hs_db != 0.0f)
-        dsps_biquad_sf32(s, s, 1, m_audioItems.coeffs[HIFGSHELF], m_audioItems.state_biquad[HIFGSHELF]);
-    s32[LEFTCHANNEL] = saturateToInt32(s[LEFTCHANNEL]);
-    s32[RIGHTCHANNEL] = saturateToInt32(s[RIGHTCHANNEL]);
-    return;
+void Audio::iirFilter(int32_t* samples, int frames) {
+    constexpr int BLOCK_FRAMES = 32;
+    alignas(16) float block[2 * BLOCK_FRAMES];
+    while (frames > 0) {
+        const int count = std::min(frames, BLOCK_FRAMES);
+        for (int i = 0; i < 2 * count; ++i)
+            block[i] = samples[i] * m_audioItems.pre_gain;
+        if (m_audioItems.gain_ls_db != 0.0f)
+            dsps_biquad_sf32(block, block, count, m_audioItems.coeffs[LOWSHELF], m_audioItems.state_biquad[LOWSHELF]);
+        if (m_audioItems.gain_peq_db != 0.0f)
+            dsps_biquad_sf32(block, block, count, m_audioItems.coeffs[PEAKINGEQ], m_audioItems.state_biquad[PEAKINGEQ]);
+        if (m_audioItems.gain_hs_db != 0.0f)
+            dsps_biquad_sf32(block, block, count, m_audioItems.coeffs[HIFGSHELF], m_audioItems.state_biquad[HIFGSHELF]);
+        for (int i = 0; i < 2 * count; ++i) {
+            if (block[i] >= static_cast<float>(INT32_MAX))
+                samples[i] = INT32_MAX;
+            else if (block[i] <= static_cast<float>(INT32_MIN))
+                samples[i] = INT32_MIN;
+            else
+                samples[i] = static_cast<int32_t>(block[i]);
+        }
+        samples += 2 * count;
+        frames -= count;
+    }
 }
 
 //    AAC - T R A N S P O R T S T R E A M

@@ -94,11 +94,13 @@ typedef struct {
 typedef struct {
     uint16_t   N;
     cfft_info* cfft;
+    complex_t* scratch; ///< Zweite Hälfte des zugehörigen FFT-Arbeitsbereichs
     complex_t* sincos;
     int64_t    cycles;
     int64_t    fft_cycles;
 } mdct_info;
 typedef struct {
+    real_t transform[2 * 1024]; ///< IMDCT-Ausgabe für die nacheinander bearbeiteten Kanäle
     const real_t* long_window[2];
     const real_t* short_window[2];
     const real_t* ld_window[2];
@@ -534,6 +536,9 @@ typedef struct {
 } sbr_info;
 typedef struct {
     uint8_t               adts_header_present;
+#ifdef PS_DEC
+    bool                  monoAdtsFrame; ///< Der aktuelle ADTS-Header meldet genau einen Kernkanal
+#endif
     uint8_t               adif_header_present;
     uint8_t               latm_header_present;
     uint8_t               sf_index;

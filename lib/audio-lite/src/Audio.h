@@ -423,6 +423,8 @@ public:
 
     // Private Bausteine
     bool i2sConfig();
+    size_t writePcm(const int32_t *samples, size_t frames, uint32_t timeoutMs);
+    void drainAacPcm();
     std::unique_ptr<Decoder> createDecoder(const char* type);
     void destroyDecoder();
     bool fsRange(uint32_t range);
@@ -491,7 +493,7 @@ public:
     void applyStereoWidth(int32_t* buff, uint16_t validSamples);
     void iirCalculateCoefficients();
     void updateEqHeadroom();
-    void iirFilter(int32_t* iir_in);
+    void iirFilter(int32_t* samples, int frames);
     uint32_t streamavail() {
         return m_client ? m_client->available() : 0;
     }
@@ -697,6 +699,11 @@ public:
     std::unique_ptr<Decoder> m_decoder = {};
     ps_ptr<int32_t> m_outBuff;       ///< Ausgangspuffer, links/rechts verschränkt
     ps_ptr<int32_t> m_resamplesBuff; ///< Resampler-Puffer, links/rechts verschränkt
+    size_t m_aacPcmTarget = 0; ///< Zielvorrat an PCM-Frames für AAC-Radio in Quellrate
+    size_t m_aacPcmRead = 0;   ///< Leseposition im als PCM-Ring genutzten Resampler-Puffer
+    size_t m_aacPcmFrames = 0; ///< Zur Ausgabe vorbereitete Stereo-Frames im Ring
+    size_t m_aacWarmupFrames = 0; ///< Noch auszugebende Frames bis zum kleineren Füllziel im laufenden Betrieb
+    bool m_aacPcmReady = false; ///< Startvorrat wurde erreicht
     ps_ptr<char> m_metadataBuff;     ///< ICY-Metadaten, höchstens 16 * 256 + 1 Bytes
     ps_ptr<char> m_httpRespHdrBuff;  ///< HTTP-Antwort-Header
     ps_ptr<char> m_ibuff;            ///< Textpuffer der Ereignis-Formatierung
