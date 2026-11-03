@@ -261,6 +261,7 @@ void Audio::setDefaults() {
     m_m3u8Codec = CODEC_AAC;
 
     m_validSamples = 0;
+    m_wavBlockPrepared = false;
     m_audioCurrentTime = 0;
     m_audioFileDuration = 0;
     m_resumeFilePos = -1;
@@ -3373,7 +3374,7 @@ void IRAM_ATTR Audio::playChunk() {
 
     bool continueI2S = true;
 
-    if (m_plCh.count > 0)
+    if (m_plCh.count > 0 || (m_codec == CODEC_WAV && m_wavBlockPrepared))
         goto i2swrite; // beim letzten Durchlauf konnten nicht alle Samples an I2S übergeben werden
 
     // Die Anzeigen des Anwendungscodes bekommen die Samples, bevor Lautstärke und Klangregelung
@@ -3409,6 +3410,9 @@ void IRAM_ATTR Audio::playChunk() {
         stereo2mono(m_outBuff.get(), m_validSamples);
     if (m_outputSr && m_outputSr != m_i2sItems.sampleRate)
         m_validSamples = resampleI2Soutput(m_resampler, m_outBuff.get(), m_validSamples, m_resamplesBuff.get()); // neue Sample-Anzahl nach dem Resampling
+
+    if (m_codec == CODEC_WAV)
+        m_wavBlockPrepared = true;
 
     if (m_aacPcmTarget)
     {
@@ -4452,11 +4456,18 @@ void Audio::processWebFile() {
         return;
     }
 
-    m_pwf.availableBytes = min(m_client->available(), (int)m_inBuff.writeSpace());
-    m_pwf.bytesAddedToBuffer = audioFileRead(m_inBuff.getWritePtr(), min(m_pwf.availableBytes, (uint32_t)UINT16_MAX));
-    if (m_pwf.bytesAddedToBuffer > 0) {
+    constexpr uint32_t WAV_REFILL_BYTES = 8192; ///< Höchstens nachgefüllte WAV-Bytes pro Aufruf
+    const bool refillWav = m_codec == CODEC_WAV && !m_fSsl;
+    uint32_t remaining = refillWav ? WAV_REFILL_BYTES : UINT16_MAX;
+    do
+    {
+        m_pwf.availableBytes = min(m_client->available(), (int)m_inBuff.writeSpace());
+        m_pwf.bytesAddedToBuffer = audioFileRead(m_inBuff.getWritePtr(), min(m_pwf.availableBytes, remaining));
+        if (m_pwf.bytesAddedToBuffer <= 0)
+            break;
         m_inBuff.bytesWritten(m_pwf.bytesAddedToBuffer);
-    }
+        remaining -= m_pwf.bytesAddedToBuffer;
+    } while (refillWav && remaining);
     if (m_audioDataSize && m_audioFilePosition >= m_audioDataSize) {
         if (!m_fAllDataReceived)
             m_fAllDataReceived = true;
@@ -6131,11 +6142,26 @@ int Audio::sendBytes(uint8_t* data, size_t len) {
     // Der erste Block danach ginge dann ohne Lautstaerkeregelung in voller Aussteuerung an
     // den Verstaerker, hoerbar als kurzes lautes Aufschrecken.
     m_plCh.count = 0;
+    m_wavBlockPrepared = false;
 
     if (m_sbyt.f_setDecodeParamsOnce && m_validSamples) {
         m_sbyt.f_setDecodeParamsOnce = false;
         setDecoderItems();
     }
+    // WAV und FLAC erhalten die PCM-Pegelreserve vor der Pegelerfassung einmal je neuem Ausgabeblock.
+    if (m_codec == CODEC_WAV || m_codec == CODEC_FLAC)
+    {
+        constexpr int64_t PCM_HEADROOM_NUMERATOR = 181; ///< Zähler der Pegelreserve von rund 3,01 dB
+        constexpr int64_t PCM_HEADROOM_DENOMINATOR = 256; ///< Nenner der Pegelreserve
+        int32_t *samples = m_outBuff.get();
+        for (int i = 0; i < m_validSamples * 2; ++i)
+        {
+            int64_t scaled = static_cast<int64_t>(samples[i]) * PCM_HEADROOM_NUMERATOR;
+            scaled += scaled >= 0 ? PCM_HEADROOM_DENOMINATOR / 2 : -(PCM_HEADROOM_DENOMINATOR / 2);
+            samples[i] = static_cast<int32_t>(scaled / PCM_HEADROOM_DENOMINATOR);
+        }
+    }
+
     samples_out = m_validSamples;
 
 exit:

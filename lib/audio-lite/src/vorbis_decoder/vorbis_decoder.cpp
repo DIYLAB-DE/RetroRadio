@@ -3274,6 +3274,11 @@ void VorbisDecoder::XNPROD31(int32_t a, int32_t b, int32_t t, int32_t v, int32_t
 }
 // ===================================================================
 int32_t VorbisDecoder::CLIP_TO_15(int32_t x) {
+    constexpr int64_t PCM_HEADROOM_NUMERATOR = 181; ///< Zähler der Pegelreserve von rund 3,01 dB
+    constexpr int64_t PCM_HEADROOM_DENOMINATOR = 256; ///< Nenner der Pegelreserve
+    int64_t scaled = static_cast<int64_t>(x) * PCM_HEADROOM_NUMERATOR;
+    scaled += scaled >= 0 ? PCM_HEADROOM_DENOMINATOR / 2 : -(PCM_HEADROOM_DENOMINATOR / 2);
+    x = static_cast<int32_t>(scaled / PCM_HEADROOM_DENOMINATOR);
     int32_t ret = x;
     ret -= ((x <= 32767) - 1) & (x - 32767);
     ret -= ((x >= -32768) - 1) & (x + 32768);

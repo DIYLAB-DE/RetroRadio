@@ -2833,6 +2833,8 @@ void AAC_HOT_ATTR NeaacDecoder::to_PCM_16bit(NeAACDecStruct* hDecoder, real_t** 
     uint8_t  ch, ch1;
     uint16_t i;
     const auto pcm16 = [](real_t sample) __attribute__((always_inline)) -> int16_t {
+        constexpr real_t PCM_HEADROOM_GAIN = 181.0f / 256.0f; ///< Pegelreserve von rund 3,01 dB vor der PCM16-Begrenzung
+        sample *= PCM_HEADROOM_GAIN;
         CLIP(sample, 32767.0f, -32768.0f);
 #if defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(USE_DOUBLE_PRECISION)
         // Im verschobenen PCM16-Bereich beträgt der Abstand zweier float-Werte genau eins. Die FPU rundet bei der Addition auf den nächsten ganzzahligen Wert.

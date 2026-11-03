@@ -741,6 +741,7 @@ public:
     uint8_t m_m4aChConfig = 0;             ///< gesetzt in readM4aHeader()
     uint16_t m_m4aSampleRate = 0;          ///< gesetzt in readM4aHeader()
     int16_t m_validSamples = 0;             ///< noch auszugebende Stereo-Sample-Paare
+    bool m_wavBlockPrepared = false;       ///< WAV-Block ist bereits pegelgeregelt, auch ohne erfolgreich geschriebenes Frame
     int16_t m_curSample = 0;                ///< aktuelles Sample innerhalb des Ausgangspuffers
     uint16_t m_dataMode = 0;                ///< Zustand der Verarbeitungs-Zustandsmaschine
     uint16_t m_streamTitleHash = 0;         ///< Streuwert des letzten Titels, unterdrückt Wiederholungen
