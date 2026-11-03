@@ -39,6 +39,12 @@
 #include <stdint-gcc.h>
 #include <stdlib.h>
 
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+#define AAC_HOT_ATTR IRAM_ATTR
+#else
+#define AAC_HOT_ATTR
+#endif
+
 // ===================================================================
 uint8_t NeaacDecoder::get_sr_index(const uint32_t samplerate) {
     if (92017 <= samplerate) return 0;
@@ -1582,7 +1588,7 @@ uint32_t NeaacDecoder::getdword_n(void* mem, int n) {
    passf2, passf3, passf4, passf5. Complex FFT passes fwd and bwd.
   ----------------------------------------------------------------------*/
 // ===================================================================
-void NeaacDecoder::passf2pos(const uint16_t ido, const uint16_t l1, const complex_t* cc, complex_t* ch, const complex_t* wa) {
+void AAC_HOT_ATTR NeaacDecoder::passf2pos(const uint16_t ido, const uint16_t l1, const complex_t* cc, complex_t* ch, const complex_t* wa) {
     uint16_t i, k, ah, ac;
     if (ido == 1) {
         for (k = 0; k < l1; k++) {
@@ -1742,7 +1748,7 @@ void NeaacDecoder::passf3(const uint16_t ido, const uint16_t l1, const complex_t
     }
 }
 // ===================================================================
-void NeaacDecoder::passf4pos(const uint16_t ido, const uint16_t l1, const complex_t* cc, complex_t* ch, const complex_t* wa1, const complex_t* wa2, const complex_t* wa3) {
+void AAC_HOT_ATTR NeaacDecoder::passf4pos(const uint16_t ido, const uint16_t l1, const complex_t* cc, complex_t* ch, const complex_t* wa1, const complex_t* wa2, const complex_t* wa3) {
     uint16_t i, k, ac, ah;
     if (ido == 1) {
         for (k = 0; k < l1; k++) {
@@ -2022,7 +2028,7 @@ void NeaacDecoder::passf5(const uint16_t ido, const uint16_t l1, const complex_t
 /*----------------------------------------------------------------------
    cfftf1, cfftf, cfftb, cffti1, cffti. Complex FFTs.
   ----------------------------------------------------------------------*/
-void NeaacDecoder::cfftf1pos(uint16_t n, complex_t* c, complex_t* ch, const uint16_t* ifac, const complex_t* wa, const int8_t isign) {
+void AAC_HOT_ATTR NeaacDecoder::cfftf1pos(uint16_t n, complex_t* c, complex_t* ch, const uint16_t* ifac, const complex_t* wa, const int8_t isign) {
     uint16_t i;
     uint16_t k1, l1, l2;
     uint16_t na, nf, ip, iw, ix2, ix3, ix4, ido, idl1;
@@ -2163,7 +2169,7 @@ void NeaacDecoder::cfftf(uint16_t mdct_len, complex_t* c) {
     cfftf1neg(cfft_select->n, c, work_select, (const uint16_t*)cfft_select->ifac, (const complex_t*)cfft_select->tab, -1);
 }
 // ===================================================================
-void NeaacDecoder::cfftb(uint16_t mdct_len, complex_t* c) {
+void AAC_HOT_ATTR NeaacDecoder::cfftb(uint16_t mdct_len, complex_t* c) {
     cfft_info* cfft_select = nullptr;
     complex_t* work_select = nullptr;
     switch (mdct_len) {
@@ -2823,10 +2829,10 @@ real_t NeaacDecoder::get_sample(real_t** input, uint8_t channel, uint16_t sample
 #endif
 // ===================================================================
 #ifndef FIXED_POINT
-void NeaacDecoder::to_PCM_16bit(NeAACDecStruct* hDecoder, real_t** input, uint8_t channels, uint16_t frame_len, int16_t** sample_buffer) {
+void AAC_HOT_ATTR NeaacDecoder::to_PCM_16bit(NeAACDecStruct* hDecoder, real_t** input, uint8_t channels, uint16_t frame_len, int16_t** sample_buffer) {
     uint8_t  ch, ch1;
     uint16_t i;
-    const auto pcm16 = [](real_t sample) -> int16_t {
+    const auto pcm16 = [](real_t sample) __attribute__((always_inline)) -> int16_t {
         CLIP(sample, 32767.0f, -32768.0f);
 #if defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(USE_DOUBLE_PRECISION)
         // Im verschobenen PCM16-Bereich beträgt der Abstand zweier float-Werte genau eins. Die FPU rundet bei der Addition auf den nächsten ganzzahligen Wert.
@@ -3820,7 +3826,7 @@ void NeaacDecoder::faad_mdct_end(uint16_t mdct_len) {
     }
 }
 // ===================================================================
-void NeaacDecoder::faad_imdct(uint16_t mdct_len, real_t* X_in, real_t* X_out) {
+void AAC_HOT_ATTR NeaacDecoder::faad_imdct(uint16_t mdct_len, real_t* X_in, real_t* X_out) {
     mdct_info* mdct_select = nullptr;
     switch (mdct_len) {
         case 256: mdct_select = m_mdct256.get(); break;
@@ -4045,7 +4051,7 @@ void NeaacDecoder::mdct_init(fb_info* fb, real_t* in_data, real_t* out_data, uin
 }
 #endif
 // ===================================================================
-void NeaacDecoder::ifilter_bank(fb_info* fb, uint8_t window_sequence, uint8_t window_shape, uint8_t window_shape_prev, real_t* freq_in, real_t* time_out, real_t* overlap, uint8_t object_type,
+void AAC_HOT_ATTR NeaacDecoder::ifilter_bank(fb_info* fb, uint8_t window_sequence, uint8_t window_shape, uint8_t window_shape_prev, real_t* freq_in, real_t* time_out, real_t* overlap, uint8_t object_type,
                                 uint16_t frame_len) {
     int16_t i;
     real_t* transf_buf = fb->transform;
@@ -6254,7 +6260,7 @@ void NeaacDecoder::DCT2_32_unscaled(real_t* y, real_t* x) {
 // ===================================================================
 #ifdef SBR_DEC
     #ifndef SBR_LOW_POWER
-void NeaacDecoder::fft_dif(real_t* Real, real_t* Imag) {
+void AAC_HOT_ATTR NeaacDecoder::fft_dif(real_t* Real, real_t* Imag) {
     const uint8_t _n = 32;
     real_t        w_real, w_imag;                                     // For faster access
     real_t        point1_real, point1_imag, point2_real, point2_imag; // For faster access
@@ -10647,7 +10653,7 @@ void NeaacDecoder::ps_data_decode(ps_info* ps) {
 #ifdef PS_DEC
 extern const complex_t Phi_Fract_Qmf[];
 /* decorrelate the mono signal using an allpass filter */
-void NeaacDecoder::ps_decorrelate(ps_info* ps, qmf_t X_left[38][64], qmf_t X_right[38][64], qmf_t X_hybrid_left[32][32], qmf_t X_hybrid_right[32][32]) {
+void AAC_HOT_ATTR NeaacDecoder::ps_decorrelate(ps_info* ps, qmf_t X_left[38][64], qmf_t X_right[38][64], qmf_t X_hybrid_left[32][32], qmf_t X_hybrid_right[32][32]) {
     uint8_t gr, n, m, bk;
     uint8_t temp_delay = 0;
     (void)temp_delay;
@@ -10914,7 +10920,7 @@ real_t NeaacDecoder::magnitude_c(complex_t c) {
 #endif //  PS_DEC
 // ===================================================================
 #ifdef PS_DEC
-void NeaacDecoder::ps_mix_phase(ps_info* ps, qmf_t X_left[38][64], qmf_t X_right[38][64], qmf_t X_hybrid_left[32][32], qmf_t X_hybrid_right[32][32]) {
+void AAC_HOT_ATTR NeaacDecoder::ps_mix_phase(ps_info* ps, qmf_t X_left[38][64], qmf_t X_right[38][64], qmf_t X_hybrid_left[32][32], qmf_t X_hybrid_right[32][32]) {
     uint8_t       n;
     uint8_t       gr;
     uint8_t       bk = 0;
@@ -12063,7 +12069,7 @@ exit:
 #ifdef SBR_DEC
     #ifndef SBR_LOW_POWER
 /* size 64 only! */
-void NeaacDecoder::dct4_kernel(real_t* in_real, real_t* in_imag, real_t* out_real, real_t* out_imag) {
+void AAC_HOT_ATTR NeaacDecoder::dct4_kernel(real_t* in_real, real_t* in_imag, real_t* out_real, real_t* out_imag) {
     // Tables with bit reverse values for 5 bits, bit reverse of i at i-th position
     const uint8_t bit_rev_tab[32] = {0, 16, 8, 24, 4, 20, 12, 28, 2, 18, 10, 26, 6, 22, 14, 30, 1, 17, 9, 25, 5, 21, 13, 29, 3, 19, 11, 27, 7, 23, 15, 31};
     uint32_t      i, i_rev;
@@ -15295,7 +15301,7 @@ void NeaacDecoder::sbr_qmf_synthesis_32(sbr_info* sbr, qmfs_info* qmfs, qmf_t X[
 // ===================================================================
 #ifdef SBR_DEC
     #ifdef SBR_LOW_POWER
-void NeaacDecoder::sbr_qmf_synthesis_64(sbr_info* sbr, qmfs_info* qmfs, qmf_t X[MAX_NTSRHFG][64], real_t* output) {
+void AAC_HOT_ATTR NeaacDecoder::sbr_qmf_synthesis_64(sbr_info* sbr, qmfs_info* qmfs, qmf_t X[MAX_NTSRHFG][64], real_t* output) {
     real_t  x[64];
     real_t  y[64];
     int32_t n, k, out = 0;
@@ -15394,7 +15400,7 @@ void NeaacDecoder::sbr_qmf_synthesis_32(sbr_info* sbr, qmfs_info* qmfs, qmf_t X[
 // ===================================================================
 #ifdef SBR_DEC
     #ifndef SBR_LOW_POWER
-void NeaacDecoder::sbr_qmf_synthesis_64(sbr_info* sbr, qmfs_info* qmfs, qmf_t X[MAX_NTSRHFG][64], real_t* output) {
+void AAC_HOT_ATTR NeaacDecoder::sbr_qmf_synthesis_64(sbr_info* sbr, qmfs_info* qmfs, qmf_t X[MAX_NTSRHFG][64], real_t* output) {
         //    real_t x1[64], x2[64];
         #ifndef SBR_LOW_POWER
     real_t in_real1[32], in_imag1[32], out_real1[32], out_imag1[32];
@@ -15406,12 +15412,14 @@ void NeaacDecoder::sbr_qmf_synthesis_64(sbr_info* sbr, qmfs_info* qmfs, qmf_t X[
         #ifdef PREFER_POINTERS
     // These pointers are used if target platform has autoinc address generators
     real_t *      pring_buffer_2, *pring_buffer_4;
+        #ifdef FIXED_POINT
     real_t *      pring_buffer_5, *pring_buffer_6;
     real_t *      pring_buffer_7, *pring_buffer_8;
     real_t *      pring_buffer_9, *pring_buffer_10;
     const real_t *pqmf_c_1, *pqmf_c_2, *pqmf_c_3, *pqmf_c_4;
     const real_t *pqmf_c_5, *pqmf_c_6, *pqmf_c_7, *pqmf_c_8;
     const real_t *pqmf_c_9, *pqmf_c_10;
+        #endif
         #endif // #ifdef PREFER_POINTERS
         #ifndef FIXED_POINT
     real_t scale = 1.f / 64.f;
@@ -15490,7 +15498,7 @@ void NeaacDecoder::sbr_qmf_synthesis_64(sbr_info* sbr, qmfs_info* qmfs, qmf_t X[
         }
         #endif // #ifdef PREFER_POINTERS
         pring_buffer_1 = qmfs->v + qmfs->v_index;
-        #ifdef PREFER_POINTERS
+        #if defined(PREFER_POINTERS) && defined(FIXED_POINT)
         pring_buffer_2 = pring_buffer_1 + 192;
         pring_buffer_3 = pring_buffer_1 + 256;
         pring_buffer_4 = pring_buffer_1 + (256 + 192);
@@ -15512,6 +15520,23 @@ void NeaacDecoder::sbr_qmf_synthesis_64(sbr_info* sbr, qmfs_info* qmfs, qmf_t X[
         pqmf_c_10 = qmf_c + 576;
         #endif // #ifdef PREFER_POINTERS
         /* calculate 64 output samples and window */
+        #if !defined(FIXED_POINT)
+        // Die DCT-Ausgabe wird nach dem Schreiben des Ringes als Fenster-Arbeitsbereich wiederverwendet.
+        for (int base = 0; base < 64; base += 32)
+        {
+            for (k = 0; k < 32; k++)
+                out_real1[k] = MUL_F(pring_buffer_1[base + k], qmf_c[base + k]) + MUL_F(pring_buffer_1[base + k + 192], qmf_c[base + k + 64]);
+            for (int part = 2; part < 10; part++)
+            {
+                const int historyOffset = (part / 2) * 256 + (part % 2) * 192 + base;
+                const int windowOffset = part * 64 + base;
+                for (k = 0; k < 32; k++)
+                    out_real1[k] += MUL_F(pring_buffer_1[historyOffset + k], qmf_c[windowOffset + k]);
+            }
+            for (k = 0; k < 32; k++)
+                output[out++] = out_real1[k];
+        }
+        #else
         for (k = 0; k < 64; k++) {
         #ifdef PREFER_POINTERS
             output[out++] = MUL_F(*pring_buffer_1++, *pqmf_c_1++) + MUL_F(*pring_buffer_2++, *pqmf_c_2++) + MUL_F(*pring_buffer_3++, *pqmf_c_3++) + MUL_F(*pring_buffer_4++, *pqmf_c_4++) +
@@ -15524,6 +15549,7 @@ void NeaacDecoder::sbr_qmf_synthesis_64(sbr_info* sbr, qmfs_info* qmfs, qmf_t X[
                             MUL_F(pring_buffer_1[k + (1024 + 192)], qmf_c[k + 576]);
         #endif // #ifdef PREFER_POINTERS
         }
+        #endif
         /* update ringbuffer index */
         qmfs->v_index -= 128;
         if (qmfs->v_index < 0) qmfs->v_index = (1280 - 128);
@@ -15555,7 +15581,7 @@ void NeaacDecoder::qmfa_end(qmfa_info* qmfa) {
 #endif /*SBR_DEC*/
 // ===================================================================
 #ifdef SBR_DEC
-void NeaacDecoder::sbr_qmf_analysis_32(sbr_info* sbr, qmfa_info* qmfa, const real_t* input, qmf_t X[MAX_NTSRHFG][64], uint8_t offset, uint8_t kx) {
+void AAC_HOT_ATTR NeaacDecoder::sbr_qmf_analysis_32(sbr_info* sbr, qmfa_info* qmfa, const real_t* input, qmf_t X[MAX_NTSRHFG][64], uint8_t offset, uint8_t kx) {
     real_t u[64];
     #ifndef SBR_LOW_POWER
     real_t in_real[32], in_imag[32], out_real[32], out_imag[32];

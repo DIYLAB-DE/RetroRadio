@@ -24,6 +24,7 @@
 
 namespace
 {
+    constexpr uint32_t BAR_FRAME_MS = 33; ///< Mindestabstand für digitale Balken und Spektren
     constexpr float VU_RAD_TO_DEG = 57.29578f; ///< Umrechnung von Radiant in Grad
 
     // Lage und Länge der Nadel, wie sie das Sprite und sein Drehpunkt vorgeben. Daraus folgt,
@@ -561,6 +562,7 @@ void Visualizer::toggleVisSubMode()
                               ? SpectrumStyle::RAINBOW
                               : SpectrumStyle::CLASSIC;
 
+        m_centeredSpectrumDirty = true;
         APP_STATE.setSpectrumStyle(static_cast<uint8_t>(m_spectrumStyle));
         LOG_INFO_F("Spektrum-Stil gewechselt zu: %d", static_cast<int>(m_spectrumStyle));
         break;
@@ -1151,9 +1153,10 @@ void Visualizer::drawDigitalVU(bool init, float rmsLeft, float rmsRight, float p
     }
 
     // Hauptteil
-    const float dt = (now - m_lastUpdate_digital) * 0.001f;
-    if (dt <= 0)
+    const uint32_t elapsed = now - m_lastUpdate_digital;
+    if (elapsed < BAR_FRAME_MS)
         return;
+    const float dt = elapsed * 0.001f;
 
     m_lastUpdate_digital = now;
 
@@ -1328,7 +1331,6 @@ void Visualizer::drawSpectrum(bool init)
 
     constexpr int BAND_COUNT = 63; ///< Anzahl der klassischen Frequenzbänder
     constexpr int FFT_BIN_COUNT = FFT_N / 2 + 1; ///< FFT-Werte einschließlich der Nyquist-Frequenz
-    constexpr uint32_t CENTERED_FRAME_MS = 17; ///< Mindestabstand der mittigen Spektrumbilder
     constexpr int CENTERED_GRAPH_H = VIS_AREA_H - SPECTRUM_LABEL_H; ///< Gesamthöhe der mittig wachsenden Balken
     constexpr int CENTERED_PEAK_H = 2; ///< Höhe der Spitzenmarkierung
     constexpr int CENTERED_PEAK_GAP = 1; ///< Abstand zwischen Balken und Spitzenmarkierung
@@ -1343,7 +1345,7 @@ void Visualizer::drawSpectrum(bool init)
     const int graphHeight = centered ? CENTERED_GRAPH_H : VIS_AREA_H;
     const uint32_t now = millis();
     const uint32_t elapsed = now - m_lastSpectrumUpdate;
-    const uint32_t frameMs = waterfall ? WATERFALL_FRAME_MS : (centered ? CENTERED_FRAME_MS : 2U);
+    const uint32_t frameMs = waterfall ? WATERFALL_FRAME_MS : BAR_FRAME_MS;
     if (!init && elapsed < frameMs)
         return;
 
@@ -1445,7 +1447,7 @@ void Visualizer::drawSpectrum(bool init)
         sampleRate = m_sampleRate[readIdx];
         const uint16_t sampleCount = m_sampleCount[readIdx];
         hasSamples = samplesL && samplesR && sampleCount > 0 && sampleRate > 0 && APP_STATE.getStationSetDone();
-        analyze = (!centered && !waterfall) || sampleSeq != m_spectrumAnalyzedSeq ||
+        analyze = sampleSeq != m_spectrumAnalyzedSeq ||
                   sampleRate != m_spectrumSampleRate || hasSamples != m_spectrumHadSamples;
 
         if (analyze && hasSamples)
@@ -1516,6 +1518,8 @@ void Visualizer::drawSpectrum(bool init)
         return;
     const int sprite_width = current_sprite->width();
     bool changed = m_centeredSpectrumDirty;
+    bool bandChanged[BAND_COUNT]{};
+    uint16_t barColors[BAND_COUNT]{};
 
     for (int band = 0; band < bandCount; ++band)
     {
@@ -1574,40 +1578,18 @@ void Visualizer::drawSpectrum(bool init)
             b.peakPosFloat = fmaxf(cur, b.peakPosFloat - PEAK_FALL_SPEED);
         }
         b.peakPos = static_cast<uint16_t>(fmaxf(1.0f, b.peakPosFloat));
-        changed = changed || previousPos != b.currentPos || previousPeak != b.peakPos;
+        bandChanged[band] = m_centeredSpectrumDirty || previousPos != b.currentPos || previousPeak != b.peakPos;
+        changed = changed || bandChanged[band];
 
-        if (centered)
-            continue;
-
-        const int x = band * (BIN_WIDTH + BIN_GAP);
-        const int bar_top = VIS_AREA_H - b.currentPos;
-        const int peak_y = VIS_AREA_H - b.peakPos;
-        uint16_t barColor = BAR_GREEN;
-        uint16_t peakColor = TFT_SILVER;
-        if (m_spectrumStyle == SpectrumStyle::RAINBOW)
-            barColor = peakColor = rainbowColors(band * 2);
-
-        for (int y = 0; y < VIS_AREA_H; ++y)
-        {
-            uint16_t color;
-            if (y == peak_y)
-                color = peakColor;
-            else if (y < bar_top)
-                color = (y % 2 == 0) ? 0x2104 : TFT_BLACK;
-            else
-                color = (y % 2 == 0) ? barColor : 0x2104;
-
-            uint16_t *line = buffer + y * sprite_width + x;
-            for (int i = 0; i < BIN_WIDTH; ++i)
-                line[i] = bswap16(color);
-        }
+        if (!centered)
+            barColors[band] = m_spectrumStyle == SpectrumStyle::RAINBOW ? rainbowColors(band * 2) : BAR_GREEN;
     }
+
+    if (!changed)
+        return;
 
     if (centered)
     {
-        if (!changed)
-            return;
-
         current_sprite->clear(TFT_BLACK);
         constexpr int CENTER_Y = SPECTRUM_LABEL_H + CENTERED_GRAPH_H / 2; ///< Mittellinie des Balkenfelds
         for (int band = 0; band < bandCount; ++band)
@@ -1626,8 +1608,32 @@ void Visualizer::drawSpectrum(bool init)
                 peakY = SPECTRUM_LABEL_H;
             current_sprite->fillRect(x, peakY, width, CENTERED_PEAK_H, peakColor);
         }
-        m_centeredSpectrumDirty = false;
     }
+    else
+    {
+        // Zeilenweise schreiben hält benachbarte Sprite-Pixel im Cache.
+        for (int y = 0; y < VIS_AREA_H; ++y)
+        {
+            uint16_t *row = buffer + y * sprite_width;
+            for (int band = 0; band < bandCount; ++band)
+            {
+                if (!bandChanged[band])
+                    continue;
+                const auto &b = m_spectrum_bands[band];
+                uint16_t color;
+                if (y == VIS_AREA_H - b.peakPos)
+                    color = m_spectrumStyle == SpectrumStyle::RAINBOW ? barColors[band] : TFT_SILVER;
+                else if (y < VIS_AREA_H - b.currentPos)
+                    color = (y % 2 == 0) ? 0x2104 : TFT_BLACK;
+                else
+                    color = (y % 2 == 0) ? barColors[band] : 0x2104;
+                const int x = band * (BIN_WIDTH + BIN_GAP);
+                for (int i = 0; i < BIN_WIDTH; ++i)
+                    row[x + i] = bswap16(color);
+            }
+        }
+    }
+    m_centeredSpectrumDirty = false;
 
     drawSpectrumLabels(cutoffFreqs, bandCount);
     current_sprite->pushSprite(centered ? VIS_AREA_X : VIS_AREA_X + 1, VIS_AREA_Y);

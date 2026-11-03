@@ -13,13 +13,15 @@ Die wesentlichen Änderungen gegenüber dem Original:
 - Eigener Ringpuffer (`AudioBuffer`) als Ersatz für die upstream-interne Pufferklasse.
 - Opus-Decoder entfernt, VU/Spektrum-Berechnung stillgelegt (das Host-Projekt verarbeitet Pegel und Spektrum selbst über den Visualizer-Callback `audio_visualizer_process_i2s`).
 - Fehlerkorrekturen, die im Original latent vorhanden sind: ID3-Parser-Kette (Fenstergrenzen im MP3_TAG-Zustand, Allokationsreihenfolge in `ps_ptr`, memcpy-Wächter) sowie ein terminaler Header-Timeout beim Verbindungsaufbau.
-- Die Decoder-Kerne (mp3, aac/libfaad, flac, vorbis, wav) sind bis auf mechanische Anpassungen (Include-Guards, Ersatz der Arduino-min/max-Makros, Speicher-Helfer) unverändert übernommen.
+- Der MP3-Decoder enthält eine bestehende Pegelreserve von rund 3 dB vor der PCM16-Begrenzung. Die Decoder-Kerne für FLAC, Vorbis und WAV sind bis auf mechanische Anpassungen (Include-Guards, Ersatz der Arduino-min/max-Makros, Speicher-Helfer) unverändert übernommen.
+- AAC/FAAD wurde für Issue #1 angepasst (02./03.11.2026): korrigierte Stereo-Konvertierung und Initialisierung bei später PS-Signalisierung, wiederverwendete Decoder-Arbeitsbereiche, blockweise QMF-Fensterung und PCM16-Rundung am S3. Häufig verwendete SBR-/PS- und Filterbankfunktionen sowie vier kleine QMF-Tabellen liegen am S3 im internen Speicher. Die Unterstützung für SBR und parametrisches Stereo bleibt erhalten.
+- Rohe AAC-Livestreams mit SBR verwenden einen laufenden PCM-Vorrat im vorhandenen PSRAM-Arbeitsbereich. Die Klangregelung verarbeitet Stereo-Frames in Blöcken. Die Ausgabe bleibt bei der Quellabtastrate.
 
 ## Lizenz
 
 GPL-3.0, wie das Original. Der vollständige Lizenztext liegt in [LICENSE](LICENSE). Die Urheberrechte am ursprünglichen Code liegen bei Wolle (schreibfaul1) und den jeweiligen Autoren der Decoder-Kerne; die Autorenvermerke in den Dateiköpfen bleiben erhalten.
 
-In der Library enthaltene Fremdanteile (unverändert aus ESP32-audioI2S übernommen):
+In der Library enthaltene Fremdanteile und ihre ursprüngliche Herkunft:
 
 | Bestandteil | Herkunft | Lizenz |
 |---|---|---|
