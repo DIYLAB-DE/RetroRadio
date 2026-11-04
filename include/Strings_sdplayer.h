@@ -61,7 +61,7 @@ enum class SDPlayerKey : uint16_t
     // ===================================================================
     // SleepTimer-Texte
     // ===================================================================
-    SDPLAYER_SLEEP_TITLE,   ///< "AUSSCHALTEN" / "TURN OFF"
+    SDPLAYER_SLEEP_TITLE,   ///< "SLEEP-TIMER" / "SLEEP TIMER"
     SDPLAYER_SLEEP_MESSAGE, ///< "Player verlassen nach:" / "Quit player after:"
 
     // ===================================================================

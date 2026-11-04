@@ -80,14 +80,14 @@ static int jpegDrawCB(JPEGDRAW *p)
 // ===================================================================
 
 // Statische Member für SleepTimer
-const char *SdPlayer::m_sleepLabels[] = {"5", "15", "25", "45", "60", "^POWER:32:D206^"};
+const char *SdPlayer::m_sleepLabels[] = {"5", "15", "25", "45", "60", Button::HOME_LABEL};
 int SdPlayer::m_sleepValues[] = {5, 15, 25, 45, 60, 0};
 
 const SdPlayerButton SdPlayer::m_buttonDefs[4] = {
     {513, 435, 75, 45, 4, 0x39E8, TFT_BLACK, TFT_DARKGREY, "durchs."},        // Playlist durchsuchen
     {598, 435, 70, 45, 4, 0x39E8, TFT_BLACK, TFT_DARKGREY, "leeren"},         // Playlist leeren
     {678, 435, 67, 45, 4, 0x39E8, TFT_BLACK, TFT_DARKGREY, "reset"},          // Reset
-    {755, 435, 45, 45, 4, 0x39E8, TFT_BLACK, TFT_DARKGREY, "^POWER:32:D206^"} // Power/SleepTimer
+    {755, 435, 45, 45, 4, 0x39E8, TFT_BLACK, TFT_DARKGREY, Button::HOME_LABEL} // Hauptmenü/Sleep-Timer
 };
 
 const SdPlayerButton SdPlayer::m_playerButtonDefs[5] = {
@@ -1513,7 +1513,7 @@ bool SdPlayer::init(DS1307_RTC &rtc, const SdPlayerCallbacks &callbacks)
         m_controlButtons[i].setFont(LeagueGothicCond34);
     }
 
-    // Browse- und Clear-Button mit Sprach-Labels überschreiben (reset und Power-Symbol bleiben)
+    // Browse- und Clear-Button mit Sprach-Labels überschreiben
     m_controlButtons[0].setLabelText(reinterpret_cast<PGM_P>(STR(SDPlayerKey::SDPLAYER_BTN_BROWSE)));
     m_controlButtons[1].setLabelText(reinterpret_cast<PGM_P>(STR(SDPlayerKey::SDPLAYER_BTN_CLEAR)));
 
@@ -1917,9 +1917,9 @@ void SdPlayer::buildWrapSprite()
 }
 
 /**
- * @brief Setzt den rotierten Dorn offscreen zusammen und pusht ihn über den sicheren Weg
+ * @brief Setzt den rotierten Dorn im Sprite zusammen und überträgt ihn vollständig
  *
- * pushRotateZoomWithAA direkt auf den Bildspeicher liest und schreibt dort fürs Kantenglätten - genau diese Zugriffsart kam auf dem RGB-Panel nur häppchenweise an (gleiche Fehlerfamilie wie setClipRect beim Sprite-Push): die Dorne bauten sich sichtbar langsam auf und verschmierten ihre Umgebung. Deshalb wird der Hintergrund aus Fenster- bzw. Körperpuffer in den Kompositionspuffer kopiert, der Dorn dort hineinrotiert und das Ergebnis normal gepusht.
+ * Die Kantenglättung liest und schreibt ausschließlich den Kompositionspuffer. Erst das vollständige Ergebnis wird auf das RGB-Panel übertragen; direkte geglättete Rotation auf dem Panel verursachte sichtbaren Bildaufbau und verschmierte Ränder.
  */
 void SdPlayer::pushDorn(int hubX, int hubY, float angle)
 {
@@ -1928,6 +1928,7 @@ void SdPlayer::pushDorn(int hubX, int hubY, float angle)
 
     constexpr int S = WRAP_SPR_SIZE;
     constexpr int HALF = S / 2;
+    constexpr int AA_MARGIN = 2; ///< Rand für geglättete Quellpixel und die Abtastfläche der Rotation
     const CassetteDesign &d = m_cassetteDesigns[m_cassetteDesignIdx];
     const int x0 = hubX - HALF;
     const int y0 = hubY - HALF;
@@ -1954,7 +1955,10 @@ void SdPlayer::pushDorn(int hubX, int hubY, float angle)
         }
     }
 
+    const int radius = d.hubCoverR + AA_MARGIN;
+    m_sprDorn->setClipRect(HALF - radius, HALF - radius, 2 * radius + 1, 2 * radius + 1);
     m_sprWrap->pushRotateZoomWithAA(m_sprDorn, (float)HALF, (float)HALF, angle, 1.0f, 1.0f, WRAP_TRANSP);
+    m_sprDorn->clearClipRect();
     m_sprDorn->pushSprite(CASSETTE_X + x0, CASSETTE_Y + y0);
 }
 
@@ -2100,6 +2104,7 @@ void SdPlayer::draw()
     // Event-Queue und Audio-Status laufen auch bei Dialog oder Grafik-Sperre weiter, sonst bleibt ein Titelende liegen und der Player verstummt bis zum Dialogschluss. m_uiSuspended lenkt die Zeichenaufrufe der EOF-Kette auf die Redraw-Flags um; nach dem Schließen stellt der Dialog seinen Schnappschuss wieder her und die Flags holen das Zeichnen nach.
     if (gfxBlocked || dialogOpen)
     {
+        m_trackTouch.cancel();
         m_uiSuspended = true;
         processEventQueue();
 
@@ -2158,7 +2163,13 @@ void SdPlayer::draw()
     // ===================================================================
 
     // Touch-Handling
-    m_touched = m_tft->getTouch(&m_touchX, &m_touchY);
+    constexpr uint32_t AURORA_IDLE_TOUCH_MS = 20; ///< Abfrageabstand bei Nordlicht ohne erkannte Berührung
+    const uint32_t touchNow = millis();
+    if (m_visualizer.getMode() != VisMode::VIS_AURORA || m_touched || static_cast<uint32_t>(touchNow - m_lastTouchPoll) >= AURORA_IDLE_TOUCH_MS)
+    {
+        m_lastTouchPoll = touchNow;
+        m_touched = m_tft->getTouch(&m_touchX, &m_touchY);
+    }
     m_visualizer.handleTouch(m_touchX, m_touchY, m_touched);
 
     // Audio-Daten für Visualisierung abrufen
@@ -2183,7 +2194,6 @@ void SdPlayer::draw()
         }
 
         // Audio-Daten als verarbeitet markieren
-        { extern volatile uint32_t g_visDataCount; g_visDataCount = g_visDataCount + 1; } // Messzähler Visualisierungs-Datenrate
         g_audioManager.consumeAudioData();
     }
 
@@ -2200,38 +2210,29 @@ void SdPlayer::draw()
     {
         m_resetRequested = false;
 
-        constexpr int8_t DEFAULT_GAIN_LOW = AppState::DEFAULT_GAIN_LOW_PASS_DB;
-        constexpr int8_t DEFAULT_GAIN_BAND = AppState::DEFAULT_GAIN_BAND_PASS_DB;
-        constexpr int8_t DEFAULT_GAIN_HIGH = AppState::DEFAULT_GAIN_HIGH_PASS_DB;
-        constexpr uint8_t DEFAULT_VOLUME = AppState::DEFAULT_VOLUME;
-
-        // Alle Einstellungen zurücksetzen
-        APP_STATE.setCurrentVolume(DEFAULT_VOLUME);
-        APP_STATE.setCurrentBalance(0);
-        APP_STATE.setCurrentGainLowPass(DEFAULT_GAIN_LOW);
-        APP_STATE.setCurrentGainBandPass(DEFAULT_GAIN_BAND);
-        APP_STATE.setCurrentGainHighPass(DEFAULT_GAIN_HIGH);
+        APP_STATE.resetAudioToDefaults();
 
         // Visualisierungen zurücksetzen
-        m_visualizer.setMode(VisMode::VIS_ANALOG);
+        const auto defaultMode = static_cast<VisMode>(AppState::DEFAULT_VIS_MODE);
+        m_visualizer.setMode(defaultMode);
 
         // UI neu zeichnen
-        drawKnob(true, DEFAULT_VOLUME);
-        drawTracks(true, 0, DEFAULT_GAIN_LOW, DEFAULT_GAIN_BAND, DEFAULT_GAIN_HIGH);
+        drawKnob(true, AppState::DEFAULT_VOLUME);
+        drawTracks(true, AppState::DEFAULT_BALANCE, AppState::DEFAULT_GAIN_LOW_PASS_DB, AppState::DEFAULT_GAIN_BAND_PASS_DB, AppState::DEFAULT_GAIN_HIGH_PASS_DB);
 
         // Callbacks
         if (m_callbacks.onVolumeChanged)
-            m_callbacks.onVolumeChanged(DEFAULT_VOLUME);
+            m_callbacks.onVolumeChanged(AppState::DEFAULT_VOLUME);
         if (m_callbacks.onBalanceChanged)
-            m_callbacks.onBalanceChanged(0);
+            m_callbacks.onBalanceChanged(AppState::DEFAULT_BALANCE);
         if (m_callbacks.onGainLowPassChanged)
-            m_callbacks.onGainLowPassChanged(DEFAULT_GAIN_LOW);
+            m_callbacks.onGainLowPassChanged(AppState::DEFAULT_GAIN_LOW_PASS_DB);
         if (m_callbacks.onGainBandPassChanged)
-            m_callbacks.onGainBandPassChanged(DEFAULT_GAIN_BAND);
+            m_callbacks.onGainBandPassChanged(AppState::DEFAULT_GAIN_BAND_PASS_DB);
         if (m_callbacks.onGainHighPassChanged)
-            m_callbacks.onGainHighPassChanged(DEFAULT_GAIN_HIGH);
+            m_callbacks.onGainHighPassChanged(AppState::DEFAULT_GAIN_HIGH_PASS_DB);
         if (m_callbacks.onVUModeChanged)
-            m_callbacks.onVUModeChanged(VisMode::VIS_ANALOG);
+            m_callbacks.onVUModeChanged(defaultMode);
     }
 
     // Event-Queue abarbeiten
@@ -3132,22 +3133,18 @@ void SdPlayer::drawTracks(bool init, int8_t balance, int8_t gainLowPass, int8_t 
     constexpr int sliderHeight = 120;
 
     // Konstanten
-    constexpr int SLIDER_X[] = {5, 55, 105, 155};
-    constexpr int TOUCH_WIDTH = 31;
-    constexpr int PIXEL_MIN = 104;
-    constexpr int PIXEL_ZERO = 64;
-    constexpr int PIXEL_MAX = 24;
+    using Track = AudioSliderTouch;
 
     auto mapDbToPixel = [](int8_t db) -> int8_t
     {
-        return (db <= 0) ? map(db, -12, 0, PIXEL_MIN, PIXEL_ZERO)
-                         : map(db, 0, 12, PIXEL_ZERO, PIXEL_MAX);
+        return (db <= 0) ? map(db, -12, 0, Track::BOTTOM, Track::NEUTRAL)
+                         : map(db, 0, 12, Track::NEUTRAL, Track::TOP);
     };
 
     auto mapPixelToDb = [](int y) -> int8_t
     {
-        return (y > PIXEL_ZERO) ? map(y, PIXEL_MIN, PIXEL_ZERO, -12, 0)
-                                : map(y, PIXEL_ZERO, PIXEL_MAX, 0, 12);
+        return (y > Track::NEUTRAL) ? map(y, Track::BOTTOM, Track::NEUTRAL, -12, 0)
+                                : map(y, Track::NEUTRAL, Track::TOP, 0, 12);
     };
 
     auto drawSlider = [this](int xPos, const __FlashStringHelper *label, int8_t pixelValue, bool withLabel = true)
@@ -3157,9 +3154,9 @@ void SdPlayer::drawTracks(bool init, int8_t balance, int8_t gainLowPass, int8_t 
         if (withLabel && label != nullptr)
             m_sprTracks->drawString(label, (xPos == 5) ? xPos - 5 : xPos, 0);
 
-        m_sprTracks->drawFastHLine(xPos, PIXEL_ZERO, TOUCH_WIDTH, TFT_DARKGREY);
-        m_sprTracks->drawSmoothCircle(xPos + 15, pixelValue, 13, 3, 0x5370, TFT_BLACK);
-        m_sprTracks->fillSmoothCircle(xPos + 15, pixelValue, 10, TFT_BLACK);
+        m_sprTracks->drawFastHLine(xPos, Track::NEUTRAL, Track::WIDTH, TFT_DARKGREY);
+        m_sprTracks->drawSmoothCircle(xPos + Track::CENTER_X, pixelValue, Track::RADIUS, 3, 0x5370, TFT_BLACK);
+        m_sprTracks->fillSmoothCircle(xPos + Track::CENTER_X, pixelValue, 10, TFT_BLACK);
     };
 
     balance = constrain(balance, -16, 16);
@@ -3167,7 +3164,7 @@ void SdPlayer::drawTracks(bool init, int8_t balance, int8_t gainLowPass, int8_t 
     gainBandPass = constrain(gainBandPass, -12, 12);
     gainHighPass = constrain(gainHighPass, -12, 12);
 
-    int8_t balancePixel = map(balance, -16, 16, PIXEL_MIN, PIXEL_MAX);
+    int8_t balancePixel = map(balance, -16, 16, Track::BOTTOM, Track::TOP);
     int8_t lowPixel = mapDbToPixel(gainLowPass);
     int8_t midPixel = mapDbToPixel(gainBandPass);
     int8_t highPixel = mapDbToPixel(gainHighPass);
@@ -3184,10 +3181,10 @@ void SdPlayer::drawTracks(bool init, int8_t balance, int8_t gainLowPass, int8_t 
         m_sprTracks->loadFont(ComfortaaBold10);
         m_sprTracks->setTextColor(TFT_LIGHTGREY, TFT_BLACK);
 
-        drawSlider(SLIDER_X[0], STR(SDPlayerKey::SDPLAYER_SLIDER_BALANCE), balancePixel);
-        drawSlider(SLIDER_X[1], STR(SDPlayerKey::SDPLAYER_SLIDER_LOW), lowPixel);
-        drawSlider(SLIDER_X[2], STR(SDPlayerKey::SDPLAYER_SLIDER_MID), midPixel);
-        drawSlider(SLIDER_X[3], STR(SDPlayerKey::SDPLAYER_SLIDER_HIGH), highPixel);
+        drawSlider(Track::LEFT[0], STR(SDPlayerKey::SDPLAYER_SLIDER_BALANCE), balancePixel);
+        drawSlider(Track::LEFT[1], STR(SDPlayerKey::SDPLAYER_SLIDER_LOW), lowPixel);
+        drawSlider(Track::LEFT[2], STR(SDPlayerKey::SDPLAYER_SLIDER_MID), midPixel);
+        drawSlider(Track::LEFT[3], STR(SDPlayerKey::SDPLAYER_SLIDER_HIGH), highPixel);
 
         m_sprTracks->pushSprite(sliderPosX, sliderPosY);
         m_sprTracks->unloadFont();
@@ -3215,65 +3212,43 @@ void SdPlayer::drawTracks(bool init, int8_t balance, int8_t gainLowPass, int8_t 
         return;
     }
 
-    if (!m_touched)
+    const int8_t positions[Track::COUNT] = {m_balance_prev, m_gainLowPass_prev, m_gainBandPass_prev, m_gainHighPass_prev};
+    const auto target = m_trackTouch.update(m_touched, m_touchX - sliderPosX, m_touchY - sliderPosY, positions, millis());
+    if (target.index < 0 || (!target.center && positions[target.index] == target.y))
         return;
 
-    int deltaX = m_touchX - sliderPosX;
-    int deltaY = m_touchY - sliderPosY;
+    const int x = Track::LEFT[target.index];
+    m_sprTracks->setClipRect(x, 11, Track::WIDTH, 107);
+    m_sprTracks->clear(TFT_BLACK);
+    drawSlider(x, nullptr, target.y, false);
+    m_sprTracks->pushSprite(sliderPosX, sliderPosY);
+    m_sprTracks->clearClipRect();
 
-    if (deltaY <= 23 || deltaY >= 105)
-        return;
-
-    typedef void (*CallbackFunc)(int8_t);
-    auto updateSlider = [&](int sliderIndex, int8_t &prevValue, int8_t currentPixel, CallbackFunc callback, bool isDbSlider = false)
+    const int8_t value = target.index == 0 ? map(target.y, Track::BOTTOM, Track::TOP, -16, 16) : mapPixelToDb(target.y);
+    auto apply = [&](int8_t &previous, void (*callback)(int8_t), void (AppState::*setter)(int8_t))
     {
-        if (deltaX >= SLIDER_X[sliderIndex] && deltaX <= SLIDER_X[sliderIndex] + TOUCH_WIDTH)
-        {
-            deltaY = constrain(deltaY, PIXEL_MAX, PIXEL_MIN);
-
-            if (prevValue != deltaY)
-            {
-                m_sprTracks->setClipRect(SLIDER_X[sliderIndex], 11, TOUCH_WIDTH, 107);
-                m_sprTracks->clear(TFT_BLACK);
-                drawSlider(SLIDER_X[sliderIndex], nullptr, deltaY, false);
-                m_sprTracks->pushSprite(sliderPosX, sliderPosY);
-                m_sprTracks->clearClipRect();
-
-                int8_t value = isDbSlider ? mapPixelToDb(deltaY)
-                                          : map(deltaY, PIXEL_MIN, PIXEL_MAX, -16, 16);
-
-                if (sliderIndex == 0)
-                    APP_STATE.setCurrentBalance(value);
-                else if (sliderIndex == 1)
-                    APP_STATE.setCurrentGainLowPass(value);
-                else if (sliderIndex == 2)
-                    APP_STATE.setCurrentGainBandPass(value);
-                else if (sliderIndex == 3)
-                    APP_STATE.setCurrentGainHighPass(value);
-
-                if (callback != nullptr)
-                    callback(value);
-
-                prevValue = deltaY;
-            }
-
-            return true;
-        }
-
-        return false;
+        previous = target.y;
+        if (callback)
+            callback(value);
+        else
+            (APP_STATE.*setter)(value);
     };
 
-    if (updateSlider(0, m_balance_prev, balancePixel, m_callbacks.onBalanceChanged))
-        return;
-
-    if (updateSlider(1, m_gainLowPass_prev, lowPixel, m_callbacks.onGainLowPassChanged, true))
-        return;
-
-    if (updateSlider(2, m_gainBandPass_prev, midPixel, m_callbacks.onGainBandPassChanged, true))
-        return;
-
-    if (updateSlider(3, m_gainHighPass_prev, highPixel, m_callbacks.onGainHighPassChanged, true))
-        return;
+    switch (target.index)
+    {
+    case 0:
+        apply(m_balance_prev, m_callbacks.onBalanceChanged, &AppState::setCurrentBalance);
+        break;
+    case 1:
+        apply(m_gainLowPass_prev, m_callbacks.onGainLowPassChanged, &AppState::setCurrentGainLowPass);
+        break;
+    case 2:
+        apply(m_gainBandPass_prev, m_callbacks.onGainBandPassChanged, &AppState::setCurrentGainBandPass);
+        break;
+    case 3:
+        apply(m_gainHighPass_prev, m_callbacks.onGainHighPassChanged, &AppState::setCurrentGainHighPass);
+        break;
+    }
 }
 
 // ===================================================================
@@ -4114,7 +4089,7 @@ void SdPlayer::handleButtons()
                 m_messageBox->start();
             }
 
-            // Sleep Timer / Ausschalten
+            // Hauptmenü / Sleep-Timer
             if (i == 3)
             {
                 APP_STATE.setBlockGFX(true);
@@ -4130,7 +4105,7 @@ void SdPlayer::handleButtons()
                 m_sleepDlg->setCallback([this](int minutes)
                                         {
                         if (minutes == 0) {
-                            // Sofort ausschalten
+                            // Wiedergabe beenden und ins Hauptmenü wechseln
                             stopPlayerImmediately();
                         } else if (minutes > 0) {
                             // Timer starten

@@ -2,7 +2,7 @@
 
 [RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > RetroRadio bedienen
 
-Nach der [Erstinstallation](RetroRadio-Ersteinrichtung.md) öffnet das Hauptmenü die Anwendungen über die großen Symbole rechts. Die Uhr und die Netzwerkangaben stehen links. Zum Verlassen einer Anwendung dient die Taste mit dem Ein-/Aus-Symbol unten rechts. Bei Radio und SD-Player öffnet sie zunächst den Ausschalt- beziehungsweise Sleep-Timer-Dialog.
+Nach der [Erstinstallation](RetroRadio-Ersteinrichtung.md) öffnet das Hauptmenü die Anwendungen über die großen Symbole rechts. Die Uhr und die Netzwerkangaben stehen links. Das Haus unten rechts führt zurück ins Hauptmenü. Bei Radio und SD-Player öffnet es zuerst den Sleep-Timer: Tippe dort erneut auf das Haus, um die Wiedergabe sofort zu beenden und ins Hauptmenü zu wechseln.
 
 [![Hauptmenü](bilder/bedienung/hauptmenue-klein.png)](bilder/bedienung/hauptmenue.png)
 
@@ -112,7 +112,7 @@ Links den Einstellbereich auswählen, rechts dessen Felder bearbeiten. Längere 
 | Nachrichten | Gewünschtes Nachrichtenressort für die Laufzeile auswählen. | [![Nachrichten](bilder/bedienung/einstellungen-nachrichten-klein.png)](bilder/bedienung/einstellungen-nachrichten.png) |
 | Cloud-Anbindung | Eigene Google-Web-App-Adressen und OpenSky-Zugang eintragen, [Dienste einrichten](dienste/README.md). | [![Cloud-Anbindung](bilder/bedienung/einstellungen-cloud-klein.png)](bilder/bedienung/einstellungen-cloud.png) |
 | Sprache | Deutsch oder Englisch auswählen. | [![Sprache](bilder/bedienung/einstellungen-sprache-klein.png)](bilder/bedienung/einstellungen-sprache.png) |
-| Sicherheit | Vierstelligen Code für den Sperrbildschirm ändern. | [![Sicherheit](bilder/bedienung/einstellungen-sicherheit-klein.png)](bilder/bedienung/einstellungen-sicherheit.png) |
+| Sicherheit | PIN-Sperre für Radio und Weboberfläche ein- oder ausschalten und den vierstelligen Code ändern. | [![Sicherheit](bilder/bedienung/einstellungen-sicherheit-klein.png)](bilder/bedienung/einstellungen-sicherheit.png) |
 | Klang | Lautstärke, Balance, Tiefen, Mitten, Höhen und Lautsprecherfreigabe einstellen. | [![Klang](bilder/bedienung/einstellungen-klang-klein.png)](bilder/bedienung/einstellungen-klang.png) |
 | Anzeige | Die angebotenen Darstellungs- und Anzeigeoptionen wählen. | [![Anzeige](bilder/bedienung/einstellungen-anzeige-klein.png)](bilder/bedienung/einstellungen-anzeige.png) |
 | Info & Neustart | Netzwerk- und Geräteinformationen lesen, Neustart oder Zurücksetzen gezielt auslösen. | [![Informationen](bilder/bedienung/einstellungen-info-klein.png)](bilder/bedienung/einstellungen-info.png) |
@@ -123,7 +123,7 @@ Unter **Klang -> Lautsprecher** schaltet Minus die beiden eingebauten Lautsprech
 
 ## Sperren und Ausschalten
 
-Das Hauptmenü bietet den Ausschaltknopf unten rechts. Die Sperr- und Aufweckansicht wird über den vierstelligen Code freigegeben. Der voreingestellte Sperrcode (Start-PIN) lautet **`0000`**. Du kannst ihn unter **Einstellungen -> Sicherheit** ändern. Die Netzwerkverbindung des Geräts und die Weboberfläche sind getrennt vom sichtbaren Display zu betrachten, Details zu deren Zugriff stehen in der [Webanleitung](Weboberfläche.md).
+Das Hauptmenü bietet den Ausschaltknopf unten rechts. Ab Werk ist die **PIN-Sperre** eingeschaltet, die Start-PIN lautet **`0000`**. Unter **Einstellungen -> Sicherheit** kannst Du den Code ändern oder die Sperre ausschalten. Tippe dafür auf den Schalter und gib einmal Deine aktuelle PIN ein. Das Radio öffnet beim Start und Aufwecken direkt das Hauptmenü. Auch die Weboberfläche öffnet sich ohne PIN. Der Schalter wirkt sofort. Beim Wiedereinschalten gilt wieder Deine bisherige PIN. Die Netzwerkverbindung des Geräts und die Weboberfläche sind getrennt vom sichtbaren Display zu betrachten, Details zu deren Zugriff stehen in der [Webanleitung](Weboberfläche.md).
 
 | Gesperrt | Code eingeben |
 | --- | --- |

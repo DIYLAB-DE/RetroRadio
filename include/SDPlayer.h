@@ -8,6 +8,7 @@
 
 #include "AppState.h"
 #include "AudioManager.h"
+#include "AudioSliderTouch.h"
 #include "BaseModule.h"
 #include "Button.h"
 #include "FileExplorer.h"
@@ -447,7 +448,7 @@ private:
     // Buttons
     // ===================================================================
 
-    Button m_controlButtons[4];                        ///< Control-Buttons: "durchs.", "leeren", "reset", Power/Sleep-Timer
+    Button m_controlButtons[4];                        ///< Control-Buttons: "durchs.", "leeren", "reset", Hauptmenü/Sleep-Timer
     Button m_playerButtons[5];                         ///< Player-Buttons: Previous, Play, Pause, Stop, Next
     static const SdPlayerButton m_buttonDefs[4];       ///< Statische Definitionen für Control-Buttons
     static const SdPlayerButton m_playerButtonDefs[5]; ///< Statische Definitionen für Player-Buttons
@@ -625,6 +626,7 @@ private:
     // Equalizer-Zustand
     // ===================================================================
 
+    AudioSliderTouch m_trackTouch;       ///< Haltegeste für Balance und Klangregler
     int8_t m_balance_prev = -128;      ///< Vorherige Balance-Position
     int8_t m_gainLowPass_prev = -128;  ///< Vorherige Tiefen-Position
     int8_t m_gainBandPass_prev = -128; ///< Vorherige Mitten-Position
@@ -637,6 +639,7 @@ private:
     int m_touchX = 0;       ///< Aktuelle Touch X-Position
     int m_touchY = 0;       ///< Aktuelle Touch Y-Position
     bool m_touched = false; ///< Touch aktiv
+    uint32_t m_lastTouchPoll = 0; ///< Zeitpunkt der letzten Hardwareabfrage in Millisekunden
 
     // ===================================================================
     // Scroll-State

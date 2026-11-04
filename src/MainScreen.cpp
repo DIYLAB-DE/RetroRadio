@@ -212,12 +212,9 @@ bool MainScreen::init(LGFX &tft, DS1307_RTC &rtc, StationManager &stationManager
     // Buttons initialisieren und zeichnen
     initButtons();
 
-    // Sperrbildschirm initialisieren und als Boot-Gate aktivieren
     m_lockScreen.init(tft);
-    m_lockScreen.activate();
-    m_lockScreenActive = true;
-
     m_initialized = true;
+    triggerLockScreen();
     LOG_SUCCESS("MainScreen wurde erfolgreich initialisiert.");
 
     return true;
@@ -266,37 +263,27 @@ void MainScreen::update()
             m_wakeRequiresRelease = false;
             APP_STATE.setBlockGFX(false);
 
-            if (isManualTimeWindowWake(day, hour))
-            {
-                triggerLockScreen();
-            }
-            else if (m_lockScreenActive)
-            {
-                m_lockScreen.activate();
-            }
-            else
-            {
-                requestRedraw(true);
-                drawButtons();
-            }
+            triggerLockScreen();
+            m_ignoreWakeTouch = !m_lockScreenActive;
         }
 
         return;
+    }
+
+    // Der Aufweck-Tipp darf beim Start ohne PIN keine Hauptmenükachel öffnen.
+    if (m_ignoreWakeTouch)
+    {
+        int32_t tx, ty;
+        if (m_tft->getTouch(&tx, &ty))
+            return;
+        m_ignoreWakeTouch = false;
     }
 
     // Sperrbildschirm hat Vorrang vor allem anderen
     if (m_lockScreenActive)
     {
         if (m_lockScreen.update())
-        {
-            m_lockScreenActive = false;
-            m_tft->clear(TFT_BLACK);
-            requestRedraw(true);
-
-            // Erst den Zustand setzen, dann zeichnen: Andernfalls zeichnet drawButtons die vom WLAN abhängigen Kacheln aktiv und disable sie unmittelbar danach ein zweites Mal ab.
-            updateButtonStates(false);
-            drawButtons();
-        }
+            showUnlockedMainScreen();
 
         return;
     }
@@ -319,9 +306,6 @@ void MainScreen::update()
         {
             APP_STATE.setSleepModeTriggered(false);
 
-            // Beim nächsten Aufwachen direkt den Sperrbildschirm zeigen
-            m_lockScreenActive = true;
-
             extern void setBacklight(bool on);
             setBacklight(false);
 
@@ -330,7 +314,7 @@ void MainScreen::update()
     }
 
     // Sperrbildschirm-Anforderung global prüfen
-    if (APP_STATE.consumeLockRequest())
+    if (APP_STATE.consumeLockRequest() && APP_STATE.isPinLockEnabled())
     {
         triggerLockScreen();
         return;
@@ -540,7 +524,8 @@ void MainScreen::enterTimeWindowSleep()
 
     closeActiveModule();
     APP_STATE.setBlockGFX(false);
-    triggerLockScreen();
+    if (APP_STATE.isPinLockEnabled())
+        triggerLockScreen();
     m_wakeRequiresRelease = true;
 
     extern void setBacklight(bool on);
@@ -1181,7 +1166,7 @@ void MainScreen::closeActiveModule()
  */
 bool MainScreen::checkActiveCorner()
 {
-    if (!m_frameTouched)
+    if (!m_frameTouched || !APP_STATE.isPinLockEnabled())
     {
         m_cornerTouchActive = false;
         m_cornerStartedInCorner = false;
@@ -1256,8 +1241,27 @@ void MainScreen::triggerLockScreen()
     m_frameTouchX = 0;
     m_frameTouchY = 0;
 
-    m_lockScreen.activate();
-    m_lockScreenActive = true;
+    if (APP_STATE.isPinLockEnabled())
+    {
+        m_lockScreen.activate();
+        m_lockScreenActive = true;
+    }
+    else
+    {
+        showUnlockedMainScreen();
+    }
+}
+
+/**
+ * @brief Zeichnet das entsperrte Hauptmenü mit den aktuell verfügbaren Anwendungen.
+ */
+void MainScreen::showUnlockedMainScreen()
+{
+    m_lockScreenActive = false;
+    m_tft->clear(TFT_BLACK);
+    requestRedraw(true);
+    updateButtonStates(false);
+    drawButtons();
 }
 
 // ===================================================================

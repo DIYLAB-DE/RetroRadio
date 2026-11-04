@@ -326,7 +326,7 @@ private:
     StationManager *m_stationManager = nullptr;     ///< Station Manager für Sendernamen
     Audio *m_audio = nullptr;                       ///< Audio-Instanz für isRunning()
     Symbols *m_symbols = nullptr;                   ///< Wetter-Symbol-Renderer
-    Button m_exitButton;                            ///< Power-Button unten rechts
+    Button m_exitButton;                            ///< Hauptmenütaste unten rechts
     Button m_radioFavBtn;                           ///< Radio: Favoriten-Dialog
     Button m_radioPrevBtn;                          ///< Radio: vorheriger Sender
     Button m_radioPlayBtn;                          ///< Radio: Play/Stop Toggle

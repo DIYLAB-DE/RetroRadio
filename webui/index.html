@@ -129,6 +129,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       --card-bg: #fff;
       --input-bg: #f5f5f5;
       --border-color: #ddd;
+      --settings-label-gap: 10px;
       --headline-dark: #333;
       --headline-light: #fff;
     }
@@ -1132,11 +1133,68 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     .settings-item h4 {
-      margin-bottom: 10px;
+      margin-bottom: var(--settings-label-gap);
       color: var(--section-header-color);
       font-size: 14px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+    }
+
+    .pin-settings {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: inherit;
+      column-gap: inherit;
+      align-items: center;
+      padding-block: var(--settings-label-gap);
+      border-block: 1px solid var(--border-color);
+    }
+
+    .pin-settings h4 {
+      margin-bottom: 0;
+    }
+
+    .pin-settings-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+    }
+
+    #pinLockToggle {
+      min-width: 4em;
+    }
+
+    #pinLockToggle[aria-checked="true"] {
+      background-color: var(--navbar-color);
+    }
+
+    #pinChangeBtn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #pinChangeBtn span {
+      font: inherit;
+    }
+
+    #pinDialog {
+      margin: auto;
+      max-width: 22rem;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+    }
+
+    #pinDialog h3 {
+      color: var(--section-header-color);
+    }
+
+    #pinDialog::backdrop {
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    #pinDialogError {
+      color: var(--danger-color);
     }
 
     /* Header-Zeile mit inline-Status (z.B. Ort: Überschrift + Geocode-Ergebnis nebeneinander).
@@ -1144,7 +1202,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
        der kleinere small (13 px) erweitert sie nicht, deshalb bleibt der Abstand
        zum Input-Feld identisch zu Items ohne Status. */
     .settings-item-head {
-      margin-bottom: 10px;
+      margin-bottom: var(--settings-label-gap);
     }
 
     .settings-item-head h4 {
@@ -1682,6 +1740,16 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
 
       .settings-container {
         grid-template-columns: 100%;
+      }
+
+      .pin-settings {
+        display: flex;
+        flex-wrap: wrap;
+        row-gap: var(--settings-label-gap);
+      }
+
+      .pin-settings-actions {
+        margin-inline-start: auto;
       }
 
       .settings-item:nth-child(1) {
@@ -2358,7 +2426,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
 
     .knob-buttons {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       gap: 12px;
       align-items: center;
       justify-content: center;
@@ -2480,6 +2548,18 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       background: #9b2020;
       border-color: #9b2020;
       color: white;
+    }
+
+    .knob-pill-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .knob-round-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
     .knob-pill-btn {
@@ -2726,6 +2806,10 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       backdrop-filter: blur(12px) saturate(115%);
     }
 
+    .lock-overlay.pending .lock-card {
+      visibility: hidden;
+    }
+
     .lock-overlay.hidden {
       display: none;
     }
@@ -2902,7 +2986,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
 
 <body>
   <!-- Sperr-Overlay: beim Laden sichtbar, gibt das Interface erst nach korrektem Code frei -->
-  <div id="lockOverlay" class="lock-overlay">
+  <div id="lockOverlay" class="lock-overlay pending">
     <div id="lockCard" class="lock-card">
       <div class="lock-icon">🔒</div>
       <h2 data-i18n="lock.title">Gesperrt</h2>
@@ -2950,7 +3034,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         <li><a href="#filemanager" data-i18n="nav.files">Dateien</a></li>
         <li><a href="#screenshot" data-i18n="nav.screenshot">Screenshot</a></li>
         <li class="nav-lock">
-          <button id="lockBtn" type="button" title="Interface sperren" data-i18n-title="lock.button">🔒</button>
+          <button id="lockBtn" type="button" hidden title="Interface sperren" data-i18n-title="lock.button">🔒</button>
         </li>
         <li class="dark-mode-toggle">
           <button id="darkModeBtn" onclick="toggleDarkMode()" title="Hell/Dunkel umschalten" data-i18n-title="theme.toggle">
@@ -3165,16 +3249,25 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
           <div class="retro-controls">
             <!-- Steuer-Buttons -->
             <div class="knob-buttons">
-              <div class="knob-buttons-row">
-                <button id="stationPrevBtn" class="knob-mute-btn" title="Vorheriger Sender" data-i18n-title="remote.previousStation">◀</button>
-                <button id="stationNextBtn" class="knob-mute-btn" title="Nächster Sender" data-i18n-title="remote.nextStation">▶</button>
+              <div class="knob-pill-group">
+                <button id="btnStationReset" class="knob-pill-btn" title="Senderliste auf Werkseinstellungen" data-i18n-title="remote.stationFactoryReset">🗘
+                  <span data-i18n="remote.reset">Reset</span></button>
+                <button id="btnStationBackup" class="knob-pill-btn" title="Senderliste als Datei sichern" data-i18n-title="remote.stationBackupTitle">💾
+                  <span data-i18n="remote.stationBackup">Sichern</span></button>
+                <button id="btnStationRestore" class="knob-pill-btn" title="Senderliste aus einer Datei laden" data-i18n-title="remote.stationRestoreTitle">📂
+                  <span data-i18n="remote.stationRestore">Laden</span></button>
+                <input type="file" id="stationRestoreInput" accept=".json,application/json" hidden>
               </div>
-              <div class="knob-buttons-row">
-                <button id="knobMuteBtn" class="knob-mute-btn" title="Stummschalten" data-i18n-title="remote.mute">🔊</button>
-                <button id="eqResetBtnRetro" class="knob-mute-btn" title="EQ zurücksetzen" data-i18n-title="remote.eqReset">↺</button>
+              <div class="knob-round-group">
+                <div class="knob-buttons-row">
+                  <button id="stationPrevBtn" class="knob-mute-btn" title="Vorheriger Sender" data-i18n-title="remote.previousStation">◀</button>
+                  <button id="stationNextBtn" class="knob-mute-btn" title="Nächster Sender" data-i18n-title="remote.nextStation">▶</button>
+                </div>
+                <div class="knob-buttons-row">
+                  <button id="knobMuteBtn" class="knob-mute-btn" title="Stummschalten" data-i18n-title="remote.mute">🔊</button>
+                  <button id="eqResetBtnRetro" class="knob-mute-btn" title="EQ zurücksetzen" data-i18n-title="remote.eqReset">↺</button>
+                </div>
               </div>
-              <button id="btnStationReset" class="knob-pill-btn" title="Senderliste auf Werkseinstellungen" data-i18n-title="remote.stationFactoryReset">🗘
-                <span data-i18n="remote.reset">Reset</span></button>
             </div>
 
             <!-- Lautstärkeregler -->
@@ -3346,20 +3439,6 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
             placeholder="Wird automatisch befüllt" data-i18n-placeholder="settings.cityPlaceholder">
         </div>
 
-        <div class="settings-item" style="grid-column: 1 / -1;">
-          <h4 data-i18n="settings.lockPin">Sperrbildschirm-Code ändern</h4>
-          <div class="button-group">
-            <input type="password" id="lockPinCurrentInput" class="settings-input"
-              inputmode="numeric" pattern="[0-9]*" maxlength="32" autocomplete="current-password"
-              placeholder="Aktueller Code" data-i18n-placeholder="settings.currentCode">
-            <input type="password" id="lockPinNewInput" class="settings-input"
-              inputmode="numeric" pattern="[0-9]*" maxlength="32" autocomplete="new-password"
-              placeholder="Neuer Code" data-i18n-placeholder="settings.newCode">
-          </div>
-          <small style="display:block;margin-top:4px;color:var(--section-text-color);" data-i18n="settings.lockPinHint">Leer lassen, wenn der Code nicht geändert werden soll.</small>
-        </div>
-
-      
         <div class="settings-item">
           <h4 data-i18n="settings.hostname">Netzwerkname</h4>
           <input type="text" id="hostnameInput" class="settings-input"
@@ -3375,6 +3454,20 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
               <option value="de" data-i18n="settings.language.de">Deutsch</option>
               <option value="en" data-i18n="settings.language.en">English</option>
             </select>
+          </div>
+        </div>
+
+        <div class="settings-item pin-settings">
+          <h4 id="pinLockLabel" data-i18n="settings.pinLockToggle">PIN-Sperre für Radio und Web</h4>
+          <div class="pin-settings-actions">
+            <button type="button" id="pinLockToggle" class="btn btn-secondary" role="switch" aria-labelledby="pinLockLabel" aria-checked="true" disabled>...</button>
+            <button type="button" id="pinChangeBtn" class="btn btn-secondary" aria-haspopup="dialog">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true" focusable="false">
+                <circle cx="16" cy="8" r="5"/>
+                <path d="m12.5 11.5-9 9m3-3 2.5 2.5m.5-5.5 2.5 2.5"/>
+              </svg>
+              <span data-i18n="settings.pinChangeTitle">PIN ändern</span>
+            </button>
           </div>
         </div>
 
@@ -3568,6 +3661,25 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
   </div>
   <!-- // Hauptcontainer -->
 
+  <dialog id="pinDialog" class="station-modal" aria-labelledby="pinDialogTitle">
+    <form id="pinForm" method="dialog">
+      <h3 id="pinDialogTitle"></h3>
+      <div class="modal-field">
+        <label for="lockPinCurrentInput" data-i18n="settings.currentCode">Aktuelle PIN</label>
+        <input type="password" id="lockPinCurrentInput" class="settings-input" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="current-password" required autofocus>
+      </div>
+      <div class="modal-field" id="pinNewField">
+        <label for="lockPinNewInput" data-i18n="settings.newCode">Neue PIN (4 Ziffern)</label>
+        <input type="password" id="lockPinNewInput" class="settings-input" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="new-password" required>
+      </div>
+      <p id="pinDialogError" role="alert"></p>
+      <div class="modal-buttons">
+        <button type="button" id="pinCancel" class="btn btn-secondary" data-i18n="core.cancel">Abbrechen</button>
+        <button type="submit" id="pinSubmit" class="btn"></button>
+      </div>
+    </form>
+  </dialog>
+
   <!-- Sender-Modal -->
   <div id="stationModal" class="modal-overlay">
     <div class="station-modal">
@@ -3661,6 +3773,10 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'remote.eqReset': 'EQ zurücksetzen',
         'remote.stationFactoryReset': 'Senderliste auf Werkseinstellungen',
         'remote.reset': 'Reset',
+        'remote.stationBackup': 'Sichern',
+        'remote.stationBackupTitle': 'Senderliste als Datei sichern',
+        'remote.stationRestore': 'Laden',
+        'remote.stationRestoreTitle': 'Senderliste aus einer Datei laden',
         'remote.volume': 'Lautstärke',
         'remote.balance': 'Balance',
         'remote.bass': 'Tiefen',
@@ -3696,10 +3812,14 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'settings.locationDetect': 'Standort ermitteln',
         'settings.city': 'Ort',
         'settings.cityPlaceholder': 'Wird automatisch befüllt',
-        'settings.lockPin': 'Sperrbildschirm-Code ändern',
-        'settings.currentCode': 'Aktueller Code',
-        'settings.newCode': 'Neuer Code',
-        'settings.lockPinHint': 'Leer lassen, wenn der Code nicht geändert werden soll.',
+        'settings.pinLockToggle': 'PIN-Sperre für Radio und Web',
+        'settings.pinOn': 'Ein',
+        'settings.pinOff': 'Aus',
+        'settings.pinChangeTitle': 'PIN ändern',
+        'settings.pinDisableTitle': 'PIN-Sperre ausschalten?',
+        'settings.pinDisable': 'Ausschalten',
+        'settings.currentCode': 'Aktuelle PIN',
+        'settings.newCode': 'Neue PIN (4 Ziffern)',
         'settings.newsRessort': 'Nachrichten-Ressort',
         'settings.ressort.inland': 'Inland',
         'settings.ressort.ausland': 'Ausland',
@@ -3791,6 +3911,13 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'js.renameError': 'Fehler beim Umbenennen',
         'js.deleteError': 'Fehler beim Löschen',
         'js.deleteConfirm': ' wirklich löschen?',
+        'js.deleteFolderConfirm': 'Der Ordner „{0}“ enthält {1} Dateien und {2} Unterordner, versteckte und Systemeinträge eingeschlossen. Ordner samt Inhalt endgültig löschen?',
+        'js.folderCounting': 'Inhalt wird gezählt...',
+        'js.folderDeleting': 'Lösche {0} von {1}...',
+        'js.folderCountFailed': 'Zählen abgebrochen bei „{0}“. Es wurde nichts gelöscht. {1}',
+        'js.folderDeleteFailed': 'Löschen abgebrochen bei „{0}“. Bestätigt gelöscht: {1} Dateien und {2} Ordner. {3}',
+        'js.folderInvalidList': 'Die Dateiliste ist unvollständig oder ungültig.',
+        'js.folderKeepOpen': 'Diese Seite bis zum Abschluss geöffnet lassen.',
         'js.folderEmpty': 'Ordner ist leer',
         'js.rename': 'Umbenennen',
         'js.deleteFolder': 'Ordner löschen',
@@ -3810,8 +3937,9 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'js.stationOnlyRadio': 'Senderwechsel nur möglich wenn RetroRadio aktiv ist',
         'js.stationChangeError': 'Fehler beim Senderwechsel',
         'js.uploadFailed': 'Upload fehlgeschlagen',
-        'js.currentCodeInvalid': 'Der aktuelle Code ist ungültig.',
-        'js.newCodeInvalid': 'Der neue Code ist ungültig.',
+        'js.currentCodeInvalid': 'Die aktuelle PIN ist falsch.',
+        'js.savePinLockFailed': 'Die PIN-Sperre konnte nicht gespeichert werden.',
+        'js.savePinFailed': 'Die neue PIN konnte nicht gespeichert werden.',
         'js.plzFiveDigits': 'PLZ muss genau 5 Ziffern haben.',
         'js.geoNotResolved': 'Der Standort wurde nicht ermittelt. Der bisherige Standort bleibt gespeichert.',
         'js.saveRestartConfirm': 'Einstellungen speichern und RetroRadio neu starten?',
@@ -3825,6 +3953,43 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'js.stationSaveError': 'Fehler beim Speichern der Senderliste!',
         'js.stationResetConfirm': 'Senderliste auf Werkseinstellungen zurücksetzen?\n\nAlle Änderungen an Sendern und Favoriten gehen verloren.',
         'js.stationResetDone': 'Senderliste wurde zurückgesetzt.',
+        'js.stationBackupError': 'Senderliste konnte nicht gelesen werden',
+        'js.stationRestoreHeader': 'Die Datei wurde nicht übernommen, die Senderliste bleibt unverändert:',
+        'js.stationRestoreMore': '… und {0} weitere Fehler',
+        'js.stationRestoreTooBig': 'Die Datei ist größer als 64 KB und damit keine Sendersicherung.',
+        'js.stationRestoreRead': 'Die Datei konnte nicht gelesen werden.',
+        'js.stationRestoreEncoding': 'Die Datei ist nicht als UTF-8 gespeichert.',
+        'js.stationRestoreEmpty': 'Die Datei ist leer.',
+        'js.stationRestoreSyntax': 'Fehler im JSON in Zeile {0}, Spalte {1}: {2}',
+        'js.jsonError.syntax': 'Dieses Zeichen passt hier nicht. Fehlt davor ein Komma, ein Anführungszeichen oder eine Klammer?',
+        'js.jsonError.end': 'Die Datei endet zu früh. Fehlt eine schließende Klammer oder ein Anführungszeichen?',
+        'js.jsonError.duplicate': 'Das Feld "{0}" steht doppelt im selben Abschnitt.',
+        'js.jsonError.trailing': 'Nach dem Ende der Daten folgt noch etwas.',
+        'js.jsonError.depth': 'Die Daten sind zu tief verschachtelt.',
+        'js.stationRestoreNotBackup': 'Die Datei ist keine Sendersicherung für RetroRadio oder RetroRadioTab5 (Feld "format" fehlt oder stimmt nicht).',
+        'js.stationRestoreNewer': 'Die Sicherung stammt von einer neueren Firmware (Version {0}).',
+        'js.stationRestoreVersion': 'Das Feld "version" muss 1 sein.',
+        'js.stationRestoreUnknownTop': 'Unbekanntes Feld "{0}". Vertippt?',
+        'js.stationRestoreList': 'Das Feld "stations" fehlt oder ist keine Liste [ … ].',
+        'js.stationRestoreCount': 'Die Liste muss genau 70 Plätze enthalten, die Datei hat {0}.',
+        'js.stationRestoreEntry': 'Eintrag {0} der Liste ist kein Abschnitt { … }.',
+        'js.stationRestoreSlotLabel': 'Platz {0}',
+        'js.stationRestoreEntryLabel': 'Eintrag {0}',
+        'js.stationRestoreSlot': '{0}: "slot" muss eine ganze Zahl von 1 bis 70 sein.',
+        'js.stationRestoreSlotTwice': 'Platz {0} kommt mehrfach vor.',
+        'js.stationRestoreSlotMissing': 'Platz {0} fehlt.',
+        'js.stationRestoreField': '{0}: Das Feld "{1}" fehlt.',
+        'js.stationRestoreUnknown': '{0}: Unbekanntes Feld "{1}". Vertippt?',
+        'js.stationRestoreText': '{0}: "{1}" muss Text in Anführungszeichen sein.',
+        'js.stationRestoreBool': '{0}: "preset" muss true oder false sein, ohne Anführungszeichen.',
+        'js.stationRestoreChars': '{0}: "{1}" enthält Steuerzeichen oder ungültige Zeichen.',
+        'js.stationRestoreLong': '{0}: "{1}" ist zu lang ({2} von höchstens {3} Byte, Umlaute zählen doppelt).',
+        'js.stationRestoreUrl': '{0}: "url" muss mit http:// oder https:// beginnen und darf keine Leerzeichen enthalten.',
+        'js.stationRestoreNames': '{0}: Ein Sender mit "url" braucht auch "shortName" und "name".',
+        'js.stationRestoreEmptySlot': '{0}: Ohne "url" müssen "shortName" und "name" leer sein und "preset" false.',
+        'js.stationRestoreFavorites': 'Höchstens 10 Favoriten sind erlaubt, die Datei hat {0}.',
+        'js.stationRestoreConfirm': 'Senderliste aus "{0}" übernehmen?\n\n{1} Sender, davon {2} Favoriten.\nDie jetzige Liste wird ersetzt. Sichere sie vorher, falls du sie noch brauchst.',
+        'js.stationRestoreDone': 'Senderliste wurde übernommen.',
         'js.noSearchResults': 'Keine Ergebnisse',
         'js.modalSlotEmpty': 'Slot #{0}: Neuer Sender',
         'js.modalSlotEdit': 'Sender #{0} bearbeiten',
@@ -3879,6 +4044,10 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'remote.eqReset': 'Reset EQ',
         'remote.stationFactoryReset': 'Reset station list to defaults',
         'remote.reset': 'Reset',
+        'remote.stationBackup': 'Backup',
+        'remote.stationBackupTitle': 'Save station list to a file',
+        'remote.stationRestore': 'Restore',
+        'remote.stationRestoreTitle': 'Load station list from a file',
         'remote.volume': 'Volume',
         'remote.balance': 'Balance',
         'remote.bass': 'Bass',
@@ -3914,10 +4083,14 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'settings.locationDetect': 'Find location',
         'settings.city': 'City',
         'settings.cityPlaceholder': 'Filled automatically',
-        'settings.lockPin': 'Change lock screen code',
-        'settings.currentCode': 'Current code',
-        'settings.newCode': 'New code',
-        'settings.lockPinHint': 'Leave empty if the code should not be changed.',
+        'settings.pinLockToggle': 'PIN lock for radio and web',
+        'settings.pinOn': 'On',
+        'settings.pinOff': 'Off',
+        'settings.pinChangeTitle': 'Change PIN',
+        'settings.pinDisableTitle': 'Turn off PIN lock?',
+        'settings.pinDisable': 'Turn off',
+        'settings.currentCode': 'Current PIN',
+        'settings.newCode': 'New PIN (4 digits)',
         'settings.newsRessort': 'News section',
         'settings.ressort.inland': 'Domestic',
         'settings.ressort.ausland': 'International',
@@ -4009,6 +4182,13 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'js.renameError': 'Error renaming',
         'js.deleteError': 'Error deleting',
         'js.deleteConfirm': ' really delete?',
+        'js.deleteFolderConfirm': 'The folder "{0}" contains {1} files and {2} subfolders, including hidden and system entries. Permanently delete the folder and all its contents?',
+        'js.folderCounting': 'Counting contents...',
+        'js.folderDeleting': 'Deleting {0} of {1}...',
+        'js.folderCountFailed': 'Counting stopped at "{0}". Nothing was deleted. {1}',
+        'js.folderDeleteFailed': 'Deletion stopped at "{0}". Confirmed deleted: {1} files and {2} folders. {3}',
+        'js.folderInvalidList': 'The file list is incomplete or invalid.',
+        'js.folderKeepOpen': 'Keep this page open until completion.',
         'js.folderEmpty': 'Folder is empty',
         'js.rename': 'Rename',
         'js.deleteFolder': 'Delete folder',
@@ -4028,8 +4208,9 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'js.stationOnlyRadio': 'Station change only possible while RetroRadio is active',
         'js.stationChangeError': 'Error changing station',
         'js.uploadFailed': 'Upload failed',
-        'js.currentCodeInvalid': 'The current code is invalid.',
-        'js.newCodeInvalid': 'The new code is invalid.',
+        'js.currentCodeInvalid': 'The current PIN is incorrect.',
+        'js.savePinLockFailed': 'Could not save the PIN lock setting.',
+        'js.savePinFailed': 'Could not save the new PIN.',
         'js.plzFiveDigits': 'Postal code must have exactly 5 digits.',
         'js.geoNotResolved': 'The location could not be determined. The previous location will be kept.',
         'js.saveRestartConfirm': 'Save settings and restart RetroRadio?',
@@ -4043,6 +4224,43 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'js.stationSaveError': 'Error saving the station list!',
         'js.stationResetConfirm': 'Reset station list to factory defaults?\n\nAll changes to stations and favorites will be lost.',
         'js.stationResetDone': 'Station list has been reset.',
+        'js.stationBackupError': 'Could not read the station list',
+        'js.stationRestoreHeader': 'The file was not applied, the station list is unchanged:',
+        'js.stationRestoreMore': '… and {0} more errors',
+        'js.stationRestoreTooBig': 'The file is larger than 64 KB and therefore not a station backup.',
+        'js.stationRestoreRead': 'The file could not be read.',
+        'js.stationRestoreEncoding': 'The file is not saved as UTF-8.',
+        'js.stationRestoreEmpty': 'The file is empty.',
+        'js.stationRestoreSyntax': 'JSON error in line {0}, column {1}: {2}',
+        'js.jsonError.syntax': 'This character does not fit here. Is a comma, quote or bracket missing before it?',
+        'js.jsonError.end': 'The file ends too early. Is a closing bracket or quote missing?',
+        'js.jsonError.duplicate': 'The field "{0}" appears twice in the same section.',
+        'js.jsonError.trailing': 'Something follows after the end of the data.',
+        'js.jsonError.depth': 'The data is nested too deeply.',
+        'js.stationRestoreNotBackup': 'The file is not a station backup for RetroRadio or RetroRadioTab5 (field "format" missing or wrong).',
+        'js.stationRestoreNewer': 'The backup comes from a newer firmware (version {0}).',
+        'js.stationRestoreVersion': 'The field "version" must be 1.',
+        'js.stationRestoreUnknownTop': 'Unknown field "{0}". Typo?',
+        'js.stationRestoreList': 'The field "stations" is missing or not a list [ … ].',
+        'js.stationRestoreCount': 'The list must contain exactly 70 slots, the file has {0}.',
+        'js.stationRestoreEntry': 'Entry {0} of the list is not a section { … }.',
+        'js.stationRestoreSlotLabel': 'Slot {0}',
+        'js.stationRestoreEntryLabel': 'Entry {0}',
+        'js.stationRestoreSlot': '{0}: "slot" must be a whole number from 1 to 70.',
+        'js.stationRestoreSlotTwice': 'Slot {0} appears more than once.',
+        'js.stationRestoreSlotMissing': 'Slot {0} is missing.',
+        'js.stationRestoreField': '{0}: The field "{1}" is missing.',
+        'js.stationRestoreUnknown': '{0}: Unknown field "{1}". Typo?',
+        'js.stationRestoreText': '{0}: "{1}" must be text in quotes.',
+        'js.stationRestoreBool': '{0}: "preset" must be true or false, without quotes.',
+        'js.stationRestoreChars': '{0}: "{1}" contains control or invalid characters.',
+        'js.stationRestoreLong': '{0}: "{1}" is too long ({2} of at most {3} bytes, accented letters count twice).',
+        'js.stationRestoreUrl': '{0}: "url" must start with http:// or https:// and must not contain spaces.',
+        'js.stationRestoreNames': '{0}: A station with "url" also needs "shortName" and "name".',
+        'js.stationRestoreEmptySlot': '{0}: Without "url", "shortName" and "name" must be empty and "preset" false.',
+        'js.stationRestoreFavorites': 'At most 10 favorites are allowed, the file has {0}.',
+        'js.stationRestoreConfirm': 'Apply station list from "{0}"?\n\n{1} stations, {2} of them favorites.\nThe current list will be replaced. Back it up first if you still need it.',
+        'js.stationRestoreDone': 'Station list has been applied.',
         'js.noSearchResults': 'No results',
         'js.modalSlotEmpty': 'Slot #{0}: New station',
         'js.modalSlotEdit': 'Edit station #{0}',
@@ -4108,6 +4326,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
 
     // Globale Variablen
     let currentPath = '/';
+    let fileOperationActive = false;
     let selectedFile = null;
     let modalCallback = null;
     let uploadAborted = false;
@@ -4152,7 +4371,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       eventSource.addEventListener('lock', function (e) {
         try {
           const data = JSON.parse(e.data);
-          if (data.locked === true) LockUI.lock();
+          LockUI.applyStatus(data);
         } catch (error) {
           console.error('Fehler beim Parsen des Lock-Events:', error);
         }
@@ -4303,12 +4522,14 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     async function refreshFiles() {
+      if (fileOperationActive) return;
       const btn = document.querySelector('.file-manager-controls .btn-secondary');
       if (btn) { btn.disabled = true; btn.innerHTML = t('js.refreshing'); }
       try {
         const response = await fetch(`/api/files/list?path=${encodeURIComponent(currentPath)}`);
         const data = await response.json();
         if (!response.ok || data.error) throw new Error(data.error || t('js.fileLoadError'));
+        if (fileOperationActive) return;
 
         const available = data.available !== false;
         document.getElementById('uploadZone').style.display = available ? '' : 'none';
@@ -4324,6 +4545,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         renderFileList(data.files);
         if (btn) btn.innerHTML = t('js.refreshed');
       } catch (e) {
+        if (fileOperationActive) return;
         const list = document.getElementById('fileList');
         list.innerHTML = '<div class="file-item"><span class="file-name"></span></div>';
         list.querySelector('.file-name').textContent = t('js.fileLoadError');
@@ -4333,15 +4555,22 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     function updateBreadcrumb() {
-      const parts = currentPath.split('/').filter(p => p);
-      let html = '<span onclick="navigateTo(\'/\')">📁</span>';
+      const breadcrumb = document.getElementById('breadcrumb');
+      breadcrumb.replaceChildren();
+      const root = document.createElement('span');
+      root.textContent = '📁';
+      root.onclick = () => navigateTo('/');
+      breadcrumb.append(root);
       let path = '';
-      for (const part of parts) {
+      for (const part of currentPath.split('/').filter(p => p)) {
         path += '/' + part;
-        html += ` / <span onclick="navigateTo('${path}')">${part}</span>`;
+        const target = path;
+        const segment = document.createElement('span');
+        segment.textContent = part;
+        segment.onclick = () => navigateTo(target);
+        breadcrumb.append(' / ', segment);
       }
-      if (parts.length === 0) html += ' /';
-      document.getElementById('breadcrumb').innerHTML = html;
+      if (currentPath === '/') breadcrumb.append(' /');
     }
 
     function renderFileList(files) {
@@ -4351,33 +4580,39 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         if (!a.isDirectory && b.isDirectory) return 1;
         return a.name.localeCompare(b.name);
       });
-
-      let html = '';
+      list.replaceChildren();
       if (currentPath !== '/') {
-        html += `<div class="file-item" onclick="navigateUp()">
-            <span class="file-icon">⬆️</span>
-            <span class="file-name">..</span>
-            <span class="file-size"></span>
-            <div class="file-actions"></div>
-          </div>`;
+        const up = document.createElement('div');
+        up.className = 'file-item';
+        up.innerHTML = '<span class="file-icon">⬆️</span><span class="file-name">..</span><span class="file-size"></span><div class="file-actions"></div>';
+        up.onclick = navigateUp;
+        list.append(up);
       }
-
       for (const file of files) {
-        const icon = file.isDirectory ? '📁' : getFileIcon(file.name);
-        const size = file.isDirectory ? '' : formatSize(file.size);
-        const clickHandler = file.isDirectory ? `onclick="navigateTo('${currentPath}${currentPath.endsWith('/') ? '' : '/'}${file.name}')"` : '';
-        const deleteKey = file.isDirectory ? 'js.deleteFolder' : 'js.deleteFile';
-        html += `<div class="file-item" ${clickHandler}>
-            <span class="file-icon">${icon}</span>
-            <span class="file-name">${file.name}</span>
-            <span class="file-size">${size}</span>
-            <div class="file-actions">
-              <button class="btn btn-secondary" title="${t('js.rename')}" data-i18n-title="js.rename" onclick="event.stopPropagation(); renameFile('${file.name}')">✏️</button>
-              <button class="btn btn-danger" title="${t(deleteKey)}" data-i18n-title="${deleteKey}" onclick="event.stopPropagation(); deleteFile('${file.name}', ${file.isDirectory})">🗑️</button>
-            </div>
-          </div>`;
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        item.innerHTML = '<span class="file-icon"></span><span class="file-name"></span><span class="file-size"></span><div class="file-actions"></div>';
+        item.querySelector('.file-icon').textContent = file.isDirectory ? '📁' : getFileIcon(file.name);
+        item.querySelector('.file-name').textContent = file.name;
+        item.querySelector('.file-size').textContent = file.isDirectory ? '' : formatSize(file.size);
+        const path = currentPath + (currentPath.endsWith('/') ? '' : '/') + file.name;
+        if (file.isDirectory) item.onclick = () => navigateTo(path);
+        const actions = item.querySelector('.file-actions');
+        for (const [icon, kind, key, action] of [
+          ['✏️', 'secondary', 'js.rename', () => renameFile(file.name)],
+          ['🗑️', 'danger', file.isDirectory ? 'js.deleteFolder' : 'js.deleteFile', () => deleteFile(file.name, file.isDirectory, item, path)]
+        ]) {
+          const button = document.createElement('button');
+          button.className = 'btn btn-' + kind;
+          button.title = t(key);
+          button.dataset.i18nTitle = key;
+          button.textContent = icon;
+          button.onclick = event => { event.stopPropagation(); action(); };
+          actions.append(button);
+        }
+        list.append(item);
       }
-      list.innerHTML = html || `<div class="file-item"><span class="file-name" style="color:#888;">${t('js.folderEmpty')}</span></div>`;
+      if (!list.children.length) list.innerHTML = `<div class="file-item"><span class="file-name" style="color:#888;">${t('js.folderEmpty')}</span></div>`;
     }
 
     function getFileIcon(filename) {
@@ -4398,11 +4633,13 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     function navigateTo(path) {
+      if (fileOperationActive) return;
       currentPath = path;
       refreshFiles();
     }
 
     function navigateUp() {
+      if (fileOperationActive) return;
       const parts = currentPath.split('/').filter(p => p);
       parts.pop();
       currentPath = '/' + parts.join('/');
@@ -4412,6 +4649,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     function createFolder() {
+      if (fileOperationActive) return;
       showModal(t('modal.newFolder'), '', async (name) => {
         if (!name) return;
         try {
@@ -4424,6 +4662,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     function renameFile(name) {
+      if (fileOperationActive) return;
       showModal(t('js.rename'), name, async (newName) => {
         if (!newName || newName === name) return;
         try {
@@ -4435,14 +4674,79 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       });
     }
 
-    async function deleteFile(name, isDirectory) {
+    /** @brief Löscht genau einen zuvor aufgelisteten Eintrag. Ein Ordner muss inzwischen leer sein. */
+    async function deleteEntry(path, isDirectory, treeRoot) {
+      const params = { path, directory: isDirectory };
+      if (treeRoot) params.treeRoot = treeRoot;
+      const response = await fetch('/api/files/delete', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(params) });
+      const data = await response.json();
+      if (!response.ok || data.success !== true) throw new Error(data.error || t('js.deleteError'));
+    }
+
+    /** @brief Löscht eine Datei nach Rückfrage oder zählt einen Ordner vor der Bestätigung. */
+    async function deleteFile(name, isDirectory, item, path) {
+      if (fileOperationActive || currentXHR) return;
+      if (isDirectory) return deleteFolder(name, path, item);
       if (!confirm(`"${name}"${t('js.deleteConfirm')}`)) return;
       try {
-        const response = await fetch('/api/files/delete', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ path: currentPath + (currentPath.endsWith('/') ? '' : '/') + name }) });
-        const data = await response.json();
-        if (data.error) alert(t('js.error') + data.error);
-        else refreshFiles();
-      } catch (e) { alert(t('js.deleteError')); }
+        await deleteEntry(path, false);
+        refreshFiles();
+        loadSDInfo();
+      } catch (e) { alert(t('js.error') + e.message); }
+    }
+
+    /** @brief Erfasst den vollständigen Baum vor der Rückfrage und löscht bestätigte Einträge einzeln, Unterordner vor ihren Eltern. Bei Fehlern endet der Ablauf ohne weitere Löschversuche. */
+    async function deleteFolder(name, path, item) {
+      fileOperationActive = true;
+      const controls = [...document.querySelectorAll('#filemanager button, #fileInput')].map(control => [control, control.disabled]);
+      controls.forEach(([control]) => { control.disabled = true; });
+      const status = item.querySelector('.file-size');
+      const show = label => { status.textContent = label; };
+      const plan = [];
+      const pending = [{ path, isDirectory: true, expanded: false }];
+      let files = 0, folders = 0, removedFiles = 0, removedFolders = 0;
+      let failedPath = path, deleting = false;
+      try {
+        show(t('js.folderCounting'));
+        while (pending.length) {
+          const entry = pending.pop();
+          failedPath = entry.path;
+          if (!entry.isDirectory || entry.expanded) {
+            plan.push(entry);
+            continue;
+          }
+          const response = await fetch('/api/files/list?' + new URLSearchParams({ path: entry.path, treeRoot: path }));
+          const data = await response.json();
+          if (!response.ok || data.error) throw new Error(data.error || t('js.fileLoadError'));
+          if (data.available === false) throw new Error(t('js.noSdCard'));
+          if (!Array.isArray(data.files)) throw new Error(t('js.folderInvalidList'));
+          pending.push({ ...entry, expanded: true });
+          for (const child of data.files) {
+            if (typeof child.name !== 'string' || !child.name || child.name === '.' || child.name === '..' || /[\\/\x00-\x1f]/.test(child.name) || typeof child.isDirectory !== 'boolean') throw new Error(t('js.folderInvalidList'));
+            pending.push({ path: entry.path + '/' + child.name, isDirectory: child.isDirectory, expanded: false });
+            if (child.isDirectory) folders++; else files++;
+          }
+        }
+        show('');
+        await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+        const question = files + folders ? tf('js.deleteFolderConfirm', name, files, folders) : `"${name}"${t('js.deleteConfirm')}`;
+        if (!confirm(question + '\n\n' + t('js.folderKeepOpen'))) return;
+        deleting = true;
+        for (const entry of plan) {
+          failedPath = entry.path;
+          show(tf('js.folderDeleting', removedFiles + removedFolders, plan.length));
+          await deleteEntry(entry.path, entry.isDirectory, path);
+          if (entry.isDirectory) removedFolders++; else removedFiles++;
+        }
+      } catch (e) {
+        alert(deleting ? tf('js.folderDeleteFailed', failedPath, removedFiles, removedFolders, e.message) : tf('js.folderCountFailed', failedPath, e.message));
+      } finally {
+        show('');
+        controls.forEach(([control, disabled]) => { control.disabled = disabled; });
+        fileOperationActive = false;
+        refreshFiles();
+        if (deleting) loadSDInfo();
+      }
     }
 
     // Datei-Upload
@@ -4799,7 +5103,6 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       initSyncIntervalDropdown();
       initLocationSettings();
       initRessortChips();
-      initLockPinSettings();
       initManualTime();
       loadCurrentSettings();
       setupSettingsButtons();
@@ -4888,6 +5191,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         const response = await fetch('/api/settings');
         if (response.ok) {
           const data = await response.json();
+          LockUI.setInitialMode(data.pinLockEnabled);
           if (data.hostname) document.getElementById('hostnameInput').value = data.hostname;
           if (data.ntpServer) document.getElementById('ntpServerInput').value = data.ntpServer;
           if (data.newsRegion) selectedNewsRegion = parseInt(data.newsRegion);
@@ -5113,19 +5417,6 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
 
 
     /** @brief Chip-Gruppe initialisieren - Einfachauswahl (Radio-Verhalten) */
-    function initLockPinSettings() {
-      const inputs = [
-        document.getElementById('lockPinCurrentInput'),
-        document.getElementById('lockPinNewInput')
-      ];
-
-      inputs.forEach(input => {
-        input.addEventListener('input', () => {
-          input.value = input.value.replace(/[^0-9]/g, '').slice(0, 32);
-        });
-      });
-    }
-
     function initRessortChips() {
       document.querySelectorAll('#ressortChips .chip').forEach(chip => {
         chip.addEventListener('click', () => {
@@ -5165,13 +5456,6 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
 
         const plz  = document.getElementById('plzInput').value.trim();
         const city = document.getElementById('cityInput').value.trim();
-        const lockPinCurrent = document.getElementById('lockPinCurrentInput').value.trim();
-        const lockPinNew = document.getElementById('lockPinNewInput').value.trim();
-
-        if (lockPinCurrent || lockPinNew) {
-          if (!/^[0-9]{4}$/.test(lockPinCurrent)) { alert(t('js.currentCodeInvalid')); return; }
-          if (!/^[0-9]{4}$/.test(lockPinNew)) { alert(t('js.newCodeInvalid')); return; }
-        }
 
         // PLZ-Plausibilität
         if (plz && (plz.length !== 5 || !/^[0-9]{5}$/.test(plz))) {
@@ -5198,11 +5482,6 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
             language: normalizeLanguage(document.getElementById('languageSelect').value)
           };
 
-          if (lockPinCurrent && lockPinNew) {
-            settingsPayload.lockPinCurrent = lockPinCurrent;
-            settingsPayload.lockPinNew = lockPinNew;
-          }
-
           const response = await fetch('/api/settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -5210,8 +5489,6 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
           });
 
           if (response.ok) {
-            document.getElementById('lockPinCurrentInput').value = '';
-            document.getElementById('lockPinNewInput').value = '';
             localStorage.setItem('retroRadioLanguage', normalizeLanguage(document.getElementById('languageSelect').value));
             alert(t('js.settingsSavedRestart'));
             setTimeout(() => location.reload(), 3000);
@@ -5400,7 +5677,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       await saveAndRefresh();
     }
 
-    // Senderliste auf ESP speichern und UI aktualisieren
+    // Senderliste auf ESP speichern und UI aktualisieren; liefert true, wenn das Gerät gespeichert hat
     async function saveAndRefresh() {
       try {
         const response = await fetch('/api/stations', {
@@ -5414,9 +5691,250 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         // ScaleWidget und Presets aktualisieren
         ScaleWidget.updateStations(allStationsRemote);
         loadPresets();
+        return true;
       } catch (error) {
         console.error('Fehler beim Speichern:', error);
         alert(t('js.stationSaveError'));
+        return false;
+      }
+    }
+
+    // Sendersicherung: eine JSON-Datei mit allen 70 Plätzen, je Platz eine Zeile, damit sie sich im Texteditor bearbeiten lässt
+    const STATION_BACKUP_FORMAT = 'RetroRadioTab5-Sender';
+    const STATION_BACKUP_VERSION = 1;
+    const STATION_BACKUP_MAX_FILE = 65536;
+    const STATION_TEXT_FIELDS = { shortName: 23, name: 63, url: 255 };  // Nutzbare UTF-8-Bytes je Textfeld
+
+    /** Baut den Dateiinhalt der Sicherung aus den Plätzen in Platzreihenfolge. */
+    function stationBackupText(stations) {
+      const lines = [];
+      for (let i = 0; i < 70; i++) {
+        const s = stations[i] || {};
+        lines.push('    ' + JSON.stringify({ slot: i + 1, shortName: s.shortName || '', name: s.name || '', url: s.url || '', preset: !!s.preset }));
+      }
+      return '{\n  "format": "' + STATION_BACKUP_FORMAT + '",\n  "version": ' + STATION_BACKUP_VERSION + ',\n  "stations": [\n' + lines.join(',\n') + '\n  ]\n}\n';
+    }
+
+    /** Holt die gespeicherte Liste frisch vom Gerät und bietet sie als retroradio-sender_JJJJ-MM-TT.json zum Download an. */
+    async function backupStations() {
+      try {
+        const response = await fetch('/api/stations');
+        if (!response.ok) throw new Error((await response.json()).error || String(response.status));
+        const stations = await response.json();
+        if (!Array.isArray(stations)) throw new Error(t('js.stationRestoreList'));
+        const now = new Date();
+        const link = document.createElement('a');
+        link.download = 'retroradio-sender_' + now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + '.json';
+        link.href = URL.createObjectURL(new Blob([stationBackupText(stations)], { type: 'application/json' }));
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      } catch (error) {
+        alert(t('js.stationBackupError') + ': ' + error.message);
+      }
+    }
+
+    /**
+     * Sucht den ersten Syntaxfehler nach RFC 8259 und doppelte Feldnamen im selben Objekt, die JSON.parse still überschreiben würde.
+     * Liefert null oder { pos, kind, name } mit kind syntax, end, duplicate, trailing oder depth; pos zählt UTF-16-Zeichen ab 0.
+     */
+    function jsonSyntaxError(text) {
+      let i = 0;
+      const fail = (kind, at = i, name = '') => { throw { pos: at, kind: kind || (i >= text.length ? 'end' : 'syntax'), name }; };
+      const space = () => { while (i < text.length && ' \t\n\r'.includes(text[i])) i++; };
+      const string = () => {
+        i++;
+        while (i < text.length) {
+          const c = text.charCodeAt(i);
+          if (c === 34) { i++; return; }
+          if (c < 32) fail();
+          if (c === 92) {
+            const e = text[++i];
+            if (e === 'u' && /^[0-9a-fA-F]{4}$/.test(text.slice(i + 1, i + 5))) i += 5;
+            else if (e !== undefined && '"\\/bfnrt'.includes(e)) i++;
+            else fail();
+          } else i++;
+        }
+        fail();
+      };
+      const number = () => {
+        const pattern = /-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/y;
+        pattern.lastIndex = i;
+        if (!pattern.exec(text)) fail();
+        i = pattern.lastIndex;
+      };
+      const word = w => { if (!text.startsWith(w, i)) fail(); i += w.length; };
+      const value = depth => {
+        if (depth > 16) fail('depth');
+        space();
+        const c = text[i];
+        if (c === '{' || c === '[') {
+          const close = c === '{' ? '}' : ']';
+          const names = new Set();
+          i++;
+          space();
+          if (text[i] === close) { i++; return; }
+          for (;;) {
+            if (c === '{') {
+              space();
+              if (text[i] !== '"') fail();
+              const at = i;
+              string();
+              const name = JSON.parse(text.slice(at, i));
+              if (names.has(name)) fail('duplicate', at, name);
+              names.add(name);
+              space();
+              if (text[i] !== ':') fail();
+              i++;
+            }
+            value(depth + 1);
+            space();
+            if (text[i] === close) { i++; return; }
+            if (text[i] !== ',') fail();
+            i++;
+          }
+        }
+        if (c === '"') string();
+        else if (c === 't') word('true');
+        else if (c === 'f') word('false');
+        else if (c === 'n') word('null');
+        else number();
+      };
+      try {
+        value(0);
+        space();
+        if (i < text.length) fail('trailing');
+        return null;
+      } catch (error) {
+        if (error && error.kind) return error;
+        throw error;
+      }
+    }
+
+    /** Rechnet eine Zeichenposition in Zeile und Spalte ab 1 um. */
+    function jsonLineColumn(text, pos) {
+      const lines = text.slice(0, pos).split(/\r\n|[\r\n]/);
+      return [lines.length, lines[lines.length - 1].length + 1];
+    }
+
+    /** Prüft Text ohne Steuerzeichen und ohne einzelne Surrogate, die sich nicht als regulärer UTF-8-Text speichern lassen. */
+    function stationTextAllowed(v) {
+      for (let i = 0; i < v.length; i++) {
+        const c = v.charCodeAt(i);
+        if (c < 32 || c === 127 || (c >= 0xDC00 && c <= 0xDFFF)) return false;
+        if (c >= 0xD800 && c <= 0xDBFF) {
+          const d = v.charCodeAt(i + 1);
+          if (!(d >= 0xDC00 && d <= 0xDFFF)) return false;
+          i++;
+        }
+      }
+      return true;
+    }
+
+    /**
+     * Prüft eine geparste Sendersicherung auf Kennung, Version, genau 70 Plätze und jedes Feld nach den Regeln des gemeinsamen Dateiformats.
+     * Liefert { errors } oder zusätzlich stations (70 Plätze in Platzreihenfolge), count (belegte Plätze) und favorites.
+     */
+    function checkStationBackup(data) {
+      if (!data || typeof data !== 'object' || Array.isArray(data) || data.format !== STATION_BACKUP_FORMAT)
+        return { errors: [t('js.stationRestoreNotBackup')] };
+      if (Number.isInteger(data.version) && data.version > STATION_BACKUP_VERSION)
+        return { errors: [tf('js.stationRestoreNewer', data.version)] };
+      const errors = [];
+      if (data.version !== STATION_BACKUP_VERSION) errors.push(t('js.stationRestoreVersion'));
+      Object.keys(data).filter(k => !['format', 'version', 'stations'].includes(k)).forEach(k => errors.push(tf('js.stationRestoreUnknownTop', k)));
+      if (!Array.isArray(data.stations)) {
+        errors.push(t('js.stationRestoreList'));
+        return { errors };
+      }
+      if (data.stations.length !== 70) errors.push(tf('js.stationRestoreCount', data.stations.length));
+      const stations = new Array(70).fill(null);
+      const seen = new Set();
+      const encoder = new TextEncoder();
+      let count = 0, favorites = 0;
+      data.stations.forEach((entry, index) => {
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+          errors.push(tf('js.stationRestoreEntry', index + 1));
+          return;
+        }
+        const slot = entry.slot;
+        let ok = Number.isInteger(slot) && slot >= 1 && slot <= 70;
+        const label = ok ? tf('js.stationRestoreSlotLabel', slot) : tf('js.stationRestoreEntryLabel', index + 1);
+        if (!ok) errors.push(tf('js.stationRestoreSlot', label));
+        else if (seen.has(slot)) {
+          errors.push(tf('js.stationRestoreSlotTwice', slot));
+          ok = false;
+        }
+        else seen.add(slot);
+        Object.keys(entry).filter(k => !['slot', 'shortName', 'name', 'url', 'preset'].includes(k)).forEach(k => errors.push(tf('js.stationRestoreUnknown', label, k)));
+        for (const [key, max] of Object.entries(STATION_TEXT_FIELDS)) {
+          const v = entry[key];
+          const bytes = typeof v === 'string' ? encoder.encode(v).length : 0;
+          const problem = !Object.prototype.hasOwnProperty.call(entry, key) ? tf('js.stationRestoreField', label, key)
+            : typeof v !== 'string' ? tf('js.stationRestoreText', label, key)
+            : !stationTextAllowed(v) ? tf('js.stationRestoreChars', label, key)
+            : bytes > max ? tf('js.stationRestoreLong', label, key, bytes, max) : '';
+          if (problem) {
+            errors.push(problem);
+            ok = false;
+          }
+        }
+        if (!Object.prototype.hasOwnProperty.call(entry, 'preset')) {
+          errors.push(tf('js.stationRestoreField', label, 'preset'));
+          ok = false;
+        } else if (typeof entry.preset !== 'boolean') {
+          errors.push(tf('js.stationRestoreBool', label));
+          ok = false;
+        }
+        if (!ok) return;
+        const s = { shortName: entry.shortName, name: entry.name, url: entry.url, preset: entry.preset };
+        if (s.url && (!/^https?:\/\//.test(s.url) || /\s/.test(s.url))) errors.push(tf('js.stationRestoreUrl', label));
+        else if (s.url && (!s.shortName || !s.name)) errors.push(tf('js.stationRestoreNames', label));
+        else if (!s.url && (s.shortName || s.name || s.preset)) errors.push(tf('js.stationRestoreEmptySlot', label));
+        if (s.url) count++;
+        if (s.preset) favorites++;
+        stations[slot - 1] = s;
+      });
+      for (let slot = 1; slot <= 70; slot++)
+        if (!seen.has(slot)) errors.push(tf('js.stationRestoreSlotMissing', slot));
+      if (favorites > 10) errors.push(tf('js.stationRestoreFavorites', favorites));
+      return errors.length ? { errors } : { errors, stations, count, favorites };
+    }
+
+    /** Liest eine Sicherungsdatei, prüft Kodierung, Syntax und Inhalt vollständig und ersetzt die Senderliste erst nach Rückfrage über saveAndRefresh. */
+    async function restoreStationsFromFile(file) {
+      const reject = errors => alert(t('js.stationRestoreHeader') + '\n\n' + errors.slice(0, 10).map(e => '• ' + e).join('\n') + (errors.length > 10 ? '\n' + tf('js.stationRestoreMore', errors.length - 10) : ''));
+      if (file.size > STATION_BACKUP_MAX_FILE) return reject([t('js.stationRestoreTooBig')]);
+      let bytes, text;
+      try {
+        bytes = await file.arrayBuffer();
+      } catch (error) {
+        return reject([t('js.stationRestoreRead')]);
+      }
+      try {
+        text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+      } catch (error) {
+        return reject([t('js.stationRestoreEncoding')]);
+      }
+      if (!text.trim()) return reject([t('js.stationRestoreEmpty')]);
+      const syntax = jsonSyntaxError(text);
+      if (syntax) {
+        const [line, column] = jsonLineColumn(text, syntax.pos);
+        return reject([tf('js.stationRestoreSyntax', line, column, tf('js.jsonError.' + syntax.kind, syntax.name))]);
+      }
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        return reject([error.message]);
+      }
+      const result = checkStationBackup(data);
+      if (result.errors.length) return reject(result.errors);
+      if (!confirm(tf('js.stationRestoreConfirm', file.name, result.count, result.favorites))) return;
+      allStationsRemote = result.stations;
+      if (await saveAndRefresh()) alert(t('js.stationRestoreDone'));
+      else {
+        await loadAllStationsRemote();
+        await loadPresets();
       }
     }
 
@@ -6364,6 +6882,17 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         }
       });
 
+      // Senderliste als Datei sichern und zurückspielen
+      document.getElementById('btnStationBackup').addEventListener('click', backupStations);
+      const stationRestoreInput = document.getElementById('stationRestoreInput');
+      document.getElementById('btnStationRestore').addEventListener('click', () => stationRestoreInput.click());
+      stationRestoreInput.addEventListener('change', async () => {
+        const file = stationRestoreInput.files[0];
+        // Leeren, damit dieselbe Datei nach einer Korrektur erneut ein change auslöst
+        stationRestoreInput.value = '';
+        if (file) await restoreStationsFromFile(file);
+      });
+
       // Sender vor/zurück
       document.getElementById('stationPrevBtn').addEventListener('click', () => changeStationRelative(-1));
       document.getElementById('stationNextBtn').addEventListener('click', () => changeStationRelative(+1));
@@ -6669,22 +7198,16 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       }
     }
 
-    function resetEqualizerRetro() {
-      // Standardwerte, sie müssen den DEFAULT_-Konstanten in AppState.h entsprechen
-      const defaults = { balanceTrack: 0, bassTrack: 10, midTrack: 1, trebleTrack: 10 };
-      const defaultVolume = 30;
-
-      for (const id in defaults) {
-        const track = document.getElementById(id);
-        track.dataset.value = defaults[id];
-        if (track._updateValue) track._updateValue(defaults[id]);
+    async function resetEqualizerRetro() {
+      clearTimeout(sliderDebounceTimer);
+      try {
+        const response = await fetch('/api/radio/reset-controls', { method: 'POST' });
+        if (!response.ok)
+          throw new Error("HTTP " + response.status);
+        await loadRemoteStatus();
+      } catch (error) {
+        console.error('Fehler beim Zurücksetzen der Audioregler:', error);
       }
-      setBalance(defaults.balanceTrack);
-      setTone(defaults.bassTrack, defaults.midTrack, defaults.trebleTrack);
-
-      remoteState.volume = defaultVolume;
-      updateKnobUI(defaultVolume, remoteState.muted);
-      setVolume(defaultVolume);
     }
 
     async function loadRemoteStatus() {
@@ -6921,8 +7444,19 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       const MAX_INPUT = 16; // Obergrenze der Code-Eingabe, oberhalb der Code-Länge
       let input = '';
       let locked = true;    // beim Laden gesperrt
+      let enabled = null;   // PIN-Modus ist bis zur ersten Antwort des Radios unbekannt
+      let savingPin = false;
+      let statusRevision = 0; // Eine verspätete Antwort darf einen neueren Sperrzustand nicht überschreiben
+      let lockRevision = 0;
       let busy = false;     // Code-Prüfung läuft gerade
       let overlay = null, keypad = null, card = null;
+      const toggle = document.getElementById('pinLockToggle');
+      const changePinBtn = document.getElementById('pinChangeBtn');
+      const pinDialog = document.getElementById('pinDialog');
+      const pinForm = document.getElementById('pinForm');
+      const currentPin = document.getElementById('lockPinCurrentInput');
+      const newPin = document.getElementById('lockPinNewInput');
+      const pinError = document.getElementById('pinDialogError');
 
       function setInput(value) {
         input = value.slice(0, MAX_INPUT);
@@ -6966,6 +7500,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         }
 
         busy = true;
+        const challenge = lockRevision;
         try {
           const body = new URLSearchParams();
           body.set('pin', input);
@@ -6981,6 +7516,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
             ok = (data && data.ok === true);
           }
 
+          if (challenge !== lockRevision || !locked) return;
           if (ok) {
             unlock();
           } else {
@@ -6996,7 +7532,96 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         }
       }
 
+      function applyStatus(data) {
+        if (typeof data.enabled !== 'boolean') return;
+        ++statusRevision;
+        const wasDisabled = enabled === false;
+        enabled = data.enabled;
+        toggle.setAttribute('aria-checked', String(enabled));
+        toggle.dataset.i18n = enabled ? 'settings.pinOn' : 'settings.pinOff';
+        toggle.textContent = t(toggle.dataset.i18n);
+        if (!savingPin) toggle.disabled = changePinBtn.disabled = false;
+        document.getElementById('lockBtn').hidden = !enabled;
+        overlay.classList.remove('pending');
+        if (!enabled) {
+          if (pinDialog.open && newPin.disabled) pinDialog.close();
+          unlock();
+        } else if (wasDisabled || data.locked === true) {
+          lock();
+        }
+      }
+
+      function setInitialMode(mode) {
+        if (enabled === null) applyStatus({enabled: mode});
+      }
+
+      function openPinDialog(changePin) {
+        if (locked || savingPin || pinDialog.open) return;
+        const title = document.getElementById('pinDialogTitle');
+        const submit = document.getElementById('pinSubmit');
+        title.dataset.i18n = changePin ? 'settings.pinChangeTitle' : 'settings.pinDisableTitle';
+        submit.dataset.i18n = changePin ? 'core.save' : 'settings.pinDisable';
+        title.textContent = t(title.dataset.i18n);
+        submit.textContent = t(submit.dataset.i18n);
+        newPin.disabled = !changePin;
+        document.getElementById('pinNewField').hidden = !changePin;
+        pinError.textContent = '';
+        pinDialog.showModal();
+      }
+
+      async function savePinAction(action) {
+        if (locked || savingPin || enabled === null) return;
+        savingPin = true;
+        const revision = statusRevision;
+        const changePin = action === 'change';
+        const enable = action === 'enable';
+        const submit = document.getElementById('pinSubmit');
+        const cancel = document.getElementById('pinCancel');
+        submit.disabled = cancel.disabled = true;
+        toggle.disabled = changePinBtn.disabled = enable;
+        pinError.textContent = '';
+        let errorMessage = '';
+        try {
+          let response;
+          if (changePin) {
+            response = await fetch('/api/settings', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({lockPinCurrent: currentPin.value, lockPinNew: newPin.value})
+            });
+          } else {
+            const body = new URLSearchParams({enabled: String(enable)});
+            if (!enable) body.set('pin', currentPin.value);
+            response = await fetch('/api/lock/mode', {method: 'POST', body});
+          }
+          if (response.ok) {
+            if (!changePin) {
+              const status = await response.json();
+              if (revision === statusRevision) applyStatus(status);
+            }
+            if (pinDialog.open) pinDialog.close();
+          } else if (response.status === 403 && pinDialog.open) {
+            errorMessage = t('js.currentCodeInvalid');
+            currentPin.focus();
+            currentPin.select();
+          } else {
+            errorMessage = t(changePin ? 'js.savePinFailed' : 'js.savePinLockFailed');
+          }
+        } catch (error) {
+          errorMessage = t('js.networkError') + error.message;
+        } finally {
+          savingPin = false;
+          submit.disabled = cancel.disabled = false;
+          toggle.disabled = changePinBtn.disabled = false;
+        }
+        if (errorMessage && pinDialog.open) pinError.textContent = errorMessage;
+        else if (errorMessage && enable && !locked) alert(errorMessage);
+      }
+
       function lock() {
+        if (enabled === false) return;
+        if (pinDialog.open) pinDialog.close();
+        ++lockRevision;
         locked = true;
         setInput('');
         clearFlash();
@@ -7056,6 +7681,20 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
 
         const lockBtn = document.getElementById('lockBtn');
         if (lockBtn) lockBtn.addEventListener('click', lock);
+        toggle.addEventListener('click', () => {
+          if (enabled) openPinDialog(false);
+          else savePinAction('enable');
+        });
+        changePinBtn.addEventListener('click', () => openPinDialog(true));
+        pinForm.addEventListener('submit', event => {
+          event.preventDefault();
+          savePinAction(newPin.disabled ? 'disable' : 'change');
+        });
+        document.getElementById('pinCancel').addEventListener('click', () => pinDialog.close());
+        pinDialog.addEventListener('cancel', event => {
+          if (savingPin) event.preventDefault();
+        });
+        pinDialog.addEventListener('close', () => pinForm.reset());
 
         // Capture-Phase, damit die Sperr-Tasten Vorrang vor anderen Seiten-Handlern haben
         document.addEventListener('keydown', onKeydown, true);
@@ -7066,7 +7705,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         document.body.classList.add('locked');
       }
 
-      return { init, lock, unlock, isLocked: () => locked };
+      return { init, applyStatus, setInitialMode, isLocked: () => locked };
     })();
 
     document.addEventListener('DOMContentLoaded', function () {

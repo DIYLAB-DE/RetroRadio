@@ -341,14 +341,14 @@ private:
     unsigned long m_visTouchStartTime = 0;               ///< Startzeit der Visualisierungsbereich-Berührung
 
     // Visualisierungs-Modi und Styles
-    VisMode m_visMode = VisMode::VIS_ANALOG;                   ///< Aktueller Visualisierungsmodus
-    SpectrumStyle m_spectrumStyle = SpectrumStyle::CLASSIC;    ///< Aktueller Style für die Spektrum-Anzeige
-    SpectrumStyle m_centeredSpectrumStyle = SpectrumStyle::CLASSIC; ///< Unabhängige Farbwahl des mittigen Spektrums
-    SpectrumStyle m_waterfallStyle = SpectrumStyle::RAINBOW; ///< Unabhängige Farbwahl des Wasserfalls
-    AuroraStyle m_auroraStyle = AuroraStyle::COOL; ///< Gespeicherte Ziel-Farbwelt des Nordlichts
-    DigitalVUStyle m_digitalVUStyle = DigitalVUStyle::CLASSIC; ///< Aktueller Style für die digitale VU-Anzeige
-    WaveformStyle m_waveformStyle = WaveformStyle::OVERLAY;    ///< Aktueller Style für die Wellenform Anzeige
-    GonioStyle m_gonioStyle = GonioStyle::CLASSIC;             ///< Aktuelle Farbvariante der VU-Balken neben dem Goniometer
+    VisMode m_visMode = static_cast<VisMode>(AppState::DEFAULT_VIS_MODE); ///< Aktueller Visualisierungsmodus
+    SpectrumStyle m_spectrumStyle = static_cast<SpectrumStyle>(AppState::DEFAULT_RAINBOW_STYLE); ///< Aktueller Style für die Spektrum-Anzeige
+    SpectrumStyle m_centeredSpectrumStyle = static_cast<SpectrumStyle>(AppState::DEFAULT_RAINBOW_STYLE); ///< Unabhängige Farbwahl des mittigen Spektrums
+    SpectrumStyle m_waterfallStyle = static_cast<SpectrumStyle>(AppState::DEFAULT_RAINBOW_STYLE); ///< Unabhängige Farbwahl des Wasserfalls
+    AuroraStyle m_auroraStyle = static_cast<AuroraStyle>(AppState::DEFAULT_AURORA_STYLE); ///< Gespeicherte Ziel-Farbwelt des Nordlichts
+    DigitalVUStyle m_digitalVUStyle = static_cast<DigitalVUStyle>(AppState::DEFAULT_RAINBOW_STYLE); ///< Aktueller Style für die digitale VU-Anzeige
+    WaveformStyle m_waveformStyle = static_cast<WaveformStyle>(AppState::DEFAULT_WAVEFORM_STYLE); ///< Aktueller Style für die Wellenform Anzeige
+    GonioStyle m_gonioStyle = static_cast<GonioStyle>(AppState::DEFAULT_RAINBOW_STYLE); ///< Aktuelle Farbvariante der VU-Balken neben dem Goniometer
     AppModule m_activeModule = AppModule::NONE;                ///< Aktuelles Modul für modulspezifische Konfiguration
 
     // Analoge VU-Meter
@@ -357,7 +357,7 @@ private:
     float m_needleVelL = 0.0f, m_needleVelR = 0.0f;                         ///< Winkelgeschwindigkeit des Zeigers in Grad je Sekunde
     float m_lastRenderedL = -VU_MAX_ANGLE, m_lastRenderedR = -VU_MAX_ANGLE; ///< Zuletzt gerenderte Werte
     VuBallistics m_vuBallistics = VuBallistics::STANDARD;                   ///< Trägheit des Zeigers
-    AnalogVUStyle m_analogVUStyle = AnalogVUStyle::CLASSIC;                 ///< Farbfassung des Skalenblatts
+    AnalogVUStyle m_analogVUStyle = static_cast<AnalogVUStyle>(AppState::DEFAULT_ANALOG_VU_STYLE); ///< Farbfassung des Skalenblatts
     uint8_t m_vuSensitivity = 2;                                            ///< Stufe der Empfindlichkeit, 0 bis 4
     unsigned long m_lastUpdate_analog = 0;                    ///< Zeitstempel des letzten analogen Updates
 
@@ -442,13 +442,16 @@ private:
     std::unique_ptr<AuroraData, PsramDeleter> m_aurora; ///< Einmalig angelegte Nordlicht-Daten im PSRAM
 
     // Wellenform-Anzeige
-    uint32_t m_lastWaveUpdateMs = 0;                          ///< Zeitstempel des letzten Wave-Updates in ms
-    float m_waveAmp = 1.0f;                                   ///< Auto-Gain Verstärkungsfaktor
-    static constexpr uint8_t WAVE_PEAK_HISTORY_SIZE = 90;     ///< Größe des Peak-History-Buffers (~3 Sekunden bei 30fps)
-    float m_wavePeakHistory[WAVE_PEAK_HISTORY_SIZE] = {0.0f}; ///< Ringpuffer für Peak-Werte
-    uint8_t m_wavePeakHistoryIdx = 0;                         ///< Aktueller Index im Ringpuffer
-    float m_waveSlidingMax = 0.0f;                            ///< Gleitendes Maximum über Peak-History
-    uint32_t m_waveLastPeakUpdate = 0;                        ///< Zeitstempel des letzten Peak-Updates
+    static constexpr uint16_t WAVE_AXIS_COLOR = 0x2104;       ///< Farbe der Mittellinien
+    static constexpr uint8_t WAVE_PEAK_HISTORY_SIZE = 90;     ///< Anzahl der Pegelspitzen für die Auto-Verstärkung
+    uint32_t m_lastWaveUpdateMs = 0;                          ///< Zeitpunkt des letzten gezeichneten Blocks oder Leerbilds
+    uint32_t m_waveDrawnSeq = 0;                              ///< Marke des zuletzt dargestellten Sampleblocks
+    uint32_t m_waveColumnRestMs = 0;                          ///< Bereits verstrichener Bruchteil einer Spalte in Millisekunden
+    int m_waveNextX = -1;                                     ///< Nächste Schreibspalte oder -1 für einen neuen Spuranfang
+    bool m_waveHasSamples = false;                            ///< Die Zeitspur enthält Daten der laufenden Wiedergabe
+    float m_waveAmp = 1.0f;                                   ///< Auto-Verstärkung für neu hinzukommende Ausschläge
+    float m_wavePeakHistory[WAVE_PEAK_HISTORY_SIZE] = {};     ///< Pegelspitzen der zuletzt dargestellten Blöcke
+    uint8_t m_wavePeakHistoryIdx = 0;                         ///< Schreibposition der nächsten Pegelspitze
 
     // Goniometer-Anzeige
     float m_gonioAmp = 1.0f;                                    ///< Auto-Gain Verstärkungsfaktor
@@ -680,7 +683,12 @@ private:
     void drawAurora(bool init, float rmsLeft, float rmsRight);
 
     /**
-     * @brief Zeichnet die Wellenform Anzeige
+     * @brief Löscht die Zeitspur und zeichnet die Mittellinien des aktuellen Kanalstils
+     */
+    void resetWaveTrace();
+
+    /**
+     * @brief Ergänzt die Zeitspur um die Ausschläge des neuesten Sampleblocks
      * @param init true für Initialisierung, false für Update
      */
     void drawWave(bool init);

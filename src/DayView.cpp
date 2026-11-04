@@ -45,8 +45,8 @@ namespace
     constexpr int DISPLAY_H = 480; ///< Display-Höhe
 
     // Exit-Button
-    constexpr int16_t EXIT_BTN_X = 765; ///< X-Mitte des Power-Buttons
-    constexpr int16_t EXIT_BTN_Y = 457; ///< Y-Mitte des Power-Buttons
+    constexpr int16_t EXIT_BTN_X = 765; ///< X-Mitte der Hauptmenütaste
+    constexpr int16_t EXIT_BTN_Y = 457; ///< Y-Mitte der Hauptmenütaste
     constexpr uint16_t BTN_SIZE = 45;   ///< Quadratischer Button
     constexpr uint16_t BTN_RADIUS = 4;  ///< Abgerundete Ecken
     constexpr int BTN_COLOR = 0x39E8;   ///< Farbe für Button-Rahmen
@@ -734,7 +734,7 @@ bool DayView::init(LGFX &tft, StationManager &stationManager, Audio &audio, cons
         BTN_COLOR,         // Hintergrundfarbe des Buttons
         TFT_BLACK,         // Textfarbe (wird nicht verwendet, da ein Symbol gezeichnet wird)
         TFT_DARKGREY,      // Rahmenfarbe des Buttons
-        "^POWER:32:D206^", // Text auf dem Button (hier ein Power-Symbol)
+        Button::HOME_LABEL, // Zum Hauptmenü
         nullptr            // kein Icon
     );
 

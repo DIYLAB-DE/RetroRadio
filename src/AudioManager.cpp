@@ -663,7 +663,6 @@ void AudioManager::handleLyrics(const Audio::msg_t &msg)
  */
 void AudioManager::task_processAudioSamples32(int32_t *outBuff, int16_t validSamples, bool *continueI2S)
 {
-    { extern volatile uint32_t g_audioCbCount; g_audioCbCount = g_audioCbCount + 1; } // Messzähler Datennachschub aus der Audio-Library
     if (continueI2S)
         *continueI2S = true;
 

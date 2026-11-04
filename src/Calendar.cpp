@@ -337,7 +337,7 @@ bool Calendar::init(LGFX &tft, const CalendarCallbacks &callbacks)
         BUTTON_COLOR,
         TFT_BLACK,
         TFT_DARKGREY,
-        "^POWER:32:D206^",
+        Button::HOME_LABEL,
         nullptr);
 
     m_exitButton.setFont(LeagueGothicCond34);

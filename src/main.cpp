@@ -296,6 +296,16 @@ void handleStationPressed(uint16_t staIdx)
 }
 
 /**
+ * @brief Wendet die gespeicherten Audioregler auf die Wiedergabe an.
+ */
+void applyAudioControls()
+{
+    audio.setBalance(APP_STATE.getCurrentBalance());
+    audio.setVolume(APP_STATE.getCurrentVolume(), 1);
+    applyEqFrequencies(APP_STATE.getEqFreqLow(), APP_STATE.getEqFreqPeak(), APP_STATE.getEqFreqHigh());
+}
+
+/**
  * @brief Lautstärke geändert.
  */
 void handleVolumeChanged(uint8_t volume)
@@ -659,7 +669,7 @@ void setup()
     else
         LOG_WARNING("Senderliste konnte nicht geladen werden");
 
-    // MainScreen erstellen (Sperrbildschirm wird intern als Boot-Gate aktiviert)
+    // Hauptmenü mit der gespeicherten PIN-Einstellung starten
     mainScreen = new MainScreen();
     mainScreen->init(tft, rtc, stationManager, audio);
 
@@ -674,10 +684,8 @@ void setup()
     audio.settings.DMA_FRAME_NUM = 256;
     audio.setPinout(i2sPins::I2S_BCLK, i2sPins::I2S_LRC, i2sPins::I2S_DOUT);
     audio.forceMono(false);
-    audio.setBalance(APP_STATE.getCurrentBalance());
     audio.setVolumeSteps(100);
-    audio.setVolume(APP_STATE.getCurrentVolume(), 1);
-    applyEqFrequencies(APP_STATE.getEqFreqLow(), APP_STATE.getEqFreqPeak(), APP_STATE.getEqFreqHigh());
+    applyAudioControls();
     applyStereoWidth(APP_STATE.getStereoWidth());
 
     // AudioManager initialisieren und Callback registrieren
@@ -779,9 +787,6 @@ void loop()
     // MainScreen
     if (mainScreen)
         mainScreen->update();
-
-    // FPS-Log bei Bedarf
-    // fps(5); // Messsonde der Visualisierungs-Vergleichsmessung; bei Bedarf aktivieren
 }
 
 // ===================================================================

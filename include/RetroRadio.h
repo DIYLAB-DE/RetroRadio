@@ -12,6 +12,7 @@
 // Member-Typen
 #include "AppState.h"       // Für AppModule enum
 #include "AudioManager.h"   // Für AudioManagerEventType
+#include "AudioSliderTouch.h"
 #include "Button.h"         // Button Member Array
 #include "DS1307_RTC.h"     // RTC Pointer (Methoden werden aufgerufen!)
 #include "Gfx.h"            // Sprite-Pointer
@@ -317,6 +318,7 @@ private:
     int m_touchY = 0;            ///< Y-Koordinate der Touch-Position
     bool m_touched = false;      ///< Flag für Touch-Status
     bool m_wasTouching = false;  ///< Touch-Zustand des vorherigen Frames
+    uint32_t m_lastTouchPoll = 0; ///< Zeitpunkt der letzten Hardwareabfrage in Millisekunden
 
     // Draw-Status
     bool m_resetRequested = false;     ///< Fordere ein Reset des Anzeigemodus und der Styles an
@@ -341,6 +343,7 @@ private:
     uint8_t m_prevVol = 0;                                  ///< Vorherige Lautstärke
 
     // Equalizer-Regler
+    AudioSliderTouch m_trackTouch;       ///< Haltegeste für Balance und Klangregler
     int8_t m_balance_prev = -128;      ///< Vorherige Balance-Einstellung
     int8_t m_gainLowPass_prev = -128;  ///< Vorherige Tiefpass-Verstärkung
     int8_t m_gainBandPass_prev = -128; ///< Vorherige Bandpass-Verstärkung

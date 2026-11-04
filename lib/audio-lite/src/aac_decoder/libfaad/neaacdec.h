@@ -40,7 +40,7 @@
 
 class NeaacDecoder {
   public:
-    NeaacDecoder() { m_initFlag = 0; }
+    NeaacDecoder() = default;
     ~NeaacDecoder() = default;
     NeAACDecHandle           NeAACDecOpen(void);
     NeAACDecConfigurationPtr NeAACDecGetCurrentConfiguration(NeAACDecHandle hpDecoder);

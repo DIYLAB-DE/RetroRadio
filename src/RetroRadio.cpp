@@ -44,7 +44,7 @@ namespace
 // ===================================================================
 
 // Statische Member für SleepTimer
-const char *RetroRadio::m_sleepLabels[] = {"5", "15", "25", "45", "60", "^POWER:32:D206^"};
+const char *RetroRadio::m_sleepLabels[] = {"5", "15", "25", "45", "60", Button::HOME_LABEL};
 int RetroRadio::m_sleepValues[] = {5, 15, 25, 45, 60, 0};
 
 // Button-Definitionen: Favoriten, Zurück, Vor, Reset, Sleep Timer
@@ -53,7 +53,7 @@ const Buttons RetroRadio::m_buttonDefs[] = {
     {nullptr, 568, 435, 45, 45, 4, 0x39E8, TFT_BLACK, TFT_DARKGREY, "^BCKW:32:5370^", nullptr}, // Zurück
     {nullptr, 623, 435, 45, 45, 4, 0x39E8, TFT_BLACK, TFT_DARKGREY, "^FORW:32:5370^", nullptr}, // Vor
     {nullptr, 678, 435, 67, 45, 4, 0x39E8, TFT_BLACK, TFT_DARKGREY, "reset", nullptr},          // Reset
-    {nullptr, 755, 435, 45, 45, 4, 0x39E8, TFT_BLACK, TFT_DARKGREY, "^POWER:32:D206^", nullptr} // Power/SleepTimer
+    {nullptr, 755, 435, 45, 45, 4, 0x39E8, TFT_BLACK, TFT_DARKGREY, Button::HOME_LABEL, nullptr} // Hauptmenü/Sleep-Timer
 };
 
 // ===================================================================
@@ -314,6 +314,7 @@ void RetroRadio::draw()
     // Dialoge zuerst prüfen und mit return behandeln
     if (m_presetDlg->isActive())
     {
+        m_trackTouch.cancel();
         m_presetDlg->update();
         return;
     }
@@ -321,6 +322,7 @@ void RetroRadio::draw()
     // MessageBox: seit API-Änderung kann nach OK ein "ConfirmationPending" Zustand auftreten, in dem isActive() bereits false ist. Daher auch isBusy() berücksichtigen und die Confirmation explizit abschließen.
     if (m_msg && (m_msg->isActive() || m_msg->isBusy()))
     {
+        m_trackTouch.cancel();
         m_msg->update();
 
         // Completion-Check für einfache Dialoge
@@ -338,7 +340,10 @@ void RetroRadio::draw()
 
     // Wenn der Dialog aktiv ist, den Rest der UI nicht zeichnen
     if (m_sleepDlg->isActive())
+    {
+        m_trackTouch.cancel();
         return;
+    }
 
     // GFX-Status prüfen
     const bool gfxBlocked = APP_STATE.getBlockGFX();
@@ -354,7 +359,13 @@ void RetroRadio::draw()
     if (!gfxBlocked)
     {
         m_wasTouching = m_touched;
-        m_touched = m_tft->getTouch(&m_touchX, &m_touchY);
+        constexpr uint32_t AURORA_IDLE_TOUCH_MS = 20; ///< Abfrageabstand bei Nordlicht ohne erkannte Berührung
+        const uint32_t touchNow = millis();
+        if (m_visualizer.getMode() != VisMode::VIS_AURORA || m_touched || static_cast<uint32_t>(touchNow - m_lastTouchPoll) >= AURORA_IDLE_TOUCH_MS)
+        {
+            m_lastTouchPoll = touchNow;
+            m_touched = m_tft->getTouch(&m_touchX, &m_touchY);
+        }
         m_visualizer.handleTouch(m_touchX, m_touchY, m_touched);
         handleMagicEyeTouch();
         getPressedRetroButton();
@@ -363,6 +374,7 @@ void RetroRadio::draw()
     else
     {
         // Touch-State explizit zurücksetzen wenn blockiert
+        m_trackTouch.cancel();
         m_touched = false;
         m_wasTouching = false;
     }
@@ -407,10 +419,8 @@ void RetroRadio::draw()
         // Externe Änderung -> Tracks neu zeichnen ohne Callbacks
         drawTracks(true, curBal, curLow, curMid, curHigh, true);
     }
-    else
-    {
+    if (!gfxBlocked)
         drawTracks(false, curBal, curLow, curMid, curHigh);
-    }
 
     // Magisches Auge nur bei Wertänderung aufbauen; der Stilvergleich fängt einen Wechsel ab, bei dem sich sonst kein Eingangswert ändert. Die Mindestpause begrenzt die Bildrate, weil beim Einlaufen auf einen Sender jeder Nadelschritt einen neuen Wert liefert.
     const int32_t magicEyeValue = calculateMagicEyeValue();
@@ -447,43 +457,34 @@ void RetroRadio::draw()
     {
         m_resetRequested = false;
 
-        constexpr int8_t DEFAULT_GAIN_LOW = AppState::DEFAULT_GAIN_LOW_PASS_DB;
-        constexpr int8_t DEFAULT_GAIN_BAND = AppState::DEFAULT_GAIN_BAND_PASS_DB;
-        constexpr int8_t DEFAULT_GAIN_HIGH = AppState::DEFAULT_GAIN_HIGH_PASS_DB;
-        constexpr uint8_t DEFAULT_VOLUME = AppState::DEFAULT_VOLUME;
-
-        // Alle Einstellungen zurücksetzen
-        APP_STATE.setCurrentVolume(DEFAULT_VOLUME);
-        APP_STATE.setCurrentBalance(0);
-        APP_STATE.setCurrentGainLowPass(DEFAULT_GAIN_LOW);
-        APP_STATE.setCurrentGainBandPass(DEFAULT_GAIN_BAND);
-        APP_STATE.setCurrentGainHighPass(DEFAULT_GAIN_HIGH);
+        APP_STATE.resetAudioToDefaults();
 
         // Visualisierungen zurücksetzen
-        m_visualizer.setMode(VisMode::VIS_ANALOG);
+        const auto defaultMode = static_cast<VisMode>(AppState::DEFAULT_VIS_MODE);
+        m_visualizer.setMode(defaultMode);
 
         // UI neu zeichnen
-        drawKnob(true, DEFAULT_VOLUME);
-        drawTracks(true, 0, DEFAULT_GAIN_LOW, DEFAULT_GAIN_BAND, DEFAULT_GAIN_HIGH);
+        drawKnob(true, AppState::DEFAULT_VOLUME);
+        drawTracks(true, AppState::DEFAULT_BALANCE, AppState::DEFAULT_GAIN_LOW_PASS_DB, AppState::DEFAULT_GAIN_BAND_PASS_DB, AppState::DEFAULT_GAIN_HIGH_PASS_DB);
 
         // Callbacks
         if (m_callbacks.onVolumeChanged)
-            m_callbacks.onVolumeChanged(DEFAULT_VOLUME);
+            m_callbacks.onVolumeChanged(AppState::DEFAULT_VOLUME);
 
         if (m_callbacks.onBalanceChanged)
-            m_callbacks.onBalanceChanged(0);
+            m_callbacks.onBalanceChanged(AppState::DEFAULT_BALANCE);
 
         if (m_callbacks.onGainLowPassChanged)
-            m_callbacks.onGainLowPassChanged(DEFAULT_GAIN_LOW);
+            m_callbacks.onGainLowPassChanged(AppState::DEFAULT_GAIN_LOW_PASS_DB);
 
         if (m_callbacks.onGainBandPassChanged)
-            m_callbacks.onGainBandPassChanged(DEFAULT_GAIN_BAND);
+            m_callbacks.onGainBandPassChanged(AppState::DEFAULT_GAIN_BAND_PASS_DB);
 
         if (m_callbacks.onGainHighPassChanged)
-            m_callbacks.onGainHighPassChanged(DEFAULT_GAIN_HIGH);
+            m_callbacks.onGainHighPassChanged(AppState::DEFAULT_GAIN_HIGH_PASS_DB);
 
         if (m_callbacks.onVUModeChanged)
-            m_callbacks.onVUModeChanged(VisMode::VIS_ANALOG);
+            m_callbacks.onVUModeChanged(defaultMode);
     }
 
     // Audio-Event-Queue verarbeiten (Metadaten)
@@ -586,7 +587,6 @@ void RetroRadio::draw()
             g_audioManager.getSampleRate());
 
         // Audio-Daten als verarbeitet markieren
-        { extern volatile uint32_t g_visDataCount; g_visDataCount = g_visDataCount + 1; } // Messzähler Visualisierungs-Datenrate
         g_audioManager.consumeAudioData();
     }
 
@@ -743,7 +743,7 @@ void RetroRadio::getPressedRetroButton()
                     m_msg->start();
                 }
 
-                // Button 4: Sleep Timer / Ausschalten
+                // Button 4: Hauptmenü / Sleep-Timer
                 if (i == 4)
                 {
                     m_lastStartedStation = 0xFF;
@@ -754,22 +754,17 @@ void RetroRadio::getPressedRetroButton()
                         (m_tft->height() - RRLayout::Dialog::SLEEP_SIZE) / 2,
                         RRLayout::Dialog::SLEEP_SIZE,
                         RRLayout::Dialog::SLEEP_SIZE);
-                    char sleepTitle[16], sleepMsg[32], sleepCancel[16], sleepStop[16];
-                    STRF(sleepTitle, RetroRadioKey::RETRO_SLEEP_DLG_TITLE);
-                    STRF(sleepMsg, RetroRadioKey::RETRO_SLEEP_DLG_MESSAGE);
-                    STRF(sleepCancel, CommonKey::COMMON_BTN_CANCEL);
-                    STRF(sleepStop, CommonKey::COMMON_BTN_STOP);
-                    m_sleepDlg->setTitle(sleepTitle);
-                    m_sleepDlg->setMessage(sleepMsg);
-                    m_sleepDlg->setCancelLabel(sleepCancel);
-                    m_sleepDlg->setStopLabel(sleepStop);
+                    m_sleepDlg->setTitle(reinterpret_cast<PGM_P>(STR(RetroRadioKey::RETRO_SLEEP_DLG_TITLE)));
+                    m_sleepDlg->setMessage(reinterpret_cast<PGM_P>(STR(RetroRadioKey::RETRO_SLEEP_DLG_MESSAGE)));
+                    m_sleepDlg->setCancelLabel(reinterpret_cast<PGM_P>(STR(CommonKey::COMMON_BTN_CANCEL)));
+                    m_sleepDlg->setStopLabel(reinterpret_cast<PGM_P>(STR(CommonKey::COMMON_BTN_STOP)));
                     m_sleepDlg->setOptions(m_sleepLabels, m_sleepValues, 6);
                     m_sleepDlg->setTimeout(10000);
 
                     m_sleepDlg->setCallback([this](int minutes)
                                             {
                         if (minutes == 0) {
-                            // Sofort ausschalten (ohne Sleep-Mode)
+                            // Wiedergabe beenden und ins Hauptmenü wechseln
                             stopRadioImmediately();
                         } else if (minutes > 0) {
                             // Timer starten - nur bei Ablauf Sleep-Mode aktivieren
@@ -1558,24 +1553,20 @@ void RetroRadio::drawTracks(bool init, int8_t balance, int8_t gainLowPass, int8_
     constexpr int sliderHeight = RRLayout::Tracks::HEIGHT;
 
     // Slider-interne Konstanten
-    constexpr int SLIDER_X[] = {5, 55, 105, 155};
-    constexpr int TOUCH_WIDTH = 31;
-    constexpr int PIXEL_MIN = 104;
-    constexpr int PIXEL_ZERO = 64;
-    constexpr int PIXEL_MAX = 24;
+    using Track = AudioSliderTouch;
 
     auto mapDbToPixel = [](int8_t db) -> int8_t
     {
         return (db <= 0)
-                   ? map(db, -12, 0, PIXEL_MIN, PIXEL_ZERO)
-                   : map(db, 0, 12, PIXEL_ZERO, PIXEL_MAX);
+                   ? map(db, -12, 0, Track::BOTTOM, Track::NEUTRAL)
+                   : map(db, 0, 12, Track::NEUTRAL, Track::TOP);
     };
 
     auto mapPixelToDb = [](int y) -> int8_t
     {
-        return (y > PIXEL_ZERO)
-                   ? map(y, PIXEL_MIN, PIXEL_ZERO, -12, 0)
-                   : map(y, PIXEL_ZERO, PIXEL_MAX, 0, 12);
+        return (y > Track::NEUTRAL)
+                   ? map(y, Track::BOTTOM, Track::NEUTRAL, -12, 0)
+                   : map(y, Track::NEUTRAL, Track::TOP, 0, 12);
     };
 
     auto drawSlider = [this](int xPos, const __FlashStringHelper *label, int8_t pixelValue, bool withLabel = true)
@@ -1585,9 +1576,9 @@ void RetroRadio::drawTracks(bool init, int8_t balance, int8_t gainLowPass, int8_
         if (withLabel && label)
             m_sprRetroTracks->drawString(label, (xPos == 5) ? xPos - 5 : xPos, 0);
 
-        m_sprRetroTracks->drawFastHLine(xPos, PIXEL_ZERO, TOUCH_WIDTH, TFT_DARKGREY);
-        m_sprRetroTracks->drawSmoothCircle(xPos + 15, pixelValue, 13, 3, RRColors::ACCENT, TFT_BLACK);
-        m_sprRetroTracks->fillSmoothCircle(xPos + 15, pixelValue, 10, TFT_BLACK);
+        m_sprRetroTracks->drawFastHLine(xPos, Track::NEUTRAL, Track::WIDTH, TFT_DARKGREY);
+        m_sprRetroTracks->drawSmoothCircle(xPos + Track::CENTER_X, pixelValue, Track::RADIUS, 3, RRColors::ACCENT, TFT_BLACK);
+        m_sprRetroTracks->fillSmoothCircle(xPos + Track::CENTER_X, pixelValue, 10, TFT_BLACK);
     };
 
     balance = constrain(balance, -16, 16);
@@ -1595,7 +1586,7 @@ void RetroRadio::drawTracks(bool init, int8_t balance, int8_t gainLowPass, int8_
     gainBandPass = constrain(gainBandPass, -12, 12);
     gainHighPass = constrain(gainHighPass, -12, 12);
 
-    int8_t balancePixel = map(balance, -16, 16, PIXEL_MIN, PIXEL_MAX);
+    int8_t balancePixel = map(balance, -16, 16, Track::BOTTOM, Track::TOP);
     int8_t lowPixel = mapDbToPixel(gainLowPass);
     int8_t midPixel = mapDbToPixel(gainBandPass);
     int8_t highPixel = mapDbToPixel(gainHighPass);
@@ -1618,10 +1609,10 @@ void RetroRadio::drawTracks(bool init, int8_t balance, int8_t gainLowPass, int8_
         m_sprRetroTracks->loadFont(ComfortaaBold10);
         m_sprRetroTracks->setTextColor(TFT_LIGHTGREY, TFT_BLACK);
 
-        drawSlider(SLIDER_X[0], STR(RetroRadioKey::RETRO_TRACK_BALANCE), balancePixel);
-        drawSlider(SLIDER_X[1], STR(RetroRadioKey::RETRO_TRACK_LOW), lowPixel);
-        drawSlider(SLIDER_X[2], STR(RetroRadioKey::RETRO_TRACK_MID), midPixel);
-        drawSlider(SLIDER_X[3], STR(RetroRadioKey::RETRO_TRACK_HIGH), highPixel);
+        drawSlider(Track::LEFT[0], STR(RetroRadioKey::RETRO_TRACK_BALANCE), balancePixel);
+        drawSlider(Track::LEFT[1], STR(RetroRadioKey::RETRO_TRACK_LOW), lowPixel);
+        drawSlider(Track::LEFT[2], STR(RetroRadioKey::RETRO_TRACK_MID), midPixel);
+        drawSlider(Track::LEFT[3], STR(RetroRadioKey::RETRO_TRACK_HIGH), highPixel);
 
         m_sprRetroTracks->pushSprite(sliderPosX, sliderPosY);
         m_sprRetroTracks->unloadFont();
@@ -1649,68 +1640,43 @@ void RetroRadio::drawTracks(bool init, int8_t balance, int8_t gainLowPass, int8_
     }
 
     // Touch-Verarbeitung
-    if (!m_touched)
+    const int8_t positions[Track::COUNT] = {m_balance_prev, m_gainLowPass_prev, m_gainBandPass_prev, m_gainHighPass_prev};
+    const auto target = m_trackTouch.update(m_touched, m_touchX - sliderPosX, m_touchY - sliderPosY, positions, millis());
+    if (target.index < 0 || (!target.center && positions[target.index] == target.y))
         return;
 
-    int deltaX = m_touchX - sliderPosX;
-    int deltaY = m_touchY - sliderPosY;
+    const int x = Track::LEFT[target.index];
+    m_sprRetroTracks->setClipRect(x, 11, Track::WIDTH, 107);
+    m_sprRetroTracks->clear(TFT_BLACK);
+    drawSlider(x, nullptr, target.y, false);
+    m_sprRetroTracks->pushSprite(sliderPosX, sliderPosY);
+    m_sprRetroTracks->clearClipRect();
 
-    if (deltaY <= 23 || deltaY >= 105)
-        return;
-
-    typedef void (*CallbackFunc)(int8_t);
-    typedef void (*AppStateSetter)(int8_t);
-
-    auto updateSlider = [&](int sliderIndex, int8_t &prevValue, int8_t currentPixel, CallbackFunc callback, AppStateSetter appStateSetter, bool isDbSlider = false)
+    const int8_t value = target.index == 0 ? map(target.y, Track::BOTTOM, Track::TOP, -16, 16) : mapPixelToDb(target.y);
+    auto apply = [&](int8_t &previous, void (*callback)(int8_t), void (AppState::*setter)(int8_t))
     {
-        if (deltaX >= SLIDER_X[sliderIndex] && deltaX <= SLIDER_X[sliderIndex] + TOUCH_WIDTH)
-        {
-            deltaY = constrain(deltaY, PIXEL_MAX, PIXEL_MIN);
-
-            if (prevValue != deltaY)
-            {
-                m_sprRetroTracks->setClipRect(SLIDER_X[sliderIndex], 11, TOUCH_WIDTH, 107);
-                m_sprRetroTracks->clear(TFT_BLACK);
-                drawSlider(SLIDER_X[sliderIndex], nullptr, deltaY, false);
-                m_sprRetroTracks->pushSprite(sliderPosX, sliderPosY);
-                m_sprRetroTracks->clearClipRect();
-
-                int8_t value = isDbSlider
-                                   ? mapPixelToDb(deltaY)
-                                   : map(deltaY, PIXEL_MIN, PIXEL_MAX, -16, 16);
-
-                // In AppState persistieren
-                if (appStateSetter)
-                    appStateSetter(value);
-
-                // Callback aufrufen
-                if (callback)
-                    callback(value);
-
-                prevValue = deltaY;
-            }
-
-            return true;
-        }
-
-        return false;
+        previous = target.y;
+        if (callback)
+            callback(value);
+        else
+            (APP_STATE.*setter)(value);
     };
 
-    if (updateSlider(0, m_balance_prev, balancePixel, m_callbacks.onBalanceChanged, [](int8_t val)
-                     { APP_STATE.setCurrentBalance(val); }))
-        return;
-
-    if (updateSlider(1, m_gainLowPass_prev, lowPixel, m_callbacks.onGainLowPassChanged, [](int8_t val)
-                     { APP_STATE.setCurrentGainLowPass(val); }, true))
-        return;
-
-    if (updateSlider(2, m_gainBandPass_prev, midPixel, m_callbacks.onGainBandPassChanged, [](int8_t val)
-                     { APP_STATE.setCurrentGainBandPass(val); }, true))
-        return;
-
-    if (updateSlider(3, m_gainHighPass_prev, highPixel, m_callbacks.onGainHighPassChanged, [](int8_t val)
-                     { APP_STATE.setCurrentGainHighPass(val); }, true))
-        return;
+    switch (target.index)
+    {
+    case 0:
+        apply(m_balance_prev, m_callbacks.onBalanceChanged, &AppState::setCurrentBalance);
+        break;
+    case 1:
+        apply(m_gainLowPass_prev, m_callbacks.onGainLowPassChanged, &AppState::setCurrentGainLowPass);
+        break;
+    case 2:
+        apply(m_gainBandPass_prev, m_callbacks.onGainBandPassChanged, &AppState::setCurrentGainBandPass);
+        break;
+    case 3:
+        apply(m_gainHighPass_prev, m_callbacks.onGainHighPassChanged, &AppState::setCurrentGainHighPass);
+        break;
+    }
 }
 
 // ===================================================================

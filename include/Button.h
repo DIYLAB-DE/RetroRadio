@@ -27,6 +27,8 @@
 class Button
 {
 public:
+    static constexpr const char *HOME_LABEL = "^HOME:32^"; ///< Haus-Symbol in der Farbe der AUS-Taste im Hauptmenü
+
     /**
      * @brief Position des Icons innerhalb des Buttons
      */

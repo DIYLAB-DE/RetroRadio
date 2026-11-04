@@ -63,6 +63,7 @@ void FlacDecoder::clear() {
     coefs.clear();
     m_flacSegmTableVec.clear();
     m_flacStatus = DECODE_FRAME;
+    m_offset = 0;
     return;
 }
 // ===================================================================
@@ -726,6 +727,9 @@ int32_t FlacDecoder::parseMetaDataBlockHeader(uint8_t* inbuf, int16_t nBytes) {
 // ===================================================================
 int32_t FlacDecoder::decode(uint8_t* inbuf, int32_t* bytesLeft, int32_t* outbuf) { //  MAIN LOOP
 
+    if (hasPendingOutput())
+        return decodeNative(inbuf, bytesLeft, outbuf);
+
     int32_t  ret = 0;
     uint32_t segmLen = 0;
 
@@ -867,6 +871,9 @@ int8_t FlacDecoder::decodeNative(uint8_t* inbuf, int32_t* bytesLeft, int32_t* ou
         // Decode each channel's subframe, then skip footer
         int32_t ret = decodeSubframes(bytesLeft);
         if (ret != 0) return ret;
+        // Spätere Ausgabeteile verwenden nur m_samplesBuffer; der Eingangszeiger kann dann bereits ungültig sein.
+        alignToByte();
+        readUint(16, bytesLeft);
         m_flacStatus = OUT_SAMPLES;
         sbl += bl - *bytesLeft;
     }
@@ -932,7 +939,7 @@ int8_t FlacDecoder::decodeNative(uint8_t* inbuf, int32_t* bytesLeft, int32_t* ou
 
         m_offset += blockSize;
         if (sbl > 0) {
-            m_flacCompressionRatio = (float)((m_flacValidSamples * 2) * FLACMetadataBlock->numChannels) / sbl; // valid samples are 16 bit
+            m_flacCompressionRatio = (float)((m_numOfOutSamples * 2) * FLACMetadataBlock->numChannels) / sbl; // sbl enthält die Eingangsbytes des ganzen Rahmens
             sbl = 0;
             m_flacBitrate = FLACMetadataBlock->sampleRate * FLACMetadataBlock->bitsPerSample * FLACMetadataBlock->numChannels;
             m_flacBitrate /= m_flacCompressionRatio;
@@ -944,8 +951,6 @@ int8_t FlacDecoder::decodeNative(uint8_t* inbuf, int32_t* bytesLeft, int32_t* ou
         m_offset = 0;
     }
 
-    alignToByte();
-    readUint(16, bytesLeft);
     //    m_flacCompressionRatio = (float)m_bytesDecoded / (float)s_numOfOutSamples * FLACMetadataBlock->numChannels * (16/8);
     //    FLAC_LOG_INFO("s_flacCompressionRatio {}", m_flacCompressionRatio);
     m_flacStatus = DECODE_FRAME;
@@ -1092,6 +1097,12 @@ int8_t FlacDecoder::decodeFrame(uint8_t* inbuf, int32_t* bytesLeft) {
 uint32_t FlacDecoder::getOutputSamples() {
     if (!FLACMetadataBlock->numChannels) return 0;
     return m_flacValidSamples;
+}
+/**
+ * @brief Meldet ausstehende Ausgabeteile ohne weiteren Eingangsbedarf
+ */
+bool FlacDecoder::hasPendingOutput() const {
+    return m_flacStatus == OUT_SAMPLES;
 }
 // ===================================================================
 uint64_t FlacDecoder::getTotoalSamplesInStream() {

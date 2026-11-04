@@ -21,11 +21,13 @@ char audioI2SVers[] = "\
 
 #include <cctype>
 
+
 namespace {
     // Länge der Base64-Ausgabe für sourceLength Bytes, ohne Nullterminierung. Kommt im Original aus Arduinos libb64.
     constexpr size_t base64_encode_expected_len(size_t sourceLength) {
         return ((sourceLength + 2) / 3) * 4;
     }
+
 }
 
 #if AUDIO_CODEC_AAC
@@ -261,7 +263,7 @@ void Audio::setDefaults() {
     m_m3u8Codec = CODEC_AAC;
 
     m_validSamples = 0;
-    m_wavBlockPrepared = false;
+    m_blockPrepared = false;
     m_audioCurrentTime = 0;
     m_audioFileDuration = 0;
     m_resumeFilePos = -1;
@@ -438,9 +440,7 @@ bool Audio::connecttohost(const char* host, const char* user, const char* pwd) {
     rqh.assignf("GET /{}", path);
     rqh.append(" HTTP/1.1\r\n");
     rqh.appendf("Host: {}\r\n", rqh_host);
-#if !AUDIO_LITE_NO_ICY
     rqh.append("Icy-MetaData:1\r\n");
-#endif
     rqh.append("Pragma: no-cache\r\n");
     rqh.append("Cache-Control: no-cache\r\n");
     rqh.append("Range: bytes=0-\r\n");
@@ -567,9 +567,7 @@ bool Audio::httpPrint(const char* host) {
     rqh.assignf("GET /{}", path);
     rqh.append(" HTTP/1.1\r\n");
     rqh.appendf("Host: {}\r\n", rqh_host);
-#if !AUDIO_LITE_NO_ICY
     rqh.append("Icy-MetaData:1\r\n");
-#endif
     rqh.append("Accept:*/*\r\n");
     rqh.append("User-Agent: VLC/3.0.21 LibVLC/3.0.21 AppleWebKit/537.36 (KHTML, like Gecko)\r\n");
     rqh.append("Accept-Encoding: identity;q=1,*;q=0\r\n");
@@ -3230,6 +3228,7 @@ bool Audio::pauseResume() {
             memset(m_resamplesBuff.get(), 0, RESAMPLES_BUFF_SIZE * sizeof(int16_t)); // Sample-Puffer leeren
             m_validSamples = 0;
             m_plCh.count = 0; // angefangener Block ist mit dem Puffer verschwunden, siehe sendBytes()
+            m_blockPrepared = false;
         }
     }
     xSemaphoreGive(m_mutexAudioTask);
@@ -3374,7 +3373,7 @@ void IRAM_ATTR Audio::playChunk() {
 
     bool continueI2S = true;
 
-    if (m_plCh.count > 0 || (m_codec == CODEC_WAV && m_wavBlockPrepared))
+    if (m_blockPrepared)
         goto i2swrite; // beim letzten Durchlauf konnten nicht alle Samples an I2S übergeben werden
 
     // Die Anzeigen des Anwendungscodes bekommen die Samples, bevor Lautstärke und Klangregelung
@@ -3411,8 +3410,7 @@ void IRAM_ATTR Audio::playChunk() {
     if (m_outputSr && m_outputSr != m_i2sItems.sampleRate)
         m_validSamples = resampleI2Soutput(m_resampler, m_outBuff.get(), m_validSamples, m_resamplesBuff.get()); // neue Sample-Anzahl nach dem Resampling
 
-    if (m_codec == CODEC_WAV)
-        m_wavBlockPrepared = true;
+    m_blockPrepared = true;
 
     if (m_aacPcmTarget)
     {
@@ -3424,6 +3422,7 @@ void IRAM_ATTR Audio::playChunk() {
             memcpy(m_resamplesBuff.get(), m_outBuff.get() + 2 * first, (frames - first) * PCM_FRAME_BYTES);
         m_aacPcmFrames += frames;
         m_validSamples = 0;
+        m_blockPrepared = false;
         if (!m_aacPcmReady && m_aacPcmFrames >= m_aacPcmTarget)
         {
             constexpr size_t WARMUP_SECONDS = 10; ///< Dauer der erhöhten Reserve nach dem Senderstart
@@ -3442,13 +3441,16 @@ i2swrite:
         m_validSamples = 0;
     }
 
+
     if (m_validSamples)
         AUDIO_LOG_DEBUG("m_validSamples {}", m_validSamples);
 
     m_plCh.count += 2 * written;
 
-    if (m_validSamples == 0)
+    if (m_validSamples == 0) {
         m_plCh.count = 0;
+        m_blockPrepared = false;
+    }
 
     return;
 }
@@ -3464,11 +3466,6 @@ size_t Audio::writePcm(const int32_t *samples, size_t frames, uint32_t timeoutMs
     const esp_err_t error = m_plCh.err;
     if (error == ESP_ERR_INVALID_ARG || error == ESP_ERR_INVALID_STATE)
         AUDIO_LOG_ERROR("I2S-Schreibfehler {}", error);
-#if AUDIO_LITE_DIAG
-    m_diagI2sBytes += m_plCh.i2s_bytesConsumed;
-    if (m_plCh.err == ESP_ERR_TIMEOUT)
-        m_diagI2sTimeout++;
-#endif
     return bytes / PCM_FRAME_BYTES;
 }
 
@@ -3489,28 +3486,11 @@ void Audio::drainAacPcm()
     }
 }
 
+
 /**
  * @brief Treibt Transport, Zustandsmaschine und Ereignis-Zustellung an, wird vom Host regelmäßig aufgerufen
  */
 void Audio::loop() {
-#if AUDIO_LITE_DIAG
-    // Statuszeile alle 500 ms: zeigt, an welcher Stelle die Pipeline steht. printf statt ESP_LOGW, weil das vorgebaute Framework mit CONFIG_LOG_MAXIMUM_LEVEL=1 alles oberhalb von ESP_LOGE wegkompiliert.
-    {
-        static uint32_t s_nextDiag = 0;
-        const uint32_t now = audio_millis();
-        if (now >= s_nextDiag) {
-            s_nextDiag = now + 500;
-            printf("[diag] mode=%d run=%d stream=%d dec=%d i2s=%d filled=%u wspace=%u avail=%d vs=%d sr=%u eof=%d\n",
-                   (int)m_dataMode, (int)m_fRunning, (int)m_fStream, (int)(m_decoder != nullptr), (int)m_fI2sInit,
-                   (unsigned)m_inBuff.bufferFilled(), (unsigned)m_inBuff.writeSpace(), m_client ? m_client->available() : -1,
-                   (int)m_validSamples, (unsigned)getSampleRate(), (int)m_fEof);
-            printf("[diag2] decOk=%u decFail=%u decMore=%u i2sKB=%u i2sTmo=%u\n",
-                   (unsigned)m_diagDecOk, (unsigned)m_diagDecFail, (unsigned)m_diagDecMore,
-                   (unsigned)(m_diagI2sBytes / 1024), (unsigned)m_diagI2sTimeout);
-            m_diagDecOk = 0; m_diagDecFail = 0; m_diagDecMore = 0; m_diagI2sBytes = 0; m_diagI2sTimeout = 0;
-        }
-    }
-#endif
     getInfo();
     if (!m_fRunning)
         return;
@@ -4219,13 +4199,8 @@ void Audio::processLocalFile() {
         return;
     }
 
-    // Hoechstmenge je Aufruf. fread blockiert den Aufrufer, bis die Karte geliefert hat; bei den
-    // vollen 64 KB sind das rund 87 ms, in denen die Hauptschleife und damit jede Anzeige steht.
-    // In kleineren Portionen bleibt die Wartezeit unter 12 ms, ohne dass der Nachschub knapp
-    // wird: die Schleife kommt etwa 190-mal je Sekunde vorbei, das sind ueber 1,5 MB/s. Selbst
-    // eine auf 60 Bilder eingebrochene Anzeige haelt damit noch das Vierfache dessen bereit,
-    // was ein FLAC-Datenstrom braucht.
-    constexpr uint32_t MAX_NACHFUELLUNG = 8192;
+    // fread() blockiert die Hauptschleife bis zum Ende des einzelnen Lesezugriffs.
+    constexpr uint32_t MAX_NACHFUELLUNG = 4096; ///< Höchstzahl gelesener Bytes je Transportaufruf
 
     m_prlf.availableBytes = min(m_inBuff.writeSpace(), (size_t)(m_audioFileSize - m_audioFilePosition));
     m_prlf.bytesAddedToBuffer = audioFileRead(m_inBuff.getWritePtr(), min(m_prlf.availableBytes, MAX_NACHFUELLUNG));
@@ -4426,8 +4401,7 @@ void Audio::processWebFile() {
         AUDIO_LOG_ERROR("m_lastHost is empty");
         return;
     }
-    uint32_t availableBytes = 0;
-    int32_t bytesAddedToBuffer = 0;
+    constexpr size_t OGG_PROBE_BYTES = 128; ///< Mindestdatenmenge für die vorhandene OGG-Codec-Erkennung
 
     if (m_fFirstCall) { // läuft je Verbindung genau einmal, bereitet den Start vor
         m_fFirstCall = false;
@@ -4441,7 +4415,7 @@ void Audio::processWebFile() {
         m_audioDataStart = 0;
         m_fAllDataReceived = false;
         m_pwf.timeout = 8000; // ms
-        if (!initializeDecoder())
+        if (m_codec != CODEC_OGG && !initializeDecoder())
             return;
         m_pwf.maxFrameSize = m_inBuff.getMaxBlockSize(); // kein Rahmen ist größer
     }
@@ -4476,9 +4450,17 @@ void Audio::processWebFile() {
         if (!m_fAllDataReceived)
             m_fAllDataReceived = true;
     }
-    if (!m_decoder && m_inBuff.bufferFilled() > 127) {
+    if (!m_decoder) {
+        if (m_inBuff.bufferFilled() < OGG_PROBE_BYTES) {
+            if (m_fAllDataReceived || (audio_millis() - m_pwf.ctime) > m_pwf.timeout) {
+                AUDIO_LOG_ERROR("OGG header incomplete");
+                goto exit;
+            }
+            return;
+        }
         if (!initializeDecoder())
             return;
+        m_pwf.maxFrameSize = m_inBuff.getMaxBlockSize();
     }
 
     if (!m_fStream) {
@@ -4505,7 +4487,7 @@ void Audio::processWebFile() {
             return;
         } else {
             if (m_resumeFilePos == -1) {
-                if (m_inBuff.bufferFilled() > 2 * m_inBuff.getMaxBlockSize()) {
+                if (m_inBuff.bufferFilled() > 2 * m_inBuff.getMaxBlockSize() || (m_fOgg && m_fAllDataReceived)) {
                     m_fStream = true;
                     info(*this, evt_info, "stream ready");
                 }
@@ -4887,6 +4869,13 @@ void Audio::playAudioData() {
             if (m_aacPcmFrames >= target)
                 goto exit;
         }
+#if AUDIO_CODEC_FLAC
+        // Der letzte Rahmen kann vollständig eingelesen sein, während noch Ausgabeteile im Decoder liegen.
+        if (m_codec == CODEC_FLAC && m_decoder && static_cast<FlacDecoder *>(m_decoder.get())->hasPendingOutput()) {
+            sendBytes(m_inBuff.getReadPtr(), 0);
+            goto exit;
+        }
+#endif
         if (isFile) {
             if (!m_audioDataSize)
                 goto exit; // bei Dateigröße 0 gibt es nichts zu dekodieren
@@ -5852,10 +5841,12 @@ void Audio::setDecoderItems() {
     }
     if (m_decoder->arg1())
         info(*this, evt_info, "{}", m_decoder->arg1());
-    if (m_decoder->getAudioDataStart() > 0) { // nur FLAC im OGG-Container, natives FLAC setzt audioDataStart im Header-Parser
+    if (m_decoder->getAudioDataStart() > 0) { // OGG-Decoder melden den Datenbeginn erst beim Dekodieren
         m_audioDataStart = m_decoder->getAudioDataStart();
     }
     if (m_audioDataStart && m_audioDataSize == m_audioFileSize) {
+        if (m_codec == CODEC_VORBIS && m_audioFileSize && m_audioDataReadPtr >= m_audioDataStart)
+            m_audioDataReadPtr -= m_audioDataStart;
         m_audioDataSize = m_audioFileSize - m_audioDataStart;
     }
 
@@ -5864,7 +5855,8 @@ void Audio::setDecoderItems() {
 
     if (m_lastGranulePosition && m_audioFileSize && m_i2sItems.sampleRate) {
         m_audioFileDuration = (uint32_t)(m_lastGranulePosition / m_i2sItems.sampleRate);
-        m_nominalBitrate = (m_audioFileSize - m_audioDataStart) * 8 / m_audioFileDuration;
+        if (m_audioFileDuration)
+            m_nominalBitrate = (m_audioFileSize - m_audioDataStart) * 8 / m_audioFileDuration;
         AUDIO_LOG_DEBUG("m_nominalBitrate {}, m_lastGranulePosition {}", m_nominalBitrate, m_lastGranulePosition);
         info(*this, evt_info, "Duration (s): {}", m_audioFileDuration);
     }
@@ -5885,14 +5877,6 @@ void Audio::setDecoderItems() {
  * @brief Behandelt einen Decoder-Fehler und bestimmt, wie viele Bytes verworfen werden
  */
 uint32_t Audio::decodeError(int8_t res, uint8_t* data, int32_t bytesDecoded) {
-#if AUDIO_LITE_DIAG
-    // Fehlercode und die Bytes an der Fehlstelle: valides MP3 (FF Ex/FF Fx) deutet auf ein
-    // Decoder-Problem, Text- oder Zufallsbytes auf eine Verfälschung des Datenstroms.
-    printf("[decErr] res=%d bd=%ld pos=%lu data:", (int)res, (long)bytesDecoded, (unsigned long)m_audioFilePosition);
-    for (int i = 0; i < 16; i++)
-        printf(" %02X", data[i]);
-    printf("\n");
-#endif
     if (res == -100) {
         stopSong();
         return bytesDecoded;
@@ -5914,9 +5898,6 @@ uint32_t Audio::decodeError(int8_t res, uint8_t* data, int32_t bytesDecoded) {
 #if AUDIO_CODEC_MP3
     if (m_codec == CODEC_MP3) {
         if (res == MP3Decoder::MP3_NEED_RESTART) {
-#if AUDIO_LITE_DIAG
-            printf("[decRestart] MP3_NEED_RESTART -> Reconnect!\n");
-#endif
             info(*this, evt_info, "" ANSI_ESC_RED "Network error" ANSI_ESC_RESET "");
             connecttohost(m_lastHost.get());
             return 0;
@@ -6007,13 +5988,15 @@ int Audio::sendBytes(uint8_t* data, size_t len) {
         m_sbyt.isPS = 0;
         m_sbyt.f_setDecodeParamsOnce = true;
         m_sbyt.nextSync = findNextSync(data, len);
-        if (m_sbyt.nextSync < 0)
+        if (m_sbyt.nextSync < 0) {
             return len; // kein Synchronwort gefunden
+        }
         if (m_sbyt.nextSync == 0) {
             m_fPlaying = true;
         }
-        if (m_sbyt.nextSync > 0)
+        if (m_sbyt.nextSync > 0) {
             return m_sbyt.nextSync;
+        }
     }
     // an dieser Stelle ist m_fPlaying gesetzt
 
@@ -6034,32 +6017,19 @@ int Audio::sendBytes(uint8_t* data, size_t len) {
     //          -100: schwerer Fehler, Wiedergabe beenden
 
     if (res < 0) {
-#if AUDIO_LITE_DIAG
-        m_diagDecFail++;
-#endif
         return decodeError(res, data, bytesDecoded);
     } // Fehler, den Rahmen überspringen
     if (res > 99) {
-#if AUDIO_LITE_DIAG
-        m_diagDecMore++;
-#endif
         return decodeContinue(res, data, bytesDecoded, &m_sbyt.bytesLeft);
     } // der Decoder braucht mehr Daten
 
     if ((bytesDecoded == 0) && (m_codec != CODEC_VORBIS && m_codec != CODEC_FLAC)) { // unlikely framesize, exept VORBIS decodes lastSegmentTable
-#if AUDIO_LITE_DIAG
-        printf("[decZero] pos=%lu data: %02X %02X %02X %02X %02X %02X %02X %02X\n", (unsigned long)m_audioFilePosition,
-               data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-#endif
         info(*this, evt_info, "framesize is 0, start decoding again");
         m_fPlaying = false; // neues Synchronwort suchen
         // das Synchronwort war falsch, also ein Byte überspringen und das nächste suchen
         return 1;
     }
     // Stand hier: bytesDecoded > 0 und res >= 0
-#if AUDIO_LITE_DIAG
-    m_diagDecOk++;
-#endif
 
     switch (m_codec) {
 #if AUDIO_CODEC_WAV
@@ -6142,7 +6112,7 @@ int Audio::sendBytes(uint8_t* data, size_t len) {
     // Der erste Block danach ginge dann ohne Lautstaerkeregelung in voller Aussteuerung an
     // den Verstaerker, hoerbar als kurzes lautes Aufschrecken.
     m_plCh.count = 0;
-    m_wavBlockPrepared = false;
+    m_blockPrepared = false;
 
     if (m_sbyt.f_setDecodeParamsOnce && m_validSamples) {
         m_sbyt.f_setDecodeParamsOnce = false;
@@ -6268,6 +6238,7 @@ void Audio::calculateAudioTime(uint16_t bytesDecoderIn, uint16_t samples_decoder
         }
     }
 }
+
 
 /**
  * @brief Konfiguriert den I2S-Kanal mit den aktuellen Einstellungen
@@ -6883,22 +6854,27 @@ uint32_t Audio::getBitRate() {
 uint64_t Audio::getLastGranulePosition(uint8_t codec) {
     if (codec != CODEC_OPUS && codec != CODEC_VORBIS)
         return 0; // nur für OPUS und VORBIS
-    if (m_audioFileSize == 0) {
+    if (m_audioFileSize == 0 || (m_dataMode != AUDIO_LOCALFILE && !m_fAcceptRanges))
         return 0;
-    } // nur für Dateien
-    uint32_t afp = m_audioFilePosition;
+
+    constexpr int32_t OGG_HEADER_BYTES = 27; ///< Fester OGG-Seitenkopf einschließlich Segmentanzahl
+    const uint32_t tailBytes = min(m_audioFileSize, static_cast<uint32_t>(UINT16_MAX));
+    const uint32_t rangeStart = m_audioFileSize - tailBytes;
+    const uint32_t afp = m_audioFilePosition;
     uint64_t granulePos = 0;
     ps_ptr<char> buff;
-    buff.alloc(UINT16_MAX, "buff");
+    if (!buff.alloc(tailBytes, "buff"))
+        return 0;
+    if (audioFileSeek(rangeStart, tailBytes) != static_cast<int32_t>(rangeStart))
+        return 0;
 
-    int rangeStart = m_audioFileSize - UINT16_MAX - 1;
-    audioFileSeek(rangeStart, UINT16_MAX);
-    audioFileRead((uint8_t*)buff.get(), UINT16_MAX, 3000);
-
-    int32_t pos = buff.last_special_index_of("OggS", UINT16_MAX);
-    if (buff[pos + 5] & 0x04) { // letzte OGG-Seite
-        for (int j = 0; j < 8; j++) {
-            granulePos |= ((uint64_t)buff[pos + 6 + j] << (j * 8));
+    const int32_t bytesRead = audioFileRead(reinterpret_cast<uint8_t*>(buff.get()), tailBytes, 3000);
+    if (bytesRead >= OGG_HEADER_BYTES) {
+        const int32_t pos = buff.last_special_index_of("OggS", bytesRead);
+        if (pos >= 0 && pos <= bytesRead - OGG_HEADER_BYTES && (buff[pos + 5] & 0x04)) {
+            for (int j = 0; j < 8; j++) {
+                granulePos |= static_cast<uint64_t>(static_cast<uint8_t>(buff[pos + 6 + j])) << (j * 8);
+            }
         }
     }
     AUDIO_LOG_DEBUG("granulePos {}", granulePos);

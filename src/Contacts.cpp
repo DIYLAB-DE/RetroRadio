@@ -350,7 +350,7 @@ bool Contacts::init(LGFX &tft, const ContactsCallbacks &callbacks)
     m_exitButton.initButton(m_tft, EXIT_BUTTON_X, EXIT_BUTTON_Y,
         BUTTON_SIZE, BUTTON_SIZE, BUTTON_RADIUS,
         COLOR_BUTTON, COLOR_BUTTON_TEXT, COLOR_BUTTON_BORDER,
-        "^POWER:32:D206^", nullptr);
+        Button::HOME_LABEL, nullptr);
     m_exitButton.setFont(LeagueGothicCond34);
 
     m_tft->clear(Theme::ColorMainBackGround);

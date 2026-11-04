@@ -1,5 +1,7 @@
 #include "Routes.h"
 
+#include <atomic>
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
@@ -14,8 +16,10 @@
 #include <memory>
 
 #include "AppState.h"
+#include "main.h"
 #include "DS1307_RTC.h"
 #include "Gfx.h"
+#include "HttpService.h"
 #include "Logger.h"
 #include "StationManager.h"
 #include "StringUtils.h"
@@ -37,7 +41,7 @@ static StationManager *g_stationManager = nullptr;
 static AsyncEventSource *g_events = nullptr;
 
 /// Sperrzustand des Displays, gespiegelt für neu verbundene SSE-Clients
-static volatile bool g_displayLocked = false;
+static std::atomic<bool> g_displayLocked{false};
 
 // ===================================================================
 // Zustand der Radio-Fernsteuerung
@@ -72,9 +76,7 @@ namespace
     // Geschützte Verzeichnis- und Dateinamen (SD-Karte)
     // ===================================================================
 
-    /// Namen, die von externen Betriebssystemen automatisch auf der SD-Karte
-    /// angelegt werden. Werden im Dateimanager-Listing ausgeblendet und können
-    /// weder erstellt, umbenannt, gelöscht noch überschrieben werden.
+    /// Automatisch angelegte Betriebssystemeinträge bleiben ausgeblendet und geschützt. Beim bestätigten Löschen eines übergeordneten Benutzerordners werden dessen Inhalte vollständig entfernt.
     constexpr const char *PROTECTED_NAMES[] = {
         "System Volume Information", ///< Windows
         "$RECYCLE.BIN",              ///< Windows-Papierkorb
@@ -108,16 +110,16 @@ namespace
      *
      * Der Pfad wird an Slashes zerlegt und jedes Segment einzeln gegen die Schutzliste geprüft. Auch tief verschachtelte Pfade wie "/foo/System Volume Information/bar" werden so erkannt.
      */
-    bool pathHasProtectedSegment(const String &path)
+    bool pathHasProtectedSegment(const char *path)
     {
-        const int len = path.length();
+        const int len = strlen(path);
         int start = 0;
         while (start < len)
         {
-            while (start < len && path.charAt(start) == '/')
+            while (start < len && path[start] == '/')
                 ++start;
             int end = start;
-            while (end < len && path.charAt(end) != '/')
+            while (end < len && path[end] != '/')
                 ++end;
             int segLen = end - start;
             if (segLen > 0)
@@ -126,7 +128,7 @@ namespace
                 if (segLen >= (int)sizeof(segment))
                     segLen = sizeof(segment) - 1;
                 for (int i = 0; i < segLen; ++i)
-                    segment[i] = path.charAt(start + i);
+                    segment[i] = path[start + i];
                 segment[segLen] = '\0';
                 if (isProtectedBasename(segment))
                     return true;
@@ -134,6 +136,46 @@ namespace
             start = end;
         }
         return false;
+    }
+
+    /**
+     * @brief Prüft absolute Pfade unterhalb der SD-Wurzel ohne leere Segmente, alternative Pfadtrenner oder unter FAT mehrdeutige Endungen.
+     */
+    bool isValidFilePath(const char *path)
+    {
+        if (!path || path[0] != '/' || path[1] == '\0')
+            return false;
+        const char *segment = path + 1;
+        for (const char *p = segment; ; ++p)
+        {
+            if (*p == '\\' || *p == ':' || (*p && static_cast<unsigned char>(*p) < ' '))
+                return false;
+            if (*p == '/' || *p == '\0')
+            {
+                const size_t length = p - segment;
+                if (!length || segment[length - 1] == '.' || segment[length - 1] == ' ')
+                    return false;
+                if (*p == '\0')
+                    return true;
+                segment = p + 1;
+            }
+        }
+    }
+
+    /**
+     * @brief Prüft, dass der Pfad im ausdrücklich gewählten Benutzerordner liegt. Systemeinträge dürfen nur als dessen Inhalt bearbeitet werden, nie über eine geschützte Wurzel.
+     */
+    bool isFileTreePath(const char *path, const char *root)
+    {
+        if (!isValidFilePath(path) || !isValidFilePath(root) || pathHasProtectedSegment(root))
+            return false;
+        const size_t length = strlen(root);
+        if (strncmp(path, root, length) != 0 || (path[length] != '\0' && path[length] != '/'))
+            return false;
+        File directory = SD.open(root);
+        const bool valid = directory && directory.isDirectory();
+        directory.close();
+        return valid;
     }
 
     // ===================================================================
@@ -175,6 +217,8 @@ namespace
         if (g_stationManager)
             g_stationManager->factoryReset();
         nvs_flash_erase();
+        APP_STATE.resetRtcVisualizationToDefaults();
+        APP_STATE.resetAudioToDefaults();
         ESP.restart();
         vTaskDelete(nullptr);
     }
@@ -420,14 +464,25 @@ void notifyRadioStationChange(int stationId)
 }
 
 /**
- * @brief Sendet den aktuellen Display-Sperrzustand als SSE-Event an alle Clients
+ * @brief Liefert PIN-Modus und Sperrzustand für die Browser.
  */
-static void sendLockSSEEvent()
+static const char *lockStatusJson()
+{
+    if (!APP_STATE.isPinLockEnabled())
+        return "{\"enabled\":false,\"locked\":false}";
+
+    return g_displayLocked ? "{\"enabled\":true,\"locked\":true}" : "{\"enabled\":true,\"locked\":false}";
+}
+
+/**
+ * @brief Sendet den gemeinsamen PIN-Modus und den Sperrzustand an verbundene Browser.
+ */
+void notifyPinLockModeChanged()
 {
     if (!g_events)
         return;
 
-    g_events->send(g_displayLocked ? "{\"locked\":true}" : "{\"locked\":false}", "lock", millis());
+    g_events->send(lockStatusJson(), "lock", millis());
 }
 
 /**
@@ -436,7 +491,7 @@ static void sendLockSSEEvent()
 void notifyDisplayLockChanged(bool locked)
 {
     g_displayLocked = locked;
-    sendLockSSEEvent();
+    notifyPinLockModeChanged();
 }
 
 /**
@@ -599,7 +654,7 @@ static void onSSEConnect(AsyncEventSourceClient *client)
     }
 
     // Aktuellen Display-Sperrzustand mitschicken, damit ein nach einer Sperre neu verbundener Browser den Stand kennt
-    client->send(g_displayLocked ? "{\"locked\":true}" : "{\"locked\":false}", "lock", millis());
+    client->send(lockStatusJson(), "lock", millis());
 }
 
 // ===================================================================
@@ -662,7 +717,7 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
         }
 
         String pin = request->getParam("pin", true)->value();
-        const bool ok = isFourDigitPin(pin.c_str()) && strcmp(pin.c_str(), APP_STATE.getLockPin()) == 0;
+        const bool ok = isFourDigitPin(pin.c_str()) && APP_STATE.matchesLockPin(pin.c_str());
 
         if (ok)
         {
@@ -680,6 +735,25 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
 
     LOG_SUCCESS("Route 'POST /api/lock/verify' registriert");
 
+    g_server->on("/api/lock/mode", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        const auto *mode = request->getParam("enabled", true);
+        if (!mode || (mode->value() != "true" && mode->value() != "false"))
+        {
+            request->send(400);
+            return;
+        }
+
+        const auto *pin = request->getParam("pin", true);
+        const auto result = APP_STATE.setPinLockEnabled(mode->value() == "true", pin ? pin->value().c_str() : nullptr);
+        if (result == AppState::PinLockResult::WrongPin)
+            request->send(403);
+        else if (result == AppState::PinLockResult::StorageError)
+            request->send(500);
+        else
+            request->send(200, "application/json", lockStatusJson());
+    });
+
     // ===================================================================
     // API: NTP-Einstellungen (GET/POST)
     // ===================================================================
@@ -690,6 +764,7 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
         char jsonBuffer[900];
         stringutils::safeFormat(jsonBuffer,
             "{"
+            "\"pinLockEnabled\":%s,"
             "\"hostname\":\"%s\","
             "\"ntpServer\":\"%s\","
             "\"timezoneRegion\":\"%s\","
@@ -703,6 +778,7 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
             "\"lon\":%.5f,"
             "\"language\":\"%s\""
             "}",
+            APP_STATE.isPinLockEnabled() ? "true" : "false",
             APP_STATE.getHostname(),
             APP_STATE.getNtpServer(),
             APP_STATE.getTimezoneRegion(),
@@ -786,7 +862,7 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
                     return;
                 }
 
-                if (strcmp(lockPinCurrent, APP_STATE.getLockPin()) != 0)
+                if (!APP_STATE.matchesLockPin(lockPinCurrent))
                 {
                     LOG_WARNING("Settings: Lock-PIN-Änderung mit falschem aktuellem Code abgelehnt");
                     request->send(403, "application/json", "{\"error\":\"Aktueller Code ist falsch\"}");
@@ -875,7 +951,13 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
 
             if (lockPinChangeRequested)
             {
-                APP_STATE.setLockPin(lockPinNew);
+                if (!APP_STATE.setLockPin(lockPinNew))
+                {
+                    request->send(500, "application/json", "{\"error\":\"PIN konnte nicht gespeichert werden\"}");
+                    free(bodyBuffer);
+                    bodyBuffer = nullptr;
+                    return;
+                }
                 hasChanges = true;
             }
 
@@ -1401,6 +1483,15 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
 
     LOG_SUCCESS("Route 'GET /api/radio/presets' registriert");
 
+    // Audioregler auf Werksvorgaben zurücksetzen
+    g_server->on("/api/radio/reset-controls", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        APP_STATE.resetAudioToDefaults();
+        applyAudioControls();
+        sendRadioSSEEvent();
+        request->send(200, "application/json", "{\"success\":true}");
+    });
+
     // POST: Lautstärke setzen
     g_server->on("/api/radio/volume", HTTP_POST, [](AsyncWebServerRequest *request)
                  {
@@ -1690,42 +1781,71 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
             return;
         }
 
-        String path = "/";
-        if (request->hasParam("path"))
-            path = request->getParam("path")->value();
+        const char *path = request->hasParam("path") ? request->getParam("path")->value().c_str() : "/";
+        const char *treeRoot = request->hasParam("treeRoot") ? request->getParam("treeRoot")->value().c_str() : nullptr;
+        if (treeRoot && !isFileTreePath(path, treeRoot))
+        {
+            request->send(403, "application/json", "{\"error\":\"Ungültiger oder geschützter Ordner\"}");
+            return;
+        }
 
-        if (!SD.exists(path)) {
+        if (!SD.exists(path))
+        {
             request->send(404, "application/json", "{\"error\":\"Pfad nicht gefunden\"}");
             return;
         }
 
         File dir = SD.open(path);
-        if (!dir.isDirectory()) {
+        if (!dir || !dir.isDirectory())
+        {
             request->send(400, "application/json", "{\"error\":\"Kein Verzeichnis\"}");
             dir.close();
             return;
         }
 
-        JsonDocument doc;
+        JsonDocument doc(HTTP_SERVICE.getPsramAllocator());
         doc["available"] = true;
         JsonArray files = doc["files"].to<JsonArray>();
+        constexpr size_t FILE_NAME_CAPACITY = 1024; ///< Bis zu 255 FAT-Namenszeichen als UTF-8 einschließlich Abschlusszeichen
 
         File entry = dir.openNextFile();
-        while (entry) {
-            if (!isProtectedBasename(entry.name())) {
+        while (entry)
+        {
+            if (treeRoot || !isProtectedBasename(entry.name()))
+            {
+                char name[FILE_NAME_CAPACITY];
+                if (strlen(entry.name()) >= sizeof(name))
+                {
+                    entry.close();
+                    dir.close();
+                    request->send(500, "application/json", "{\"error\":\"Dateiname ist zu lang\"}");
+                    return;
+                }
+                stringutils::safeCopy(name, entry.name());
                 JsonObject fileObj = files.add<JsonObject>();
-                fileObj["name"] = String(entry.name());
+                fileObj["name"] = name;
                 fileObj["size"] = entry.size();
                 fileObj["isDirectory"] = entry.isDirectory();
             }
+            entry.close();
             entry = dir.openNextFile();
         }
         dir.close();
 
-        String response;
-        serializeJson(doc, response);
-        request->send(200, "application/json", response);
-        LOG_INFO_F("Verzeichnis aufgelistet: %s (%d Einträge)", path.c_str(), files.size()); });
+        if (doc.overflowed())
+        {
+            request->send(500, "application/json", "{\"error\":\"Zu wenig Speicher zum Auflisten\"}");
+            return;
+        }
+        AsyncResponseStream *response = request->beginResponseStream("application/json");
+        if (!response || serializeJson(doc, *response) != measureJson(doc))
+        {
+            delete response;
+            request->send(500, "application/json", "{\"error\":\"Zu wenig Speicher zum Auflisten\"}");
+            return;
+        }
+        request->send(response);
+        LOG_INFO_F("Verzeichnis aufgelistet: %s (%u Einträge)", path, static_cast<unsigned>(files.size())); });
 
     // Route: Neues Verzeichnis erstellen
     g_server->on("/api/files/mkdir", HTTP_POST, [](AsyncWebServerRequest *request)
@@ -1737,7 +1857,7 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
 
         String path = request->getParam("path", true)->value();
 
-        if (pathHasProtectedSegment(path)) {
+        if (pathHasProtectedSegment(path.c_str())) {
             LOG_WARNING_F("mkdir abgelehnt (geschützter Pfad): %s", path.c_str());
             request->send(403, "application/json", "{\"error\":\"Dieser Name ist geschützt\"}");
             return;
@@ -1757,44 +1877,70 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
             request->send(500, "application/json", "{\"error\":\"Verzeichnis konnte nicht erstellt werden\"}");
         } });
 
-    // Route: Datei oder Verzeichnis löschen
+    // Route: Datei oder leeres Verzeichnis löschen
     g_server->on("/api/files/delete", HTTP_POST, [](AsyncWebServerRequest *request)
                  {
-        if (!request->hasParam("path", true)) {
+        if (!request->hasParam("path", true))
+        {
             request->send(400, "application/json", "{\"error\":\"Kein Pfad angegeben\"}");
             return;
         }
 
-        String path = request->getParam("path", true)->value();
-
-        if (pathHasProtectedSegment(path)) {
-            LOG_WARNING_F("delete abgelehnt (geschützter Pfad): %s", path.c_str());
+        const char *path = request->getParam("path", true)->value().c_str();
+        const char *treeRoot = request->hasParam("treeRoot", true) ? request->getParam("treeRoot", true)->value().c_str() : nullptr;
+        if (!isValidFilePath(path))
+        {
+            request->send(400, "application/json", "{\"error\":\"Ungültiger Pfad oder SD-Hauptverzeichnis\"}");
+            return;
+        }
+        if ((treeRoot && !isFileTreePath(path, treeRoot)) || (!treeRoot && pathHasProtectedSegment(path)))
+        {
+            LOG_WARNING_F("delete abgelehnt (geschützter Pfad): %s", path);
             request->send(403, "application/json", "{\"error\":\"Dieser Name ist geschützt\"}");
             return;
         }
 
-        if (!SD.exists(path)) {
-            LOG_ERROR_F("Pfad nicht gefunden: %s", path.c_str());
+        if (!SD.exists(path))
+        {
             request->send(404, "application/json", "{\"error\":\"Pfad nicht gefunden\"}");
             return;
         }
 
         File file = SD.open(path);
-        bool isDir = file.isDirectory();
+        if (!file)
+        {
+            request->send(500, "application/json", "{\"error\":\"Eintrag konnte nicht geöffnet werden\"}");
+            return;
+        }
+        const bool isDir = file.isDirectory();
+        if (request->hasParam("directory", true) && isDir != (request->getParam("directory", true)->value() == "true"))
+        {
+            file.close();
+            request->send(409, "application/json", "{\"error\":\"Eintrag hat sich seit dem Auflisten geändert\"}");
+            return;
+        }
+        if (isDir)
+        {
+            File child = file.openNextFile();
+            if (child)
+            {
+                child.close();
+                file.close();
+                request->send(409, "application/json", "{\"error\":\"Der Ordner ist nicht leer. Bitte erneut auflisten.\"}");
+                return;
+            }
+        }
         file.close();
 
-        bool success = false;
-        if (isDir) {
-            success = SD.rmdir(path);
-        } else {
-            success = SD.remove(path);
-        }
-
-        if (success) {
-            LOG_SUCCESS_F("Gelöscht: %s", path.c_str());
+        const bool success = isDir ? SD.rmdir(path) : SD.remove(path);
+        if (success)
+        {
+            LOG_SUCCESS_F("Gelöscht: %s", path);
             request->send(200, "application/json", "{\"success\":true}");
-        } else {
-            LOG_ERROR_F("Fehler beim Löschen von: %s", path.c_str());
+        }
+        else
+        {
+            LOG_ERROR_F("Fehler beim Löschen von: %s", path);
             request->send(500, "application/json", "{\"error\":\"Konnte nicht gelöscht werden\"}");
         } });
 
@@ -1809,7 +1955,7 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
         String oldPath = request->getParam("oldPath", true)->value();
         String newPath = request->getParam("newPath", true)->value();
 
-        if (pathHasProtectedSegment(oldPath) || pathHasProtectedSegment(newPath)) {
+        if (pathHasProtectedSegment(oldPath.c_str()) || pathHasProtectedSegment(newPath.c_str())) {
             LOG_WARNING_F("rename abgelehnt (geschützter Pfad): %s -> %s", oldPath.c_str(), newPath.c_str());
             request->send(403, "application/json", "{\"error\":\"Dieser Name ist geschützt\"}");
             return;
@@ -1891,7 +2037,7 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
                 tmpFilePath = finalFilePath + ".tmp";
 
                 // Schutz-Check: geschützte Namen im Ziel-Pfad oder Dateinamen ablehnen
-                if (pathHasProtectedSegment(finalFilePath))
+                if (pathHasProtectedSegment(finalFilePath.c_str()))
                 {
                     LOG_WARNING_F("Upload abgelehnt (geschützter Pfad): %s", finalFilePath.c_str());
                     s_fileUploadAllowed = false;
