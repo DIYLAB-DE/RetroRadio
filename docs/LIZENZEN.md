@@ -51,7 +51,7 @@ Die Konstruktion stammt von Bruno / DIYLAB-DE. Die Lautsprechergitter hat Frank 
 
 Comfortaa Bold, Atkinson Hyperlegible Next Medium und League Gothic stehen unter SIL OFL 1.1. Die vollständigen Texte und Urheberangaben stehen unter [Schriftarten](fonts/README.md). Die Webschrift ist lokal im HTML eingebettet, dort ist ihr Lizenztext beigefügt. Die PDF-Anleitung verwendet DejaVu Sans und DejaVu Sans Mono, die [zugehörigen Lizenzvermerke](lizenzen/DejaVu-Lizenz.txt) liegen ebenfalls bei.
 
-Die verwendeten Phosphor-Symbole stammen von **Phosphor Icons**, Copyright 2023, unter MIT. Das Taschenmesser-Symbol stammt von **Lucide Icons and Contributors**, Copyright 2026, unter ISC. Die vollständigen Texte liegen als [Phosphor-Lizenz](lizenzen/Phosphor-Lizenz.txt) und [Lucide-Lizenz](lizenzen/Lucide-Lizenz.txt) bei. Die Daten in `IconShapeData.h` enthalten die zugehörigen Herkunftshinweise.
+Die verwendeten Phosphor-Symbole stammen von **Phosphor Icons**, Copyright 2023, unter MIT. Die Haus-Taste für das Hauptmenü verwendet eine für das Display angepasste Kontur von [House Bold](https://github.com/phosphor-icons/core/blob/main/assets/bold/house-bold.svg). Das Taschenmesser-Symbol stammt von **Lucide Icons and Contributors**, Copyright 2026, unter ISC. Die vollständigen Texte liegen als [Phosphor-Lizenz](lizenzen/Phosphor-Lizenz.txt) und [Lucide-Lizenz](lizenzen/Lucide-Lizenz.txt) bei. Die Herkunftshinweise der übrigen Symbolgeometrien stehen in `IconShapeData.h`.
 
 ## Darstellungen und Bilder
 

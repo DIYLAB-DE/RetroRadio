@@ -423,6 +423,8 @@ public:
 
     // Private Bausteine
     bool i2sConfig();
+    size_t writePcm(const int32_t *samples, size_t frames, uint32_t timeoutMs);
+    void drainAacPcm();
     std::unique_ptr<Decoder> createDecoder(const char* type);
     void destroyDecoder();
     bool fsRange(uint32_t range);
@@ -491,7 +493,7 @@ public:
     void applyStereoWidth(int32_t* buff, uint16_t validSamples);
     void iirCalculateCoefficients();
     void updateEqHeadroom();
-    void iirFilter(int32_t* iir_in);
+    void iirFilter(int32_t* samples, int frames);
     uint32_t streamavail() {
         return m_client ? m_client->available() : 0;
     }
@@ -697,6 +699,11 @@ public:
     std::unique_ptr<Decoder> m_decoder = {};
     ps_ptr<int32_t> m_outBuff;       ///< Ausgangspuffer, links/rechts verschränkt
     ps_ptr<int32_t> m_resamplesBuff; ///< Resampler-Puffer, links/rechts verschränkt
+    size_t m_aacPcmTarget = 0; ///< Zielvorrat an PCM-Frames für AAC-Radio in Quellrate
+    size_t m_aacPcmRead = 0;   ///< Leseposition im als PCM-Ring genutzten Resampler-Puffer
+    size_t m_aacPcmFrames = 0; ///< Zur Ausgabe vorbereitete Stereo-Frames im Ring
+    size_t m_aacWarmupFrames = 0; ///< Noch auszugebende Frames bis zum kleineren Füllziel im laufenden Betrieb
+    bool m_aacPcmReady = false; ///< Startvorrat wurde erreicht
     ps_ptr<char> m_metadataBuff;     ///< ICY-Metadaten, höchstens 16 * 256 + 1 Bytes
     ps_ptr<char> m_httpRespHdrBuff;  ///< HTTP-Antwort-Header
     ps_ptr<char> m_ibuff;            ///< Textpuffer der Ereignis-Formatierung
@@ -734,6 +741,7 @@ public:
     uint8_t m_m4aChConfig = 0;             ///< gesetzt in readM4aHeader()
     uint16_t m_m4aSampleRate = 0;          ///< gesetzt in readM4aHeader()
     int16_t m_validSamples = 0;             ///< noch auszugebende Stereo-Sample-Paare
+    bool m_blockPrepared = false;          ///< Ausgabeblock ist verarbeitet, auch wenn I2S noch kein Frame übernommen hat
     int16_t m_curSample = 0;                ///< aktuelles Sample innerhalb des Ausgangspuffers
     uint16_t m_dataMode = 0;                ///< Zustand der Verarbeitungs-Zustandsmaschine
     uint16_t m_streamTitleHash = 0;         ///< Streuwert des letzten Titels, unterdrückt Wiederholungen
@@ -785,13 +793,6 @@ public:
     bool m_fResetM3u8Codec = true;        ///< Codec des M3U8-Streams neu bestimmen
     bool m_fConnectionClose = false;       ///< Server schließt die Verbindung, gesetzt in parseHttpResponseHeader()
     bool m_fI2sChannelEnabled = false;   ///< I2S-Kanal ist eingeschaltet
-#if AUDIO_LITE_DIAG
-    uint32_t m_diagDecOk = 0;               ///< erfolgreiche decode()-Aufrufe seit der letzten Diagnosezeile
-    uint32_t m_diagDecFail = 0;             ///< decode()-Fehler seit der letzten Diagnosezeile
-    uint32_t m_diagDecMore = 0;             ///< decode() wollte mehr Daten
-    uint32_t m_diagI2sBytes = 0;            ///< an I2S übergebene Bytes
-    uint32_t m_diagI2sTimeout = 0;          ///< i2s_channel_write-Timeouts
-#endif
     uint32_t m_audioFileDuration = 0;       ///< Gesamtdauer in Sekunden
     uint32_t m_audioCurrentTime = 0;        ///< abgespielte Zeit in Sekunden
     uint32_t m_audioDataStart = 0;          ///< Beginn der Audiodaten in Bytes
@@ -1016,5 +1017,6 @@ public:
 // Die Samples tragen damit den Programmpegel; wer den Lautsprecherpegel braucht, muss selbst
 // mit der Lautstärkeeinstellung multiplizieren.
 void audio_visualizer_process_i2s(int32_t *outBuff, int16_t validSamples, bool *continueI2S);
+
 
 #endif // AUDIO_LITE_AUDIO_H

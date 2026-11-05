@@ -93,13 +93,17 @@ namespace
     const char DE_LANG_NAME_EN[] PROGMEM = "English";
 
     const char DE_SEC_TITLE[] PROGMEM = "Sicherheit";
-    const char DE_SEC_SUBTITLE[] PROGMEM = "Sperr-PIN ändern";
+    const char DE_SEC_SUBTITLE[] PROGMEM = "Sperre für Radio und Weboberfläche";
     const char DE_SEC_PIN_HINT[] PROGMEM = "Tippe 4 Ziffern für eine neue PIN.";
     const char DE_SEC_PIN_SET[] PROGMEM = "Eine PIN ist gesetzt.";
     const char DE_SEC_SAVED_TITLE[] PROGMEM = "PIN geändert";
     const char DE_SEC_SAVED_MSG[] PROGMEM = "Die neue PIN wurde gespeichert.";
     const char DE_SEC_PIN_REPEAT[] PROGMEM = "PIN wiederholen";
     const char DE_SEC_PIN_MISMATCH[] PROGMEM = "Eingaben stimmen nicht überein";
+    const char DE_SEC_TOGGLE[] PROGMEM = "PIN-Sperre";
+    const char DE_SEC_CONFIRM_OFF[] PROGMEM = "Zum Ausschalten aktuelle PIN eingeben.";
+    const char DE_SEC_WRONG_PIN[] PROGMEM = "Falsche PIN. Bitte erneut eingeben.";
+    const char DE_SEC_WRITE_ERROR[] PROGMEM = "Sicherheitseinstellung konnte nicht gespeichert werden.";
     const char DE_SEC_PIN_READY[] PROGMEM = "PIN vorgemerkt. Mit Speichern bestätigen.";
 
     const char DE_INFO_TITLE[] PROGMEM = "Info & Neustart";
@@ -369,13 +373,17 @@ namespace
     const char EN_LANG_NAME_EN[] PROGMEM = "English";
 
     const char EN_SEC_TITLE[] PROGMEM = "Security";
-    const char EN_SEC_SUBTITLE[] PROGMEM = "Change lock PIN";
+    const char EN_SEC_SUBTITLE[] PROGMEM = "Lock for radio and web interface";
     const char EN_SEC_PIN_HINT[] PROGMEM = "Type 4 digits for a new PIN.";
     const char EN_SEC_PIN_SET[] PROGMEM = "A PIN is set.";
     const char EN_SEC_SAVED_TITLE[] PROGMEM = "PIN changed";
     const char EN_SEC_SAVED_MSG[] PROGMEM = "The new PIN has been saved.";
     const char EN_SEC_PIN_REPEAT[] PROGMEM = "Repeat PIN";
     const char EN_SEC_PIN_MISMATCH[] PROGMEM = "Entries do not match";
+    const char EN_SEC_TOGGLE[] PROGMEM = "PIN lock";
+    const char EN_SEC_CONFIRM_OFF[] PROGMEM = "Enter the current PIN to turn off the lock.";
+    const char EN_SEC_WRONG_PIN[] PROGMEM = "Incorrect PIN. Please try again.";
+    const char EN_SEC_WRITE_ERROR[] PROGMEM = "Could not save the security setting.";
     const char EN_SEC_PIN_READY[] PROGMEM = "PIN ready. Confirm with Save.";
 
     const char EN_INFO_TITLE[] PROGMEM = "Info & restart";
@@ -658,6 +666,10 @@ namespace
         {DE_SEC_SAVED_MSG, EN_SEC_SAVED_MSG},
         {DE_SEC_PIN_REPEAT, EN_SEC_PIN_REPEAT},
         {DE_SEC_PIN_MISMATCH, EN_SEC_PIN_MISMATCH},
+        {DE_SEC_TOGGLE, EN_SEC_TOGGLE},
+        {DE_SEC_CONFIRM_OFF, EN_SEC_CONFIRM_OFF},
+        {DE_SEC_WRONG_PIN, EN_SEC_WRONG_PIN},
+        {DE_SEC_WRITE_ERROR, EN_SEC_WRITE_ERROR},
         {DE_SEC_PIN_READY, EN_SEC_PIN_READY},
 
         {DE_INFO_TITLE, EN_INFO_TITLE},

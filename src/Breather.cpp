@@ -504,7 +504,7 @@ bool Breather::init(LGFX &tft, const BreatherCallbacks &callbacks)
         COLOR_BUTTON_BORDER,    // Rahmenfarbe
         COLOR_BG,               // Hintergrundfarbe
         COLOR_TEXT_DIM,         // Textfarbe
-        "^POWER:32:D206^",      // Beschriftung
+        Button::HOME_LABEL,      // Beschriftung
         nullptr                 // kein Icon
     );
 

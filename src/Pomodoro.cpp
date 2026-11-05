@@ -279,7 +279,7 @@ bool Pomodoro::init(LGFX &tft, const PomodoroCallbacks &callbacks)
         BUTTON_COLOR,                        ///< Randfarbe des Exit-Buttons
         static_cast<uint16_t>(TFT_BLACK),    ///< Füllfarbe des Exit-Buttons
         static_cast<uint16_t>(TFT_DARKGREY), ///< Schattenfarbe des Exit-Buttons
-        "^POWER:32:D206^",                   ///< Text des Exit-Buttons
+        Button::HOME_LABEL,                   ///< Text des Exit-Buttons
         nullptr                              ///< kein Icon
     );
 

@@ -172,15 +172,16 @@ int32_t AACDecoder::decode(uint8_t* inbuf, int32_t* bytesLeft, int32_t* outbuf) 
         }
     } else {
 
+        const int16_t* pcm = m_out16.get();
         if (m_aacChannels == 1) {
             for (int i = 0; i < m_validSamples; i++) {
-                outbuf[i * 2] = m_out16[i] << 16;
-                outbuf[i * 2 + 1] = m_out16[i] << 16;
+                outbuf[i * 2] = static_cast<int32_t>(pcm[i]) * 65536;
+                outbuf[i * 2 + 1] = static_cast<int32_t>(pcm[i]) * 65536;
             }
         }
 
         if (m_aacChannels == 2) {
-            for (int i = 0; i < m_validSamples * 2; i++) { outbuf[i] = m_out16[i] << 16; }
+            for (int i = 0; i < m_validSamples; i++) { outbuf[i] = static_cast<int32_t>(pcm[i]) * 65536; }
         }
     }
     return err;

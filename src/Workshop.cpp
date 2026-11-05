@@ -444,7 +444,7 @@ void Workshop::initButtons()
         BTN_BORDER,                 // Rahmenfarbe
         BTN_FILL,                   // Füllfarbe
         uint16_t(TFT_DARKGREY),     // Textfarbe
-        "^POWER:32:D206^",          // Beschriftung (Power-Symbol, Größe 32)
+        Button::HOME_LABEL,          // Zum Hauptmenü
         nullptr);                   // Kein Icon
 
     m_exitButton.setFont(ComfortaaBold30);

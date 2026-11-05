@@ -46,20 +46,6 @@
 #define AUDIO_CODEC_OPUS 0
 
 // ===================================================================
-// Diagnose
-// ===================================================================
-
-// Diagnose: Statuszeile alle 500 ms in Audio::loop() plus Hexdump bei Decoder-Fehlern. Im Normalbetrieb 0; bei Fehlersuche per Build-Flag oder hier auf 1 setzen. Die serielle Ausgabe kostet Rechenzeit im Audio-Umfeld.
-#ifndef AUDIO_LITE_DIAG
-    #define AUDIO_LITE_DIAG 0
-#endif
-
-// 1 = ICY-Metadaten NICHT anfordern (Vergleichsschalter für die Fehlersuche). Im Normalbetrieb 0, sonst fehlt die Titelanzeige (StreamTitle) beim Webradio.
-#ifndef AUDIO_LITE_NO_ICY
-    #define AUDIO_LITE_NO_ICY 0
-#endif
-
-// ===================================================================
 // Klangregelung
 // ===================================================================
 

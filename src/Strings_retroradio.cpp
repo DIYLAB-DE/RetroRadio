@@ -13,8 +13,8 @@ namespace
     const char DE_PRESET_DLG_TITLE[]  PROGMEM = "FAVORITEN";
     const char DE_RESET_DLG_TITLE[]   PROGMEM = "ZURÜCKSETZEN?";
     const char DE_RESET_DLG_MESSAGE[] PROGMEM = "Die Lautstärke, der Ton und die Visualisierungen werden zurückgesetzt.";
-    const char DE_SLEEP_DLG_TITLE[]   PROGMEM = "AUSSCHALTEN";
-    const char DE_SLEEP_DLG_MESSAGE[] PROGMEM = "Radio ausschalten nach:";
+    const char DE_SLEEP_DLG_TITLE[]   PROGMEM = "SLEEP-TIMER";
+    const char DE_SLEEP_DLG_MESSAGE[] PROGMEM = "Radio verlassen nach:";
 
     // Control-Labels
     const char DE_KNOB_LABEL[]    PROGMEM = "Lautstärke";
@@ -36,8 +36,8 @@ namespace
     const char EN_PRESET_DLG_TITLE[]  PROGMEM = "FAVOURITES";
     const char EN_RESET_DLG_TITLE[]   PROGMEM = "RESET?";
     const char EN_RESET_DLG_MESSAGE[] PROGMEM = "Volume, sound and visualisations will be reset.";
-    const char EN_SLEEP_DLG_TITLE[]   PROGMEM = "SWITCH OFF";
-    const char EN_SLEEP_DLG_MESSAGE[] PROGMEM = "Switch off radio after:";
+    const char EN_SLEEP_DLG_TITLE[]   PROGMEM = "SLEEP TIMER";
+    const char EN_SLEEP_DLG_MESSAGE[] PROGMEM = "Quit radio after:";
 
     // Control-Labels
     const char EN_KNOB_LABEL[]    PROGMEM = "Volume";

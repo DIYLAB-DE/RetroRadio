@@ -118,9 +118,11 @@ namespace
     constexpr int FOOTER_ACTION_BTN_X0 = WORK_X;  ///< Linker Anfang des Textknopf-Blocks im Footer
     constexpr int FOOTER_ACTION_CLOCK_GAP = 16;   ///< Mindestabstand zwischen Textknöpfen und Uhr
 
-    // PIN-Punkte
-    constexpr int PIN_DOT_R = 13;   ///< Radius eines PIN-Punktes
-    constexpr int PIN_DOT_GAP = 26; ///< Abstand zwischen PIN-Punkten
+    // PIN-Eingabe
+    constexpr int PIN_HINT_Y = CONTENT_Y + TOGGLE_H + 32; ///< Höhe der Textmitte unter dem PIN-Schalter
+    constexpr int PIN_DOTS_Y = PIN_HINT_Y + 36;           ///< Höhe der Punktmitten
+    constexpr int PIN_DOT_R = 13;                         ///< Radius eines PIN-Punktes
+    constexpr int PIN_DOT_GAP = 36;                       ///< Abstand zwischen zwei Punktmitten
 
     // Fußzeile und Buttons
     constexpr int FOOTER_CY = FOOTER_Y + FOOTER_H / 2;   ///< Vertikale Mitte der Fußzeile
@@ -1013,7 +1015,7 @@ void Settings::initButtons()
         BTN_OUTLINE,
         BTN_FILL,
         uint16_t(TFT_DARKGREY),
-        "^POWER:32:D206^",
+        Button::HOME_LABEL,
         nullptr);
     m_exitButton.setFont(ComfortaaBold30);
 
@@ -1174,6 +1176,13 @@ void Settings::draw()
                 m_lastInfoRefreshMs = now;
                 m_workDirty = true;
             }
+        }
+
+        if (m_panel == Panel::SECURITY && m_displayedPinLock != APP_STATE.isPinLockEnabled())
+        {
+            m_confirmPinDisable = false;
+            resetPinEntry();
+            m_workDirty = true;
         }
 
         if (m_menuDirty)
@@ -1753,7 +1762,15 @@ void Settings::drawPanelLanguage(Gfx_Sprite *spr)
 // ===================================================================
 
 /**
- * @brief Zeichnet das Sicherheit-Panel mit PIN-Anzeige und Nummernblock.
+ * @brief Bestimmt die Lage des PIN-Schalters im Arbeitsbereich.
+ */
+Settings::Rect Settings::pinLockToggleRect() const
+{
+    return {CONTENT_X + CONTENT_W - TOGGLE_W, CONTENT_Y, TOGGLE_W, TOGGLE_H};
+}
+
+/**
+ * @brief Zeichnet das Sicherheit-Panel mit Sperrschalter, PIN-Anzeige und Nummernblock.
  */
 void Settings::drawPanelSecurity(Gfx_Sprite *spr)
 {
@@ -1766,7 +1783,13 @@ void Settings::drawPanelSecurity(Gfx_Sprite *spr)
     // Hinweistext je nach Eingabephase
     SettingsKey hintKey = SettingsKey::SETTINGS_SEC_PIN_HINT;
     uint16_t hintColor = C_SUB;
-    if (m_pinConfirming)
+    if (m_confirmPinDisable)
+    {
+        hintKey = m_pinMismatch ? SettingsKey::SETTINGS_SEC_WRONG_PIN : SettingsKey::SETTINGS_SEC_CONFIRM_OFF;
+        if (m_pinMismatch)
+            hintColor = uint16_t(Theme::ColorRetroRed);
+    }
+    else if (m_pinConfirming)
     {
         hintKey = SettingsKey::SETTINGS_SEC_PIN_REPEAT;
     }
@@ -1781,23 +1804,28 @@ void Settings::drawPanelSecurity(Gfx_Sprite *spr)
         hintColor = C_SEC_SYSTEM;
     }
 
+    m_displayedPinLock = APP_STATE.isPinLockEnabled();
+    const Rect toggle = pinLockToggleRect();
+    drawToggle(spr, toggle, m_displayedPinLock, C_WORK_BG);
     spr->loadFont(ComfortaaBold16);
+    spr->setTextDatum(ML_DATUM);
+    spr->setTextColor(C_TEXT);
+    spr->drawString(I18n::str(SettingsKey::SETTINGS_SEC_TOGGLE), CONTENT_X, toggle.y + toggle.h / 2);
     spr->setTextDatum(MC_DATUM);
     spr->setTextColor(hintColor);
-    spr->drawString(I18n::str(hintKey), CONTENT_X + CONTENT_W / 2, CONTENT_Y + 18);
+    spr->drawString(I18n::str(hintKey), CONTENT_X + CONTENT_W / 2, PIN_HINT_Y);
     spr->unloadFont();
 
     // PIN-Punkte
-    const int dotsY = CONTENT_Y + 64;
     const int totalW = 3 * PIN_DOT_GAP;
     const int startX = CONTENT_X + (CONTENT_W - totalW) / 2;
     for (int i = 0; i < 4; ++i)
     {
         const int cx = startX + i * PIN_DOT_GAP;
         if (i < m_pinLen)
-            spr->fillSmoothCircle(cx, dotsY, PIN_DOT_R, C_TEXT);
+            spr->fillSmoothCircle(cx, PIN_DOTS_Y, PIN_DOT_R, C_TEXT);
         else
-            spr->fillSmoothCircle(cx, dotsY, PIN_DOT_R, C_DOT_EMPTY);
+            spr->fillSmoothCircle(cx, PIN_DOTS_Y, PIN_DOT_R, C_DOT_EMPTY);
     }
 
     // Nummernblock am unteren Rand
@@ -2560,6 +2588,7 @@ void Settings::selectPanel(Panel p)
     m_panel = p;
     if (p == Panel::SECURITY)
     {
+        m_confirmPinDisable = false;
         resetPinEntry();
         m_numpadLayoutValid = false;
     }
@@ -2696,6 +2725,19 @@ void Settings::handleLanguageTouch(int sx, int sy)
  */
 void Settings::handleSecurityTouch(int sx, int sy)
 {
+    const Rect toggle = pinLockToggleRect();
+    if (pointIn(sx, sy, CONTENT_X, toggle.y, CONTENT_W, toggle.h))
+    {
+        resetPinEntry();
+        if (APP_STATE.isPinLockEnabled())
+            m_confirmPinDisable = !m_confirmPinDisable;
+        else
+            changePinLock(true, nullptr);
+
+        m_workDirty = true;
+        return;
+    }
+
     const int cx = sx - CONTENT_X;
     const int cy = sy - CONTENT_Y;
     const int key = m_numpad.hitTest(cx, cy);
@@ -2710,6 +2752,19 @@ void Settings::handleSecurityTouch(int sx, int sy)
 // ===================================================================
 // Sprache und PIN
 // ===================================================================
+
+/**
+ * @brief Schaltet die PIN-Sperre um oder zeigt den Grund der Ablehnung.
+ */
+void Settings::changePinLock(bool enabled, const char *pin)
+{
+    const auto result = APP_STATE.setPinLockEnabled(enabled, pin);
+    resetPinEntry();
+    m_pinMismatch = result == AppState::PinLockResult::WrongPin;
+    m_confirmPinDisable = m_pinMismatch;
+    if (result == AppState::PinLockResult::StorageError)
+        showInfoBox(SettingsKey::SETTINGS_SEC_TITLE, SettingsKey::SETTINGS_SEC_WRITE_ERROR);
+}
 
 /**
  * @brief Liefert den Index der aktuell aktiven Sprache (0=de, 1=en).
@@ -2768,6 +2823,12 @@ void Settings::handlePinKey(char action)
         if (m_pinLen < 4)
             return;
 
+        if (m_confirmPinDisable)
+        {
+            changePinLock(false, m_pinEntry);
+            return;
+        }
+
         if (!m_pinConfirming)
         {
             stringutils::safeCopy(m_pinFirst, m_pinEntry);
@@ -2813,7 +2874,11 @@ bool Settings::applyPendingPin()
     if (m_pinPending[0] == '\0')
         return false;
 
-    APP_STATE.setLockPin(m_pinPending);
+    if (!APP_STATE.setLockPin(m_pinPending))
+    {
+        m_pinSaveErrorPending = true;
+        return false;
+    }
     m_pinPending[0] = '\0';
     m_pinMismatch = false;
     LOG_SUCCESS("Neue Sperr-PIN gespeichert");
@@ -2931,6 +2996,14 @@ void Settings::updateSavingState()
  */
 bool Settings::handleDeferredActions()
 {
+    if (m_pinSaveErrorPending && m_state == State::IDLE)
+    {
+        m_pinSaveErrorPending = false;
+        selectPanel(Panel::SECURITY);
+        showInfoBox(SettingsKey::SETTINGS_SEC_TITLE, SettingsKey::SETTINGS_SEC_WRITE_ERROR);
+        return true;
+    }
+
     if (m_restartRequested)
     {
         m_restartRequested = false;
@@ -3588,8 +3661,9 @@ void Settings::startExitDialog()
         if (save)
         {
             // Alle Panels still sichern. Eine Bestätigungsbox darf hier niemand öffnen, weil der Rückruf aus der noch laufenden Meldungsbox heraus läuft und eine zweite sie unter sich selbst wegräumen würde.
+            if (pinPending() && !applyPendingPin())
+                return;
             saveProfiles();
-            applyPendingPin();
 
             // Nur eine wirklich geänderte Postleitzahl schreiben; weatherPending meldet auch die unveränderte, und AppState::setPlz leert dabei das Nachrichten-Ressort im Arbeitsspeicher. Aus demselben Grund steht die Postleitzahl vor den Nachrichten.
             if (m_plzLen == PLZ_DIGITS && strcmp(m_plzEntry, m_plzBaseline) != 0)

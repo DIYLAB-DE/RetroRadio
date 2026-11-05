@@ -384,7 +384,7 @@ bool ToDo::init(LGFX &tft, const ToDoCallbacks &callbacks)
         COLOR_BUTTON,        // Hintergrundfarbe
         COLOR_BUTTON_TEXT,   // Textfarbe
         COLOR_BUTTON_BORDER, // Rahmenfarbe
-        "^POWER:32:D206^",   // Beschriftung
+        Button::HOME_LABEL,   // Beschriftung
         nullptr              // Icon
     );
 

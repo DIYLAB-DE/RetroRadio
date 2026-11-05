@@ -1,12 +1,13 @@
 #include "Visualizer.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 
 #include "StringUtils.h"
 #include "Logger.h"
-#include "Theme.h"
 #include "Tools.h"
+#include "Theme.h"
 
 #include "I18n.h"
 #include "Strings_retroradio.h"
@@ -24,6 +25,7 @@
 
 namespace
 {
+    constexpr uint32_t VIS_FRAME_MS = 35; ///< Höchstens 28,6 Aktualisierungen pro Sekunde
     constexpr float VU_RAD_TO_DEG = 57.29578f; ///< Umrechnung von Radiant in Grad
 
     // Lage und Länge der Nadel, wie sie das Sprite und sein Drehpunkt vorgeben. Daraus folgt,
@@ -307,17 +309,7 @@ bool Visualizer::init(LGFX &tft, DS1307_RTC &rtc)
     }
     m_lastSpectrumUpdate = 0;
 
-    // Wellenform Auto-Gain initialisieren
-
-    for (uint8_t i = 0; i < WAVE_PEAK_HISTORY_SIZE; i++)
-    {
-        m_wavePeakHistory[i] = 0.0f;
-    }
-
-    m_wavePeakHistoryIdx = 0;
-    m_waveSlidingMax = 0.0f;
-    m_waveLastPeakUpdate = 0;
-    m_waveAmp = 1.0f;
+    m_waveNextX = -1;
 
     // Goniometer Auto-Verstärkung initialisieren
     for (uint8_t i = 0; i < GONIO_PEAK_HISTORY_SIZE; i++)
@@ -552,6 +544,7 @@ void Visualizer::toggleVisSubMode()
                               ? WaveformStyle::STACKED
                               : WaveformStyle::OVERLAY;
 
+        m_waveNextX = -1;
         APP_STATE.setWaveformStyle(static_cast<uint8_t>(m_waveformStyle));
         LOG_INFO_F("Wellenform-Stil gewechselt zu: %d", static_cast<int>(m_waveformStyle));
         break;
@@ -561,6 +554,7 @@ void Visualizer::toggleVisSubMode()
                               ? SpectrumStyle::RAINBOW
                               : SpectrumStyle::CLASSIC;
 
+        m_centeredSpectrumDirty = true;
         APP_STATE.setSpectrumStyle(static_cast<uint8_t>(m_spectrumStyle));
         LOG_INFO_F("Spektrum-Stil gewechselt zu: %d", static_cast<int>(m_spectrumStyle));
         break;
@@ -875,7 +869,7 @@ void Visualizer::drawAnalogVU(bool init, float rmsLeft, float rmsRight)
         return;
     }
 
-    if (deltaTime <= 0)
+    if (currentTime - m_lastUpdate_analog < VIS_FRAME_MS)
         return;
 
     m_lastUpdate_analog = currentTime;
@@ -1151,9 +1145,10 @@ void Visualizer::drawDigitalVU(bool init, float rmsLeft, float rmsRight, float p
     }
 
     // Hauptteil
-    const float dt = (now - m_lastUpdate_digital) * 0.001f;
-    if (dt <= 0)
+    const uint32_t elapsed = now - m_lastUpdate_digital;
+    if (elapsed < VIS_FRAME_MS)
         return;
+    const float dt = elapsed * 0.001f;
 
     m_lastUpdate_digital = now;
 
@@ -1328,8 +1323,8 @@ void Visualizer::drawSpectrum(bool init)
 
     constexpr int BAND_COUNT = 63; ///< Anzahl der klassischen Frequenzbänder
     constexpr int FFT_BIN_COUNT = FFT_N / 2 + 1; ///< FFT-Werte einschließlich der Nyquist-Frequenz
-    constexpr uint32_t CENTERED_FRAME_MS = 17; ///< Mindestabstand der mittigen Spektrumbilder
     constexpr int CENTERED_GRAPH_H = VIS_AREA_H - SPECTRUM_LABEL_H; ///< Gesamthöhe der mittig wachsenden Balken
+    constexpr int CENTER_Y = SPECTRUM_LABEL_H + CENTERED_GRAPH_H / 2; ///< Mittellinie der mittigen Balken
     constexpr int CENTERED_PEAK_H = 2; ///< Höhe der Spitzenmarkierung
     constexpr int CENTERED_PEAK_GAP = 1; ///< Abstand zwischen Balken und Spitzenmarkierung
     constexpr uint32_t PEAK_HOLD_MS = 800; ///< Haltezeit der Spitzen beider Spektren
@@ -1343,7 +1338,7 @@ void Visualizer::drawSpectrum(bool init)
     const int graphHeight = centered ? CENTERED_GRAPH_H : VIS_AREA_H;
     const uint32_t now = millis();
     const uint32_t elapsed = now - m_lastSpectrumUpdate;
-    const uint32_t frameMs = waterfall ? WATERFALL_FRAME_MS : (centered ? CENTERED_FRAME_MS : 2U);
+    const uint32_t frameMs = waterfall ? WATERFALL_FRAME_MS : VIS_FRAME_MS;
     if (!init && elapsed < frameMs)
         return;
 
@@ -1445,7 +1440,7 @@ void Visualizer::drawSpectrum(bool init)
         sampleRate = m_sampleRate[readIdx];
         const uint16_t sampleCount = m_sampleCount[readIdx];
         hasSamples = samplesL && samplesR && sampleCount > 0 && sampleRate > 0 && APP_STATE.getStationSetDone();
-        analyze = (!centered && !waterfall) || sampleSeq != m_spectrumAnalyzedSeq ||
+        analyze = sampleSeq != m_spectrumAnalyzedSeq ||
                   sampleRate != m_spectrumSampleRate || hasSamples != m_spectrumHadSamples;
 
         if (analyze && hasSamples)
@@ -1515,7 +1510,12 @@ void Visualizer::drawSpectrum(bool init)
     if (!buffer)
         return;
     const int sprite_width = current_sprite->width();
-    bool changed = m_centeredSpectrumDirty;
+    const bool fullRedraw = m_centeredSpectrumDirty;
+    bool changed = fullRedraw;
+    bool bandChanged[BAND_COUNT]{};
+    int16_t dirtyTop[BAND_COUNT]{};
+    int16_t dirtyBottom[BAND_COUNT]{};
+    uint16_t barColors[BAND_COUNT]{};
 
     for (int band = 0; band < bandCount; ++band)
     {
@@ -1574,63 +1574,148 @@ void Visualizer::drawSpectrum(bool init)
             b.peakPosFloat = fmaxf(cur, b.peakPosFloat - PEAK_FALL_SPEED);
         }
         b.peakPos = static_cast<uint16_t>(fmaxf(1.0f, b.peakPosFloat));
-        changed = changed || previousPos != b.currentPos || previousPeak != b.peakPos;
 
         if (centered)
-            continue;
-
-        const int x = band * (BIN_WIDTH + BIN_GAP);
-        const int bar_top = VIS_AREA_H - b.currentPos;
-        const int peak_y = VIS_AREA_H - b.peakPos;
-        uint16_t barColor = BAR_GREEN;
-        uint16_t peakColor = TFT_SILVER;
-        if (m_spectrumStyle == SpectrumStyle::RAINBOW)
-            barColor = peakColor = rainbowColors(band * 2);
-
-        for (int y = 0; y < VIS_AREA_H; ++y)
         {
-            uint16_t color;
-            if (y == peak_y)
-                color = peakColor;
-            else if (y < bar_top)
-                color = (y % 2 == 0) ? 0x2104 : TFT_BLACK;
+            barColors[band] = m_centeredSpectrumStyle == SpectrumStyle::RAINBOW ? m_centeredSpectrumColors[band] : BAR_GREEN;
+            const int halfHeight = b.currentPos > 1 ? b.currentPos / 2 : 1;
+            const int previousHalfHeight = previousPos > 1 ? previousPos / 2 : 1;
+            const int peakHalfHeight = b.peakPos > 1 ? b.peakPos / 2 : 1;
+            const int previousPeakHalfHeight = previousPeak > 1 ? previousPeak / 2 : 1;
+            const int peakY = std::max(SPECTRUM_LABEL_H, CENTER_Y - peakHalfHeight - CENTERED_PEAK_H - CENTERED_PEAK_GAP);
+            const int previousPeakY = std::max(SPECTRUM_LABEL_H, CENTER_Y - previousPeakHalfHeight - CENTERED_PEAK_H - CENTERED_PEAK_GAP);
+            int top = VIS_AREA_H;
+            int bottom = -1;
+            if (fullRedraw)
+            {
+                top = 0;
+                bottom = VIS_AREA_H - 1;
+            }
             else
-                color = (y % 2 == 0) ? barColor : 0x2104;
-
-            uint16_t *line = buffer + y * sprite_width + x;
-            for (int i = 0; i < BIN_WIDTH; ++i)
-                line[i] = bswap16(color);
+            {
+                if (halfHeight != previousHalfHeight)
+                {
+                    top = CENTER_Y - std::max(halfHeight, previousHalfHeight);
+                    bottom = CENTER_Y + std::max(halfHeight, previousHalfHeight);
+                }
+                if (peakY != previousPeakY)
+                {
+                    top = std::min(top, std::min(peakY, previousPeakY));
+                    bottom = std::max(bottom, std::max(peakY, previousPeakY) + CENTERED_PEAK_H - 1);
+                }
+            }
+            dirtyTop[band] = std::max(0, top);
+            dirtyBottom[band] = std::min(VIS_AREA_H - 1, bottom);
         }
+        else
+        {
+            barColors[band] = m_spectrumStyle == SpectrumStyle::RAINBOW ? rainbowColors(band * 2) : BAR_GREEN;
+            int top = VIS_AREA_H;
+            int bottom = -1;
+            if (fullRedraw)
+            {
+                top = 0;
+                bottom = VIS_AREA_H - 1;
+            }
+            else
+            {
+                if (previousPos != b.currentPos)
+                {
+                    top = VIS_AREA_H - std::max(previousPos, b.currentPos);
+                    bottom = VIS_AREA_H - std::min(previousPos, b.currentPos) - 1;
+                }
+                if (previousPeak != b.peakPos)
+                {
+                    top = std::min(top, VIS_AREA_H - std::max(previousPeak, b.peakPos));
+                    bottom = std::max(bottom, VIS_AREA_H - std::min(previousPeak, b.peakPos));
+                }
+            }
+            dirtyTop[band] = std::max(0, top);
+            dirtyBottom[band] = std::min(VIS_AREA_H - 1, bottom);
+        }
+        bandChanged[band] = dirtyTop[band] <= dirtyBottom[band];
+        changed = changed || bandChanged[band];
     }
+
+    if (!changed)
+        return;
 
     if (centered)
     {
-        if (!changed)
-            return;
-
-        current_sprite->clear(TFT_BLACK);
-        constexpr int CENTER_Y = SPECTRUM_LABEL_H + CENTERED_GRAPH_H / 2; ///< Mittellinie des Balkenfelds
-        for (int band = 0; band < bandCount; ++band)
+        for (int y = 0; y < VIS_AREA_H; ++y)
         {
-            const auto &b = m_spectrum_bands[band];
-            const int x = band * (VIS_AREA_W + CENTERED_BAR_GAP) / bandCount;
-            const int nextX = (band + 1) * (VIS_AREA_W + CENTERED_BAR_GAP) / bandCount;
-            const int width = nextX - x - CENTERED_BAR_GAP;
-            const int halfHeight = b.currentPos > 1 ? b.currentPos / 2 : 1;
-            const uint16_t barColor = m_centeredSpectrumStyle == SpectrumStyle::RAINBOW ? m_centeredSpectrumColors[band] : BAR_GREEN;
-            const uint16_t peakColor = m_centeredSpectrumStyle == SpectrumStyle::RAINBOW ? barColor : TFT_SILVER;
-            current_sprite->fillRect(x, CENTER_Y - halfHeight, width, halfHeight * 2 + 1, barColor);
-            const int peakHalfHeight = b.peakPos > 1 ? b.peakPos / 2 : 1;
-            int peakY = CENTER_Y - peakHalfHeight - CENTERED_PEAK_H - CENTERED_PEAK_GAP;
-            if (peakY < SPECTRUM_LABEL_H)
-                peakY = SPECTRUM_LABEL_H;
-            current_sprite->fillRect(x, peakY, width, CENTERED_PEAK_H, peakColor);
+            uint16_t *row = buffer + y * sprite_width;
+            for (int band = 0; band < bandCount; ++band)
+            {
+                if (!bandChanged[band] || y < dirtyTop[band] || y > dirtyBottom[band])
+                    continue;
+                const auto &b = m_spectrum_bands[band];
+                const int halfHeight = b.currentPos > 1 ? b.currentPos / 2 : 1;
+                const int peakHalfHeight = b.peakPos > 1 ? b.peakPos / 2 : 1;
+                const int peakY = std::max(SPECTRUM_LABEL_H, CENTER_Y - peakHalfHeight - CENTERED_PEAK_H - CENTERED_PEAK_GAP);
+                uint16_t color = TFT_BLACK;
+                if (y >= peakY && y < peakY + CENTERED_PEAK_H)
+                    color = m_centeredSpectrumStyle == SpectrumStyle::RAINBOW ? barColors[band] : TFT_SILVER;
+                else if (y >= CENTER_Y - halfHeight && y <= CENTER_Y + halfHeight)
+                    color = barColors[band];
+                const int x = band * (VIS_AREA_W + CENTERED_BAR_GAP) / CENTERED_BAND_COUNT;
+                const int nextX = (band + 1) * (VIS_AREA_W + CENTERED_BAR_GAP) / CENTERED_BAND_COUNT;
+                for (int i = x; i < nextX - CENTERED_BAR_GAP; ++i)
+                    row[i] = bswap16(color);
+            }
         }
-        m_centeredSpectrumDirty = false;
     }
+    else
+    {
+        // Zeilenweise schreiben hält benachbarte Sprite-Pixel im Cache.
+        for (int y = 0; y < VIS_AREA_H; ++y)
+        {
+            uint16_t *row = buffer + y * sprite_width;
+            for (int band = 0; band < bandCount; ++band)
+            {
+                if (!bandChanged[band] || y < dirtyTop[band] || y > dirtyBottom[band])
+                    continue;
+                const auto &b = m_spectrum_bands[band];
+                uint16_t color;
+                if (y == VIS_AREA_H - b.peakPos)
+                    color = m_spectrumStyle == SpectrumStyle::RAINBOW ? barColors[band] : TFT_SILVER;
+                else if (y < VIS_AREA_H - b.currentPos)
+                    color = (y % 2 == 0) ? 0x2104 : TFT_BLACK;
+                else
+                    color = (y % 2 == 0) ? barColors[band] : 0x2104;
+                const int x = band * (BIN_WIDTH + BIN_GAP);
+                for (int i = 0; i < BIN_WIDTH; ++i)
+                    row[x + i] = bswap16(color);
+            }
+        }
+    }
+    m_centeredSpectrumDirty = false;
 
     drawSpectrumLabels(cutoffFreqs, bandCount);
-    current_sprite->pushSprite(centered ? VIS_AREA_X : VIS_AREA_X + 1, VIS_AREA_Y);
+    if (fullRedraw)
+    {
+        current_sprite->pushSprite(centered ? VIS_AREA_X : VIS_AREA_X + 1, VIS_AREA_Y);
+    }
+    else
+    {
+        for (int band = 0; band < bandCount; ++band)
+        {
+            if (dirtyTop[band] > dirtyBottom[band])
+                continue;
+            const int first = band;
+            while (band + 1 < bandCount && dirtyTop[band + 1] == dirtyTop[first] && dirtyBottom[band + 1] == dirtyBottom[first])
+                ++band;
+            const int x = centered ? first * (VIS_AREA_W + CENTERED_BAR_GAP) / CENTERED_BAND_COUNT : first * (BIN_WIDTH + BIN_GAP);
+            const int endX = centered ? (band + 1) * (VIS_AREA_W + CENTERED_BAR_GAP) / CENTERED_BAND_COUNT - CENTERED_BAR_GAP : band * (BIN_WIDTH + BIN_GAP) + BIN_WIDTH;
+            const int width = endX - x;
+            const int displayX = centered ? VIS_AREA_X : VIS_AREA_X + 1;
+            const int top = dirtyTop[first];
+            const int height = dirtyBottom[first] - top + 1;
+            m_tft->setClipRect(displayX + x, VIS_AREA_Y + top, width, height);
+            current_sprite->pushSprite(displayX, VIS_AREA_Y);
+        }
+        m_tft->clearClipRect();
+    }
 }
 
 /**
@@ -1713,6 +1798,7 @@ void Visualizer::drawWaterfall(bool init, bool analyze, bool hasSamples, uint32_
         data.targetLevels.fill(0);
         data.displayLevels.fill(0);
         data.activeRows = 0;
+        data.firstRow = 0;
         data.sampleRate = 0;
         for (size_t i = 0; i < data.colors.size(); ++i)
         {
@@ -1822,13 +1908,28 @@ void Visualizer::drawWaterfall(bool init, bool analyze, bool hasSamples, uint32_
     if (!rowVisible && data.activeRows == 0)
         return;
 
-    memmove(graph + rows * stride, graph, (GRAPH_H - rows) * stride * sizeof(uint16_t));
+    data.firstRow = (data.firstRow + GRAPH_H - rows) % GRAPH_H;
+    const int clearedRows = std::min(rows, GRAPH_H - data.firstRow);
+    memset(graph + data.firstRow * stride, 0, clearedRows * stride * sizeof(uint16_t));
+    if (clearedRows < rows)
+        memset(graph, 0, (rows - clearedRows) * stride * sizeof(uint16_t));
+
     // Ausgelassene Zeitschritte bleiben leer; die Höhe des Verlaufs bleibt an die reale Zeit gebunden.
-    memset(graph, 0, rows * stride * sizeof(uint16_t));
+    uint16_t *newRow = graph + data.firstRow * stride;
     for (int x = 0; x < VIS_AREA_W; ++x)
-        graph[x] = data.colors[data.displayLevels[x]];
+        newRow[x] = data.colors[data.displayLevels[x]];
     data.activeRows = rowVisible ? GRAPH_H : (data.activeRows > rows ? data.activeRows - rows : 0);
-    m_sprVU_Spectrum->pushSprite(VIS_AREA_X, VIS_AREA_Y);
+
+    // Die umlaufenden Bildzeilen werden unterhalb der unveränderten Frequenzbeschriftung ausgegeben.
+    const int firstRows = GRAPH_H - data.firstRow;
+    m_tft->setClipRect(VIS_AREA_X, VIS_AREA_Y + SPECTRUM_LABEL_H, VIS_AREA_W, firstRows);
+    m_sprVU_Spectrum->pushSprite(VIS_AREA_X, VIS_AREA_Y - data.firstRow);
+    if (data.firstRow > 0)
+    {
+        m_tft->setClipRect(VIS_AREA_X, VIS_AREA_Y + SPECTRUM_LABEL_H + firstRows, VIS_AREA_W, data.firstRow);
+        m_sprVU_Spectrum->pushSprite(VIS_AREA_X, VIS_AREA_Y + firstRows);
+    }
+    m_tft->clearClipRect();
 }
 
 // ===================================================================
@@ -1840,7 +1941,6 @@ void Visualizer::drawWaterfall(bool init, bool analyze, bool hasSamples, uint32_
  */
 void Visualizer::drawAurora(bool init, float rmsLeft, float rmsRight)
 {
-    constexpr uint32_t FRAME_MS = 33; ///< Höchstens etwa 30 Bilder pro Sekunde
     constexpr uint32_t SLICE_US = 1500; ///< Rechenbudget je Aufruf, nach jeder Spalte geprüft
     constexpr int COLUMNS_PER_SLICE = 32; ///< Höchstens 32 Spalten je Aufruf
     constexpr uint32_t MAX_FRAME_MS = 100; ///< Begrenzter Bewegungsschritt nach einer Zeichenpause
@@ -1886,6 +1986,7 @@ void Visualizer::drawAurora(bool init, float rmsLeft, float rmsRight)
 
     if (init)
     {
+        auroraprobe::reset();
         if (!m_sprAurora)
         {
             if (!m_tft->safeCreateSprite(m_sprAurora, VIS_AREA_W, VIS_AREA_H))
@@ -1940,6 +2041,7 @@ void Visualizer::drawAurora(bool init, float rmsLeft, float rmsRight)
     if (!init && m_activeModule == AppModule::RETRO_RADIO && !APP_STATE.getStationSetDone())
     {
         // Während der Zeigerfahrt bleibt das Bild stehen; die verstrichene Zeit wird beim Fortsetzen nicht nachgeholt.
+        auroraprobe::reset();
         data.lastFrame = now;
         data.rendering = false;
         data.nextColumn = 0;
@@ -1949,8 +2051,9 @@ void Visualizer::drawAurora(bool init, float rmsLeft, float rmsRight)
     if (!data.rendering)
     {
         const uint32_t elapsed = now - data.lastFrame;
-        if (!init && elapsed < FRAME_MS)
+        if (!init && elapsed < VIS_FRAME_MS)
             return;
+        auroraprobe::beginFrame(sliceStart, elapsed < MAX_FRAME_MS ? elapsed : MAX_FRAME_MS);
         data.lastFrame = now;
         const float dt = (elapsed < MAX_FRAME_MS ? elapsed : MAX_FRAME_MS) * 0.001f;
         float targetLevel = 0.0f;
@@ -1990,14 +2093,19 @@ void Visualizer::drawAurora(bool init, float rmsLeft, float rmsRight)
     if (data.nextColumn == VIS_AREA_W)
     {
         // Die Bildübertragung belegt einen eigenen Aufruf ohne weitere Pixelberechnung.
+        const uint32_t pushStart = micros();
         m_sprAurora->pushSprite(VIS_AREA_X, VIS_AREA_Y);
+        auroraprobe::endFrame(pushStart, micros());
         data.rendering = false;
         return;
     }
 
-    auto *buffer = static_cast<uint16_t *>(m_sprAurora->getBuffer());
+    uint16_t *__restrict__ buffer = static_cast<uint16_t *>(m_sprAurora->getBuffer());
     if (!buffer)
         return;
+    // Der Sprite-Puffer überlappt weder Leuchtprofil noch Randverlauf.
+    const uint16_t *__restrict__ glowProfile = data.glow.data();
+    const uint16_t *__restrict__ verticalEnvelope = data.edgeFade.data();
     const int stride = m_sprAurora->width();
     int columns = 0;
     while (data.nextColumn < VIS_AREA_W)
@@ -2026,6 +2134,8 @@ void Visualizer::drawAurora(bool init, float rmsLeft, float rmsRight)
         for (int y = 0; y < VIS_AREA_H; ++y)
         {
             uint32_t red = 0, green = 0, blue = 0;
+            const uint32_t verticalFade = verticalEnvelope[y];
+#pragma GCC unroll AURORA_LAYERS
             for (int layer = 0; layer < AURORA_LAYERS; ++layer)
             {
                 int distance = y * POSITION_SCALE - center[layer];
@@ -2034,7 +2144,7 @@ void Visualizer::drawAurora(bool init, float rmsLeft, float rmsRight)
                 const int index = (distance * data.profileScale[layer]) >> 16;
                 if (index >= AURORA_GLOW_STEPS)
                     continue;
-                const uint32_t glow = (static_cast<uint32_t>(data.glow[index]) * data.edgeFade[y]) >> 8;
+                const uint32_t glow = (static_cast<uint32_t>(glowProfile[index]) * verticalFade) >> 8;
                 red += glow * columnColors[layer][0];
                 green += glow * columnColors[layer][1];
                 blue += glow * columnColors[layer][2];
@@ -2055,8 +2165,9 @@ void Visualizer::drawAurora(bool init, float rmsLeft, float rmsRight)
         ++data.nextColumn;
         ++columns;
         if (columns >= COLUMNS_PER_SLICE || static_cast<uint32_t>(micros() - sliceStart) >= SLICE_US)
-            return;
+            break;
     }
+    auroraprobe::recordSlice(micros() - sliceStart, static_cast<uint16_t>(columns));
 }
 
 // ===================================================================
@@ -2064,221 +2175,176 @@ void Visualizer::drawAurora(bool init, float rmsLeft, float rmsRight)
 // ===================================================================
 
 /**
- * @brief Wellenform-Anzeige
+ * @brief Startet die Wellenform-Zeitspur mit den Mittellinien des gewählten Stils
+ */
+void Visualizer::resetWaveTrace()
+{
+    m_waveNextX = 0;
+    m_waveColumnRestMs = 0;
+    m_waveHasSamples = false;
+    m_waveAmp = 1.0f;
+    m_wavePeakHistoryIdx = 0;
+    memset(m_wavePeakHistory, 0, sizeof(m_wavePeakHistory));
+
+    const bool stacked = m_waveformStyle == WaveformStyle::STACKED;
+    m_sprVU_Wave->clear(Theme::ColorMainBackGround);
+    m_sprVU_Wave->drawFastHLine(0, stacked ? VIS_AREA_H / 4 : VIS_AREA_H / 2, VIS_AREA_W, WAVE_AXIS_COLOR);
+    if (stacked)
+        m_sprVU_Wave->drawFastHLine(0, 3 * VIS_AREA_H / 4, VIS_AREA_W, WAVE_AXIS_COLOR);
+    m_sprVU_Wave->pushSprite(VIS_AREA_X, VIS_AREA_Y);
+}
+
+/**
+ * @brief Ergänzt die positiven und negativen Ausschläge beider Kanäle von links nach rechts
  */
 void Visualizer::drawWave(bool init)
 {
     if (APP_STATE.getBlockGFX())
         return;
 
-    // RAII-Guard: Signalisiert dem Writer, dass gerade gelesen wird
-    ReaderGuard guard(m_readerActive);
-
-    // Lese-Puffer ermitteln (Double-Buffer: der NICHT gerade beschrieben wird)
-    const uint8_t readIdx = m_writeBufferIdx.load(std::memory_order_acquire) ^ 1;
-    const int16_t *samplesL = m_samplesL[readIdx].get();
-    const int16_t *samplesR = m_samplesR[readIdx].get();
-    uint16_t sampleCount = m_sampleCount[readIdx];
-
-    // Defensive: PSRAM-Allokation könnte fehlgeschlagen sein
-    if (!samplesL || !samplesR)
+    const uint32_t now = millis();
+    const uint32_t elapsed = now - m_lastWaveUpdateMs;
+    if (!init && m_waveNextX >= 0 && elapsed < VIS_FRAME_MS)
         return;
 
-    if (!APP_STATE.getStationSetDone())
-        sampleCount = 0;
-
-    // Initialisierung
     if (init)
     {
-    // Ein Puffer genuegt. Ein zweiter lohnt nur, solange eine Uebertragung noch laeuft;
-    // beim RGB-Panel liegt der Bildspeicher im PSRAM, und pushSprite ist ein Kopiervorgang.
-        if (!m_sprVU_Wave)
+        if (!m_sprVU_Wave && !m_tft->safeCreateSprite(m_sprVU_Wave, VIS_AREA_W, VIS_AREA_H))
         {
-            if (!m_tft->safeCreateSprite(m_sprVU_Wave, VIS_AREA_W, VIS_AREA_H))
-            {
-                LOG_ERROR("Konnte Wave Sprite nicht erstellen!");
-                return;
-            }
+            LOG_ERROR("Konnte Wellenform-Sprite nicht erstellen!");
+            return;
         }
-
-        // Visualisierungshintergrund löschen
         clearVisualizationArea();
+    }
 
-        // Erstes Frame mit Mittellinie
-        Gfx_Sprite *spr = m_sprVU_Wave;
-        spr->clear(Theme::ColorMainBackGround);
-        spr->drawFastHLine(0, VIS_AREA_H / 2, VIS_AREA_W, 0x2104);
-        spr->pushSprite(VIS_AREA_X, VIS_AREA_Y);
+    if (!m_sprVU_Wave)
+        return;
+    if (init || m_waveNextX < 0)
+    {
+        m_lastWaveUpdateMs = now;
+        resetWaveTrace();
+        return;
+    }
 
-        // Auto-Gain zurücksetzen
+    const bool ready = APP_STATE.getStationSetDone();
+    const uint32_t sampleSeq = m_sampleSeq.load(std::memory_order_acquire);
+    if (ready && m_waveHasSamples && sampleSeq == m_waveDrawnSeq)
+        return;
 
-        for (uint8_t i = 0; i < WAVE_PEAK_HISTORY_SIZE; i++)
+    constexpr uint32_t COLUMN_MS = 12; ///< Zeit je Spalte, ein Durchlauf dauert rund 5,3 Sekunden
+    constexpr int MAX_COLUMNS = 8;     ///< Höchstens 96 ms neue Spur nach einer Zeichenpause
+    constexpr int CURSOR_GAP = 2;      ///< Freie Spalten vor der Schreibposition
+    const uint32_t span = m_waveHasSamples ? std::min(elapsed, COLUMN_MS * MAX_COLUMNS) : VIS_FRAME_MS;
+    const uint32_t projectedMs = span + m_waveColumnRestMs;
+    const int columns = projectedMs / COLUMN_MS;
+
+    struct Column
+    {
+        int16_t minL, maxL, minR, maxR;
+    };
+    Column peaks[MAX_COLUMNS] = {};
+    bool hasSamples = false;
+    if (ready)
+    {
+        ReaderGuard guard(m_readerActive);
+        const uint8_t idx = m_writeBufferIdx.load(std::memory_order_acquire) ^ 1;
+        const int16_t *left = m_samplesL[idx].get();
+        const int16_t *right = m_samplesR[idx].get();
+        const int count = m_sampleCount[idx];
+        hasSamples = left && right && count >= 2 && m_sampleRate[idx] > 0;
+        if (hasSamples)
         {
-            m_wavePeakHistory[i] = 0.0f;
+            for (int x = 0; x < columns; ++x)
+            {
+                const int first = x * count / columns;
+                const int end = std::max(first + 1, (x + 1) * count / columns);
+                Column &peak = peaks[x];
+                for (int i = first; i < end; ++i)
+                {
+                    const int16_t l = left[i];
+                    const int16_t r = right[i];
+                    peak.minL = std::min(peak.minL, l);
+                    peak.maxL = std::max(peak.maxL, l);
+                    peak.minR = std::min(peak.minR, r);
+                    peak.maxR = std::max(peak.maxR, r);
+                }
+            }
         }
-
-        m_wavePeakHistoryIdx = 0;
-        m_waveSlidingMax = 0.0f;
-        m_waveLastPeakUpdate = 0;
-        m_waveAmp = 1.0f;
-        m_lastWaveUpdateMs = millis();
-
-        return;
     }
 
-    // Fenster: immer nur die letzten 1024 Paare
-    constexpr uint16_t WAVE_N = 1024;
-    const uint16_t take = (sampleCount >= WAVE_N) ? WAVE_N : sampleCount;
-    const uint16_t start = (sampleCount > take) ? (sampleCount - take) : 0;
-
-    Gfx_Sprite *current_sprite = m_sprVU_Wave;
-    current_sprite->clear(Theme::ColorMainBackGround);
-
-    if (take < 2)
-    {
-        current_sprite->pushSprite(VIS_AREA_X, VIS_AREA_Y);
-        return;
-    }
-
-    // Peak-Tracking der unverstärkten Samples (für Auto-Verstärkung)
-    float maxPeak = 0.0f;
-    for (uint16_t i = 0; i < take; ++i)
-    {
-        const uint16_t idx = start + i;
-        const float aL = fabsf(samplesL[idx] / 32767.0f);
-        const float aR = fabsf(samplesR[idx] / 32767.0f);
-        const float m = (aL > aR) ? aL : aR;
-
-        if (m > maxPeak)
-            maxPeak = m;
-    }
-
-    // Auto-Verstärkung mit gleitendem Fenster
-    const uint32_t now = millis();
     m_lastWaveUpdateMs = now;
-
-    // Peak-History alle ~33ms aktualisieren (~30fps)
-    if (now - m_waveLastPeakUpdate >= 33)
+    if (!hasSamples)
     {
-        m_waveLastPeakUpdate = now;
-
-        m_wavePeakHistory[m_wavePeakHistoryIdx] = maxPeak;
-        m_wavePeakHistoryIdx = (m_wavePeakHistoryIdx + 1) % WAVE_PEAK_HISTORY_SIZE;
-
-        // Gleitendes Maximum über die letzten ~3 Sekunden
-        m_waveSlidingMax = 0.0f;
-        for (uint8_t i = 0; i < WAVE_PEAK_HISTORY_SIZE; i++)
-        {
-            if (m_wavePeakHistory[i] > m_waveSlidingMax)
-                m_waveSlidingMax = m_wavePeakHistory[i];
-        }
+        if (m_waveHasSamples)
+            resetWaveTrace();
+        return;
     }
 
-    // Effektiven Peak verwenden (Sliding Max oder aktueller Peak als Fallback)
-    const float effectivePeak = (m_waveSlidingMax > 0.001f) ? m_waveSlidingMax : maxPeak;
+    m_waveHasSamples = true;
+    m_waveDrawnSeq = sampleSeq;
+    m_waveColumnRestMs = projectedMs % COLUMN_MS;
 
-    // Auto-Verstärkungs-Regelung (Ziel: 90% Aussteuerung)
-    if (effectivePeak > 0.001f)
+    int peak = 0;
+    for (int x = 0; x < columns; ++x)
     {
-        const float targetAmp = 0.90f / effectivePeak;
-
-        // Schnell runterregeln bei Übersteuerung
-        if (effectivePeak * m_waveAmp > 1.05f)
-            m_waveAmp += (targetAmp * 0.95f - m_waveAmp) * 0.3f;
-        // Langsam hochregeln bei leisem Signal
-        else if (targetAmp > m_waveAmp)
-            m_waveAmp += (targetAmp - m_waveAmp) * 0.08f;
-        // Mittel runterregeln
+        const Column &p = peaks[x];
+        const int negativePeak = -static_cast<int>(std::min(p.minL, p.minR));
+        const int positivePeak = std::max(p.maxL, p.maxR);
+        peak = std::max(peak, std::max(negativePeak, positivePeak));
+    }
+    m_wavePeakHistory[m_wavePeakHistoryIdx] = peak / 32768.0f;
+    m_wavePeakHistoryIdx = (m_wavePeakHistoryIdx + 1) % WAVE_PEAK_HISTORY_SIZE;
+    float windowPeak = 0.0f;
+    for (float value : m_wavePeakHistory)
+        windowPeak = std::max(windowPeak, value);
+    if (windowPeak > 0.001f)
+    {
+        const float target = 0.9f / windowPeak;
+        if (windowPeak * m_waveAmp > 1.05f)
+            m_waveAmp += (target * 0.95f - m_waveAmp) * 0.3f;
+        else if (target > m_waveAmp)
+            m_waveAmp += (target - m_waveAmp) * 0.08f;
         else
-            m_waveAmp += (targetAmp - m_waveAmp) * 0.12f;
-
-        // Limits: max. 100× Verstärkung, min. 0.1×
-        if (m_waveAmp > 100.0f)
-            m_waveAmp = 100.0f;
-
-        if (m_waveAmp < 0.1f)
-            m_waveAmp = 0.1f;
+            m_waveAmp += (target - m_waveAmp) * 0.12f;
+        m_waveAmp = std::clamp(m_waveAmp, 0.1f, 100.0f);
     }
 
-    // Zeichnen
-    const float xScale = (take > 1) ? (float)(VIS_AREA_W - 1) / (float)(take - 1) : 0.0f;
+    const bool stacked = m_waveformStyle == WaveformStyle::STACKED;
+    const int midL = stacked ? VIS_AREA_H / 4 : VIS_AREA_H / 2;
+    const int midR = stacked ? 3 * VIS_AREA_H / 4 : midL;
+    const int height = midL - 1;
+    const float scale = m_waveAmp * height / 32768.0f;
+    auto offset = [scale, height](int16_t value) {
+        return std::clamp(static_cast<int>(lroundf(value * scale)), -height, height);
+    };
 
-    if (m_waveformStyle == WaveformStyle::STACKED)
+    const int dirty = columns + CURSOR_GAP;
+    for (int i = 0; i < dirty; ++i)
     {
-        // Jeder Kanal nutzt eine halbe Höhe
-        const float half_h = VIS_AREA_H * 0.5f;
-        const float mid_y_L = half_h * 0.5f;    // Mitte oben
-        const float mid_y_R = half_h + mid_y_L; // Mitte unten
-        const float scale_y = (half_h - 3.0f);  // Nutzt die verfügbare Höhe bis auf einen Rand von 3 px.
-
-        int16_t last_lx = 0, last_ly = (int16_t)mid_y_L;
-        int16_t last_rx = 0, last_ry = (int16_t)mid_y_R;
-
-        for (uint16_t i = 0; i < take; ++i)
-        {
-            const uint16_t idx = start + i;
-            const int16_t x = (int16_t)lroundf(i * xScale);
-
-            const float nL = (samplesL[idx] / 32767.0f) * m_waveAmp;
-            const float nR = (samplesR[idx] / 32767.0f) * m_waveAmp;
-
-            const int16_t y_l = (int16_t)lroundf(mid_y_L - nL * scale_y);
-            const int16_t y_r = (int16_t)lroundf(mid_y_R - nR * scale_y);
-
-            if (x > last_lx)
-            {
-                current_sprite->drawLine(last_lx, last_ly, x, y_l, TFT_DARKGREEN);
-                current_sprite->drawLine(last_rx, last_ry, x, y_r, TFT_DARKGREY);
-                last_lx = x;
-                last_ly = y_l;
-                last_rx = x;
-                last_ry = y_r;
-            }
-            else
-            {
-                // gleicher Pixel -> nur "Stiftposition" aktualisieren
-                last_ly = y_l;
-                last_ry = y_r;
-            }
-        }
-    }
-    else // OVERLAY
-    {
-        const float mid_y = VIS_AREA_H * 0.5f;
-        const float scale_y = (VIS_AREA_H * 0.5f) - 2.0f;
-
-        int16_t last_x = 0;
-        int16_t last_yL = (int16_t)mid_y;
-        int16_t last_yR = (int16_t)mid_y;
-
-        for (uint16_t i = 0; i < take; ++i)
-        {
-            const uint16_t idx = start + i;
-            const int16_t x = (int16_t)lroundf(i * xScale);
-
-            const float nL = (samplesL[idx] / 32767.0f) * m_waveAmp;
-            const float nR = (samplesR[idx] / 32767.0f) * m_waveAmp;
-
-            const int16_t y_l = (int16_t)lroundf(mid_y - nL * scale_y);
-            const int16_t y_r = (int16_t)lroundf(mid_y - nR * scale_y);
-
-            if (x > last_x)
-            {
-                current_sprite->drawLine(last_x, last_yL, x, y_l, TFT_DARKGREEN);
-                current_sprite->drawLine(last_x, last_yR, x, y_r, TFT_DARKGREY);
-                last_x = x;
-                last_yL = y_l;
-                last_yR = y_r;
-            }
-            else
-            {
-                last_yL = y_l;
-                last_yR = y_r;
-            }
-        }
+        const int x = (m_waveNextX + i) % VIS_AREA_W;
+        m_sprVU_Wave->drawFastVLine(x, 0, VIS_AREA_H, Theme::ColorMainBackGround);
+        if (i >= columns)
+            continue;
+        const Column &p = peaks[i];
+        const int topL = midL - offset(p.maxL);
+        const int bottomL = midL - offset(p.minL);
+        const int topR = midR - offset(p.maxR);
+        const int bottomR = midR - offset(p.minR);
+        m_sprVU_Wave->drawFastVLine(x, topR, bottomR - topR + 1, TFT_DARKGREY);
+        m_sprVU_Wave->drawFastVLine(x, topL, bottomL - topL + 1, TFT_DARKGREEN);
     }
 
-    current_sprite->pushSprite(VIS_AREA_X, VIS_AREA_Y);
+    // Am rechten Rand werden die neuen Spalten in zwei getrennten Rechtecken übertragen.
+    auto pushColumns = [this](int x, int width) {
+        m_tft->setClipRect(VIS_AREA_X + x, VIS_AREA_Y, width, VIS_AREA_H);
+        m_sprVU_Wave->pushSprite(VIS_AREA_X, VIS_AREA_Y);
+    };
+    const int firstWidth = std::min(dirty, VIS_AREA_W - m_waveNextX);
+    pushColumns(m_waveNextX, firstWidth);
+    if (firstWidth < dirty)
+        pushColumns(0, dirty - firstWidth);
+    m_tft->clearClipRect();
+    m_waveNextX = (m_waveNextX + columns) % VIS_AREA_W;
 }
 
 /**
@@ -2340,6 +2406,8 @@ void Visualizer::drawGonioStaticElements(Gfx_Sprite *spr, const GonioConfig &cfg
 void Visualizer::drawGonio(bool init, float peakLeft, float peakRight)
 {
     if (APP_STATE.getBlockGFX())
+        return;
+    if (!init && millis() - m_gonioLastDynamicsUpdate < VIS_FRAME_MS)
         return;
 
     // RAII-Guard: Signalisiert dem Writer, dass gerade gelesen wird
@@ -2813,6 +2881,8 @@ void Visualizer::drawGonioVU(bool init, float rmsLeft, float rmsRight)
 
     // Zeitbasierte Ballistik
     uint32_t now = millis();
+    if (now - m_lastGonioVUUpdate < VIS_FRAME_MS)
+        return;
     float dt = (now - m_lastGonioVUUpdate) / 1000.0f;
     m_lastGonioVUUpdate = now;
 

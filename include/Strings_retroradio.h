@@ -20,8 +20,8 @@ enum class RetroRadioKey : uint16_t
     RETRO_PRESET_DLG_TITLE,    ///< "FAVORITEN" / "FAVOURITES"
     RETRO_RESET_DLG_TITLE,     ///< "ZURÜCKSETZEN?" / "RESET?"
     RETRO_RESET_DLG_MESSAGE,   ///< Reset-Bestätigungs-Text (Lautstärke, Ton, Visualisierungen)
-    RETRO_SLEEP_DLG_TITLE,     ///< "AUSSCHALTEN" / "SWITCH OFF"
-    RETRO_SLEEP_DLG_MESSAGE,   ///< "Radio ausschalten nach:" / "Switch off radio after:"
+    RETRO_SLEEP_DLG_TITLE,     ///< "SLEEP-TIMER" / "SLEEP TIMER"
+    RETRO_SLEEP_DLG_MESSAGE,   ///< "Radio verlassen nach:" / "Quit radio after:"
 
     // ------------------------------------------------------------------------
     // Control-Labels (Hauptscreen)

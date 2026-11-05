@@ -73,6 +73,10 @@ Die Werkstatt enthält 38 Werkzeuge in sieben Kategorien. Dazu gehören Rechner,
 | Stricken | Maschenprobe, Maschenverteilung und Ärmelabnahme. |
 | Musik | Quintenzirkel und Metronom. |
 
+## Bekannter offener Displayfehler
+
+Das gesamte Bild kann kurz seitlich zucken, unter anderem im Webradio sowie bei Datenabrufen in DayView und im Flugradar. Die Ursache ist noch ungeklärt. Die aktuellen Verbesserungen an Audiowiedergabe und Visualisierungen beheben diesen Bildversatz nicht. Hinweise zur Eingrenzung stehen in der [Fehlerhilfe](docs/Fehlerhilfe.md).
+
 ## Hardware
 
 Der gezeigte Vollausbau verwendet:

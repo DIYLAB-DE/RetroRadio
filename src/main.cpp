@@ -266,7 +266,6 @@ void handleButtonPressed(uint16_t btnIdx, bool /*buttonState*/)
             if (url && url[0] != '\0')
             {
                 APP_STATE.setCurrentRetroStation(i);
-                setNewStation(i);
                 return;
             }
         }
@@ -280,7 +279,6 @@ void handleButtonPressed(uint16_t btnIdx, bool /*buttonState*/)
             if (url && url[0] != '\0')
             {
                 APP_STATE.setCurrentRetroStation(i);
-                setNewStation(i);
                 return;
             }
         }
@@ -293,6 +291,16 @@ void handleButtonPressed(uint16_t btnIdx, bool /*buttonState*/)
 void handleStationPressed(uint16_t staIdx)
 {
     APP_STATE.setCurrentRetroStation(staIdx);
+}
+
+/**
+ * @brief Wendet die gespeicherten Audioregler auf die Wiedergabe an.
+ */
+void applyAudioControls()
+{
+    audio.setBalance(APP_STATE.getCurrentBalance());
+    audio.setVolume(APP_STATE.getCurrentVolume(), 1);
+    applyEqFrequencies(APP_STATE.getEqFreqLow(), APP_STATE.getEqFreqPeak(), APP_STATE.getEqFreqHigh());
 }
 
 /**
@@ -659,7 +667,9 @@ void setup()
     else
         LOG_WARNING("Senderliste konnte nicht geladen werden");
 
-    // MainScreen erstellen (Sperrbildschirm wird intern als Boot-Gate aktiviert)
+    auroraprobe::init();
+
+    // Hauptmenü mit der gespeicherten PIN-Einstellung starten
     mainScreen = new MainScreen();
     mainScreen->init(tft, rtc, stationManager, audio);
 
@@ -674,10 +684,8 @@ void setup()
     audio.settings.DMA_FRAME_NUM = 256;
     audio.setPinout(i2sPins::I2S_BCLK, i2sPins::I2S_LRC, i2sPins::I2S_DOUT);
     audio.forceMono(false);
-    audio.setBalance(APP_STATE.getCurrentBalance());
     audio.setVolumeSteps(100);
-    audio.setVolume(APP_STATE.getCurrentVolume(), 1);
-    applyEqFrequencies(APP_STATE.getEqFreqLow(), APP_STATE.getEqFreqPeak(), APP_STATE.getEqFreqHigh());
+    applyAudioControls();
     applyStereoWidth(APP_STATE.getStereoWidth());
 
     // AudioManager initialisieren und Callback registrieren
@@ -696,6 +704,7 @@ void setup()
  */
 void loop()
 {
+    const uint32_t probeLoopStart = micros();
     // WiFi-Manager Update
     wifiManager.update();
 
@@ -756,32 +765,47 @@ void loop()
         APP_STATE.setNtpSynced(true);
     }
 
+    auroraprobe::recordSection(auroraprobe::LoopSection::Network, micros() - probeLoopStart);
+
     // Audio-Transport nur wenn Display an ist, Aufruf nur alle 5 ms.
     if (APP_STATE.isDisplayOn())
     {
         static unsigned long lastAudioLoop = 0;
         if (millis() - lastAudioLoop >= 5)
         {
+            const uint32_t probeAudioStart = micros();
+            auroraprobe::recordAudio(probeAudioStart);
             audio.loop();
             lastAudioLoop = millis();
+            auroraprobe::recordSection(auroraprobe::LoopSection::Audio, micros() - probeAudioStart);
         }
     }
 
     // Status aktualisieren (WLAN/DST etc.)
+    uint32_t probeSectionStart = micros();
     updateStatus(APP_STATE.isDisplayOn());
+    auroraprobe::recordSection(auroraprobe::LoopSection::Status, micros() - probeSectionStart);
 
     // SystemStats aktualisieren (sendet SSE-Events automatisch)
+    probeSectionStart = micros();
     SYSTEM_STATS.update();
+    auroraprobe::recordSection(auroraprobe::LoopSection::Statistics, micros() - probeSectionStart);
 
     // FTP-Server bedienen (Dateitransfers verarbeiten)
+    probeSectionStart = micros();
     FTP_SERVICE.handle();
+    auroraprobe::recordSection(auroraprobe::LoopSection::Ftp, micros() - probeSectionStart);
 
     // MainScreen
+    probeSectionStart = micros();
     if (mainScreen)
         mainScreen->update();
+    auroraprobe::recordSection(auroraprobe::LoopSection::Ui, micros() - probeSectionStart);
+    auroraprobe::recordLoop(probeLoopStart, micros());
 
-    // FPS-Log bei Bedarf
-    // fps(5); // Messsonde der Visualisierungs-Vergleichsmessung; bei Bedarf aktivieren
+    const AppModule probeModule = APP_STATE.getActiveModule();
+    const bool probeActive = APP_STATE.isDisplayOn() && !APP_STATE.getBlockGFX() && APP_STATE.getVisMode() == static_cast<uint8_t>(VisMode::VIS_AURORA) && (probeModule == AppModule::SD_PLAYER || (probeModule == AppModule::RETRO_RADIO && APP_STATE.getStationSetDone()));
+    auroraprobe::report(probeActive, audio.isRunning());
 }
 
 // ===================================================================

@@ -1,4 +1,5 @@
 #include "AppState.h"
+#include "Routes.h"
 
 #include <Wire.h>  // Für I2C-Kommunikation
 #include <cmath>   // Für std::isnan
@@ -52,16 +53,12 @@ namespace
     constexpr uint8_t MAX_LOUDNESS = 100;
     constexpr uint8_t MAX_VIS_MODE = 7;
     constexpr uint8_t MAX_STYLE = 1;
-    constexpr uint8_t DEFAULT_CENTERED_SPECTRUM_STYLE = 0; ///< Werksvorgabe des mittigen Spektrums: grün
-    constexpr uint8_t DEFAULT_WATERFALL_STYLE = 1; ///< Werksvorgabe des Wasserfalls: mehrfarbig
-    constexpr uint8_t DEFAULT_AURORA_STYLE = 0; ///< Werksvorgabe des Nordlichts: kühl
     constexpr uint8_t DEFAULT_MAGIC_EYE_STYLE = 0; ///< Werksvorgabe des magischen Auges: EM11
     constexpr uint8_t MAX_MAGIC_EYE_STYLE = 3;     ///< Höchster gültiger Stil des magischen Auges: EM84, muss zur Aufzählung MagicEyeStyle in include/RetroRadio.h passen
     constexpr uint8_t DEFAULT_VU_BALLISTICS = 1;   ///< Werksvorgabe der Zeigerträgheit: 300 ms, so verlangt es die Norm
     constexpr uint8_t MAX_VU_BALLISTICS = 2;       ///< Höchste gültige Trägheit, muss zur Aufzählung VuBallistics in include/Visualizer.h passen
     constexpr uint8_t DEFAULT_VU_SENSITIVITY = 2;  ///< Werksvorgabe des Bezugspegels: 0 VU bei -10 dBFS
     constexpr uint8_t MAX_VU_SENSITIVITY = 4;      ///< Höchste Empfindlichkeitsstufe, muss zur Tabelle VU_ALIGNMENT_DB in src/Visualizer.cpp passen
-    constexpr uint8_t DEFAULT_ANALOG_VU_STYLE = 0; ///< Werksvorgabe der Farbfassung: klassisch
     constexpr uint8_t MAX_ANALOG_VU_STYLE = 1;     ///< Höchste gültige Fassung, muss zur Aufzählung AnalogVUStyle in include/Visualizer.h passen
 
     // Geografische Limits
@@ -186,6 +183,7 @@ const char *AppState::P_KEY_WIFI_PASS[3] = {"wifi_pass_0", "wifi_pass_1", "wifi_
 const char *AppState::P_KEY_WIFI_ENABLED[3] = {"wifi_en_0", "wifi_en_1", "wifi_en_2"};
 
 // Sperrbildschirm Preferences Key
+const char *AppState::P_KEY_PIN_LOCK_ENABLED = "pinLockOn";
 const char *AppState::P_KEY_LOCK_PIN = "lockPin";
 
 // UI Preferences Key
@@ -260,6 +258,16 @@ AppState &AppState::instance()
 // ===================================================================
 
 /**
+ * @brief Speichert die fünf benachbarten Visualisierungswerte im RTC-NVRAM.
+ */
+bool AppState::saveRtcVisualization()
+{
+    const uint8_t values[] = {m_visMode, m_digitalVUStyle, m_spectrumStyle, m_waveformStyle, m_gonioStyle};
+    static_assert(sizeof(values) == NVRAM_ADDR_GONIO_STYLE - NVRAM_ADDR_VIS_MODE + 1, "Der Visualisierungsblock muss alle fünf RTC-Werte enthalten");
+    return m_rtc.writeNVRAMBlock(NVRAM_ADDR_VIS_MODE, values, sizeof(values));
+}
+
+/**
  * @brief Speichert alle drei EQ-Werte und ihre Kennung im RTC-NVRAM
  */
 bool AppState::saveEqToNVRAM()
@@ -270,6 +278,10 @@ bool AppState::saveEqToNVRAM()
         static_cast<uint8_t>(m_currentGainHighPass)};
 
     if (!m_rtc.writeNVRAMBlock(NVRAM_ADDR_GAIN_LOW, gains, NVRAM_EQ_GAIN_COUNT))
+        return false;
+
+    // Erst mit der Kennung gelten auch die fünf Visualisierungsbytes beim nächsten Start als initialisiert.
+    if (!m_eqNVRAMInitialized && !saveRtcVisualization())
         return false;
 
     if (!m_rtc.writeNVRAMBlock(NVRAM_ADDR_EQ_MARKER, NVRAM_EQ_MARKER, sizeof(NVRAM_EQ_MARKER)))
@@ -287,6 +299,7 @@ void AppState::loadFromNVRAM()
     uint8_t data[NVRAM_READ_SIZE] = {};
     if (!m_rtc.readNVRAMBlock(0, data, NVRAM_READ_SIZE))
     {
+        resetRtcVisualizationToDefaults(false);
         LOG_WARNING("AppState: RTC-NVRAM konnte nicht gelesen werden - verwende Standardwerte");
         return;
     }
@@ -305,31 +318,25 @@ void AppState::loadFromNVRAM()
         m_currentGainLowPass = constrain(static_cast<int8_t>(data[NVRAM_ADDR_GAIN_LOW]), MIN_GAIN_DB, MAX_GAIN_DB);
         m_currentGainBandPass = constrain(static_cast<int8_t>(data[NVRAM_ADDR_GAIN_BAND]), MIN_GAIN_DB, MAX_GAIN_DB);
         m_currentGainHighPass = constrain(static_cast<int8_t>(data[NVRAM_ADDR_GAIN_HIGH]), MIN_GAIN_DB, MAX_GAIN_DB);
+
+        const auto readChoice = [&data](uint8_t address, uint8_t maximum, uint8_t fallback)
+        {
+            return data[address] <= maximum ? data[address] : fallback;
+        };
+        m_visMode = readChoice(NVRAM_ADDR_VIS_MODE, MAX_VIS_MODE, DEFAULT_VIS_MODE);
+        m_digitalVUStyle = readChoice(NVRAM_ADDR_VU_STYLE, MAX_STYLE, DEFAULT_RAINBOW_STYLE);
+        m_spectrumStyle = readChoice(NVRAM_ADDR_SPECTRUM_STYLE, MAX_STYLE, DEFAULT_RAINBOW_STYLE);
+        m_waveformStyle = readChoice(NVRAM_ADDR_WAVEFORM_STYLE, MAX_STYLE, DEFAULT_WAVEFORM_STYLE);
+        m_gonioStyle = readChoice(NVRAM_ADDR_GONIO_STYLE, MAX_STYLE, DEFAULT_RAINBOW_STYLE);
     }
     else
     {
-        m_currentGainLowPass = DEFAULT_GAIN_LOW_PASS_DB;
-        m_currentGainBandPass = DEFAULT_GAIN_BAND_PASS_DB;
-        m_currentGainHighPass = DEFAULT_GAIN_HIGH_PASS_DB;
-
-        // Frisches NVRAM: auch Lautstärke und Balance auf die Standardwerte bringen, statt Rohdaten zu übernehmen
-        setCurrentVolume(DEFAULT_VOLUME);
-        setVolumeBeforeMute(DEFAULT_VOLUME);
-        setCurrentBalance(0);
-
-        if (saveEqToNVRAM())
+        resetRtcVisualizationToDefaults(false);
+        resetAudioToDefaults();
+        if (m_eqNVRAMInitialized)
             LOG_INFO_F("EQ-Standardwerte im RTC-NVRAM initialisiert: Tiefen=%d dB, Mitten=%d dB, Höhen=%d dB",
                        m_currentGainLowPass, m_currentGainBandPass, m_currentGainHighPass);
-        else
-            LOG_WARNING("AppState: EQ-Standardwerte konnten nicht im RTC-NVRAM gespeichert werden");
     }
-
-    // Visualisierungs-Settings
-    m_visMode = constrain(data[NVRAM_ADDR_VIS_MODE], 0, MAX_VIS_MODE);
-    m_digitalVUStyle = constrain(data[NVRAM_ADDR_VU_STYLE], 0, MAX_STYLE);
-    m_spectrumStyle = constrain(data[NVRAM_ADDR_SPECTRUM_STYLE], 0, MAX_STYLE);
-    m_waveformStyle = constrain(data[NVRAM_ADDR_WAVEFORM_STYLE], 0, MAX_STYLE);
-    m_gonioStyle = constrain(data[NVRAM_ADDR_GONIO_STYLE], 0, MAX_STYLE);
 
     // ToDo-Einstellungen
     m_toDoShowCompleted = data[NVRAM_ADDR_TODO_SHOW_COMPLETED] != 0;
@@ -384,6 +391,7 @@ void AppState::loadFromPreferences()
                hasOpenSkyCredentials() ? "✓" : "✗");
 
     // Sperrbildschirm-PIN
+    m_pinLockEnabled = m_prefs.getBool(P_KEY_PIN_LOCK_ENABLED, DEFAULT_PIN_LOCK_ENABLED);
     loadPrefText(m_prefs, P_KEY_LOCK_PIN, m_lockPin, sizeof(m_lockPin), "0000");
 
     // UI-Einstellungen
@@ -468,13 +476,13 @@ void AppState::loadFromPreferences()
     if (m_analogVUStyle > MAX_ANALOG_VU_STYLE)
         m_analogVUStyle = DEFAULT_ANALOG_VU_STYLE;
 
-    m_centeredSpectrumStyle = m_prefs.getUChar(P_KEY_CENTERED_SPECTRUM_STYLE, DEFAULT_CENTERED_SPECTRUM_STYLE);
+    m_centeredSpectrumStyle = m_prefs.getUChar(P_KEY_CENTERED_SPECTRUM_STYLE, DEFAULT_RAINBOW_STYLE);
     if (m_centeredSpectrumStyle > MAX_STYLE)
-        m_centeredSpectrumStyle = DEFAULT_CENTERED_SPECTRUM_STYLE;
+        m_centeredSpectrumStyle = DEFAULT_RAINBOW_STYLE;
 
-    m_waterfallStyle = m_prefs.getUChar(P_KEY_WATERFALL_STYLE, DEFAULT_WATERFALL_STYLE);
+    m_waterfallStyle = m_prefs.getUChar(P_KEY_WATERFALL_STYLE, DEFAULT_RAINBOW_STYLE);
     if (m_waterfallStyle > MAX_STYLE)
-        m_waterfallStyle = DEFAULT_WATERFALL_STYLE;
+        m_waterfallStyle = DEFAULT_RAINBOW_STYLE;
 
     m_auroraStyle = m_prefs.getUChar(P_KEY_AURORA_STYLE, DEFAULT_AURORA_STYLE);
     if (m_auroraStyle > MAX_STYLE)
@@ -1314,22 +1322,56 @@ void AppState::setHostname(const char *hostname)
 // ===================================================================
 
 /**
+ * @brief Prüft die eingegebene PIN gegen die gespeicherte PIN.
+ */
+bool AppState::matchesLockPin(const char *pin) const
+{
+    std::lock_guard<std::mutex> guard(m_pinMutex);
+    return pin && strcmp(pin, m_lockPin) == 0;
+}
+
+/**
+ * @brief Prüft und speichert Änderungen der PIN-Sperre.
+ */
+AppState::PinLockResult AppState::setPinLockEnabled(bool enabled, const char *currentPin)
+{
+    {
+        std::lock_guard<std::mutex> guard(m_pinMutex);
+        if (enabled == isPinLockEnabled())
+            return PinLockResult::Saved;
+        if (!enabled && (!currentPin || strcmp(currentPin, m_lockPin) != 0))
+            return PinLockResult::WrongPin;
+        if (!m_prefs.putBool(P_KEY_PIN_LOCK_ENABLED, enabled))
+            return PinLockResult::StorageError;
+
+        m_pinLockEnabled = enabled;
+    }
+
+    notifyPinLockModeChanged();
+    return PinLockResult::Saved;
+}
+
+/**
  * @brief Lock-PIN setzen und speichern
  */
-void AppState::setLockPin(const char *pin)
+bool AppState::setLockPin(const char *pin)
 {
     if (!pin || strlen(pin) != 4)
-        return;
+        return false;
 
     for (int i = 0; i < 4; ++i)
     {
         if (pin[i] < '0' || pin[i] > '9')
-            return;
+            return false;
     }
 
+    std::lock_guard<std::mutex> guard(m_pinMutex);
+    if (!m_prefs.putString(P_KEY_LOCK_PIN, pin))
+        return false;
+
     stringutils::safeCopy(m_lockPin, pin);
-    m_prefs.putString(P_KEY_LOCK_PIN, m_lockPin);
     LOG_INFO("Lock-PIN aktualisiert");
+    return true;
 }
 
 // ===================================================================
@@ -1480,26 +1522,55 @@ void AppState::saveWiFiProfiles()
 // ===================================================================
 
 /**
+ * @brief Stellt die Werksvorgaben der Audioregler wieder her.
+ */
+void AppState::resetAudioToDefaults(bool persist)
+{
+    m_currentVolume = DEFAULT_VOLUME;
+    m_volumeBeforeMute = DEFAULT_VOLUME;
+    m_currentBalance = DEFAULT_BALANCE;
+    m_currentGainLowPass = DEFAULT_GAIN_LOW_PASS_DB;
+    m_currentGainBandPass = DEFAULT_GAIN_BAND_PASS_DB;
+    m_currentGainHighPass = DEFAULT_GAIN_HIGH_PASS_DB;
+    m_isMuted = false;
+
+    if (!persist)
+        return;
+
+    // Die Audioregler und der Mute-Status liegen im RTC-NVRAM unmittelbar hintereinander.
+    const uint8_t controls[] = {
+        m_currentVolume, m_volumeBeforeMute, static_cast<uint8_t>(m_currentBalance),
+        static_cast<uint8_t>(m_currentGainLowPass), static_cast<uint8_t>(m_currentGainBandPass),
+        static_cast<uint8_t>(m_currentGainHighPass), static_cast<uint8_t>(m_isMuted)};
+    static_assert(sizeof(controls) == NVRAM_ADDR_MUTED - NVRAM_ADDR_VOLUME + 1, "Der Audioblock muss alle Regler bis zum Mute-Status enthalten");
+    if (!m_rtc.writeNVRAMBlock(NVRAM_ADDR_VOLUME, controls, sizeof(controls)) ||
+        (!m_eqNVRAMInitialized && !saveEqToNVRAM()))
+        LOG_WARNING("Audio-Werksvorgaben konnten nicht vollständig im RTC-NVRAM gespeichert werden");
+}
+
+/**
+ * @brief Stellt die Werksvorgaben für die Visualisierungswerte der RTC wieder her.
+ */
+void AppState::resetRtcVisualizationToDefaults(bool persist)
+{
+    m_visMode = DEFAULT_VIS_MODE;
+    m_digitalVUStyle = DEFAULT_RAINBOW_STYLE;
+    m_spectrumStyle = DEFAULT_RAINBOW_STYLE;
+    m_waveformStyle = DEFAULT_WAVEFORM_STYLE;
+    m_gonioStyle = DEFAULT_RAINBOW_STYLE;
+    if (persist && !saveRtcVisualization())
+        LOG_WARNING("Visualisierungsvorgaben konnten nicht im RTC-NVRAM gespeichert werden");
+}
+
+/**
  * @brief Setzt alle Einstellungen auf Standardwerte zurück
  */
 void AppState::resetToDefaults(bool clearNVRAM, bool clearPrefs)
 {
     m_currentRetroStation = 0;
-    m_currentVolume = DEFAULT_VOLUME;
-    m_volumeBeforeMute = DEFAULT_VOLUME;
-    m_currentBalance = 0;
-    m_currentGainLowPass = DEFAULT_GAIN_LOW_PASS_DB;
-    m_currentGainBandPass = DEFAULT_GAIN_BAND_PASS_DB;
-    m_currentGainHighPass = DEFAULT_GAIN_HIGH_PASS_DB;
-    m_isMuted = false;
     m_forceMono = false;
 
-    // Visualisierungen
-    m_visMode = 0;
-    m_digitalVUStyle = 0;
-    m_spectrumStyle = 0;
-    m_waveformStyle = 0;
-    m_gonioStyle = 0;
+    resetRtcVisualizationToDefaults(false);
 
     // Runtime-Variablen
     m_stationSetDone = false;
@@ -1511,24 +1582,16 @@ void AppState::resetToDefaults(bool clearNVRAM, bool clearPrefs)
         m_rtc.clearNVRAM();
         m_eqNVRAMInitialized = false;
         setCurrentRetroStation(m_currentRetroStation);
-        setCurrentVolume(m_currentVolume);
-        setVolumeBeforeMute(m_volumeBeforeMute);
-        setCurrentBalance(m_currentBalance);
-        setCurrentGainLowPass(m_currentGainLowPass);
-        setCurrentGainBandPass(m_currentGainBandPass);
-        setCurrentGainHighPass(m_currentGainHighPass);
-        setIsMuted(m_isMuted);
         setForceMono(m_forceMono);
-        setVisMode(m_visMode);
-        setDigitalVUStyle(m_digitalVUStyle);
-        setSpectrumStyle(m_spectrumStyle);
-        setWaveformStyle(m_waveformStyle);
-        setGonioStyle(m_gonioStyle);
     }
+
+    resetAudioToDefaults(clearNVRAM);
 
     // Preferences löschen
     if (clearPrefs)
     {
+        m_prefs.remove(P_KEY_PIN_LOCK_ENABLED);
+        m_pinLockEnabled = DEFAULT_PIN_LOCK_ENABLED;
         resetPreferencesWeather();
         resetPreferencesNtp();
         resetPreferencesGoogleApi();
@@ -1565,9 +1628,9 @@ void AppState::resetToDefaults(bool clearNVRAM, bool clearPrefs)
         m_prefs.remove(P_KEY_ANALOG_VU_STYLE);
         m_analogVUStyle = DEFAULT_ANALOG_VU_STYLE;
         m_prefs.remove(P_KEY_CENTERED_SPECTRUM_STYLE);
-        m_centeredSpectrumStyle = DEFAULT_CENTERED_SPECTRUM_STYLE;
+        m_centeredSpectrumStyle = DEFAULT_RAINBOW_STYLE;
         m_prefs.remove(P_KEY_WATERFALL_STYLE);
-        m_waterfallStyle = DEFAULT_WATERFALL_STYLE;
+        m_waterfallStyle = DEFAULT_RAINBOW_STYLE;
         m_prefs.remove(P_KEY_AURORA_STYLE);
         m_auroraStyle = DEFAULT_AURORA_STYLE;
     }

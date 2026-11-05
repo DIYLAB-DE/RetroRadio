@@ -118,13 +118,17 @@ enum class SettingsKey : uint16_t
     // Sicherheit-Panel
     // ===================================================================
     SETTINGS_SEC_TITLE,       ///< "Sicherheit" / "Security"
-    SETTINGS_SEC_SUBTITLE,    ///< "Sperr-PIN ändern" / "Change lock PIN"
+    SETTINGS_SEC_SUBTITLE,    ///< "Sperre für Radio und Weboberfläche" / "Lock for radio and web interface"
     SETTINGS_SEC_PIN_HINT,    ///< "Tippe 4 Ziffern für eine neue PIN." / "Type 4 digits for a new PIN."
     SETTINGS_SEC_PIN_SET,     ///< "Eine PIN ist gesetzt." / "A PIN is set."
     SETTINGS_SEC_SAVED_TITLE, ///< "PIN geändert" / "PIN changed"
     SETTINGS_SEC_SAVED_MSG,   ///< "Die neue PIN wurde gespeichert." / "The new PIN has been saved."
     SETTINGS_SEC_PIN_REPEAT,   ///< "PIN wiederholen" / "Repeat PIN"
     SETTINGS_SEC_PIN_MISMATCH, ///< "Eingaben stimmen nicht überein" / "Entries do not match"
+    SETTINGS_SEC_TOGGLE, ///< "PIN-Sperre" / "PIN lock"
+    SETTINGS_SEC_CONFIRM_OFF, ///< "Zum Ausschalten aktuelle PIN eingeben." / "Enter the current PIN to turn off the lock."
+    SETTINGS_SEC_WRONG_PIN, ///< "Falsche PIN. Bitte erneut eingeben." / "Incorrect PIN. Please try again."
+    SETTINGS_SEC_WRITE_ERROR, ///< "Sicherheitseinstellung konnte nicht gespeichert werden." / "Could not save the security setting."
     SETTINGS_SEC_PIN_READY,    ///< "PIN vorgemerkt. Mit Speichern bestätigen." / "PIN ready. Confirm with Save."
 
     // ===================================================================

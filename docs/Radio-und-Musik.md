@@ -8,13 +8,13 @@
 
 Öffne im Hauptmenü das Radiosymbol. Die große Analogskala zeigt die Sender, der rote Zeiger bewegt sich zum ausgewählten Eintrag. Ein Tipp auf einen Sender wählt ihn aus. Unten stehen Lautstärke, Balance und die drei Klangregler. Die Pfeiltasten wechseln zum vorherigen oder nächsten Sender. Der Stern öffnet die Favoriten.
 
-| Radio | Favoriten | Ausschalt- und Sleep-Timer |
+| Radio | Favoriten | Sleep-Timer |
 | --- | --- | --- |
 | [![Radio](bilder/bedienung/radio-uebersicht-klein.png)](bilder/bedienung/radio-uebersicht.png) | [![Favoriten](bilder/bedienung/radio-senderspeicher-klein.png)](bilder/bedienung/radio-senderspeicher.png) | [![Sleep-Timer](bilder/bedienung/radio-sleeptimer-klein.png)](bilder/bedienung/radio-sleeptimer.png) |
 
-Der Lautstärkeknopf reagiert auf eine Drehbewegung am äußeren Bereich. Ein Tipp in die Mitte schaltet stumm beziehungsweise hebt die Stummschaltung auf. Balance, Tiefen, Mitten und Höhen werden an den zugehörigen Reglern eingestellt. Sendernamen, Streamadressen und Favoriten lassen sich in der [Weboberfläche](Weboberfläche.md) pflegen.
+Der Lautstärkeknopf reagiert auf eine Drehbewegung am äußeren Bereich. Ein Tipp in die Mitte schaltet stumm beziehungsweise hebt die Stummschaltung auf. Balance, Tiefen, Mitten und Höhen stellst Du durch Ziehen ein. Hältst Du einen Reglerkreis etwa 0,8 Sekunden ruhig gedrückt, springt nur dieser Regler auf die Mittellinie (Balance 0 oder 0 dB). Sendernamen, Streamadressen und Favoriten lassen sich in der [Weboberfläche](Weboberfläche.md) pflegen.
 
-Der Ausschaltknopf öffnet den Sleep-Timer mit **5, 15, 25, 45 und 60 Minuten** sowie dem Symbol für sofortiges Beenden. **Abbruch** schließt den Dialog. Nach Auswahl einer Zeit läuft die Wiedergabe bis zum Ablauf weiter. **Reset** öffnet einen eigenen Bestätigungsdialog, die Funktion nicht mit dem normalen Beenden verwechseln.
+Das Haus unten rechts öffnet den Sleep-Timer mit **5, 15, 25, 45 und 60 Minuten**. Ein Tipp auf das Haus im Dialog beendet die Wiedergabe sofort und führt zurück ins Hauptmenü. **Abbruch** schließt den Dialog. Nach Auswahl einer Zeit läuft die Wiedergabe bis zum Ablauf weiter. **Reset** öffnet einen eigenen Bestätigungsdialog, die Funktion nicht mit dem normalen Beenden verwechseln.
 
 ## Alle acht Visualisierungen
 
@@ -61,6 +61,10 @@ Der SD-Player verbindet eine animierte Kassette, Coveranzeige, Titelinformatione
 | --- | --- | --- |
 | [![SD-Player mit Cover](bilder/bedienung/sdplayer-cover-wiedergabe-klein.png)](bilder/bedienung/sdplayer-cover-wiedergabe.png) | [![SD-Player pausiert](bilder/bedienung/sdplayer-pause-klein.png)](bilder/bedienung/sdplayer-pause.png) | [![Leere Titelliste](bilder/bedienung/sdplayer-uebersicht-klein.png)](bilder/bedienung/sdplayer-uebersicht.png) |
 
+### SD-Karte auswählen
+
+Für den SD-Player wird eine schnelle microSD-Karte mit **mindestens Class 10 und höchstens 32 GB** empfohlen. Die bisherigen Geräteerfahrungen zeigen zuverlässigere Wiedergabe mit schnellen Karten. Im RetroRadio wurden **SanDisk Extreme 32 GB** und **SanDisk Ultra 32 GB** erprobt. Für andere Kartenmodelle liegt keine vergleichbare Bestätigung vor; Karten mit mehr als 32 GB werden für dieses Projekt nicht empfohlen.
+
 ### Musik auswählen
 
 **Durchs.** öffnet die Dateiauswahl. Ein kurzer Tipp öffnet einen Ordner, **..** führt eine Ebene zurück. Dateien beziehungsweise ein ganzer Ordner lassen sich durch längeres Drücken auswählen. Die Auswahl wird unten zusammengefasst. **OK** übernimmt sie in die Titelliste, **Abbruch** schließt den Dialog ohne Übernahme. Bereits enthaltene Dateien werden beim Hinzufügen übersprungen.
@@ -69,7 +73,7 @@ Der SD-Player verbindet eine animierte Kassette, Coveranzeige, Titelinformatione
 | --- | --- | --- | --- |
 | [![Dateiauswahl](bilder/bedienung/sdplayer-dateiauswahl-klein.png)](bilder/bedienung/sdplayer-dateiauswahl.png) | [![Musikordner](bilder/bedienung/sdplayer-musikordner-klein.png)](bilder/bedienung/sdplayer-musikordner.png) | [![Albumordner](bilder/bedienung/sdplayer-albumauswahl-klein.png)](bilder/bedienung/sdplayer-albumauswahl.png) | [![Ausgewählter Ordner](bilder/bedienung/sdplayer-ordner-ausgewaehlt-klein.png)](bilder/bedienung/sdplayer-ordner-ausgewaehlt.png) |
 
-Die Titel werden über die Wiedergabetaste gestartet. Die Coveranzeige hängt von den Metadaten der Musikdatei ab, ohne lesbares Cover erscheint der Platzhalter. **Leeren** entfernt die Titelliste, nicht die Musikdateien auf der SD-Karte. Der Ausschaltknopf öffnet den Sleep-Timer. Lautstärke, Balance, Klang und Visualisierungswechsel funktionieren wie im Radio.
+Die Titel werden über die Wiedergabetaste gestartet. Die Coveranzeige hängt von den Metadaten der Musikdatei ab, ohne lesbares Cover erscheint der Platzhalter. **Leeren** entfernt die Titelliste, nicht die Musikdateien auf der SD-Karte. Das Haus unten rechts öffnet wie im Radio den Sleep-Timer. Lautstärke, Balance, Klang und Visualisierungswechsel funktionieren wie im Radio.
 
 Die Abbildungen zeigen die Wiedergabe einer vorhandenen Musikdatei zur Demonstration. Titel, Künstlernamen und eingeblendetes Albumcover gehören zum dargestellten Musikinhalt, Musikdateien sind nicht Bestandteil des Repositorys.
 

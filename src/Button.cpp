@@ -22,6 +22,7 @@
 #include <limits>
 
 #include "StringUtils.h"
+#include "Theme.h"
 
 // ===================================================================
 // Senkrechte Mitte der Beschriftung
@@ -292,7 +293,8 @@ int16_t Button::parseSymbolAttributes(const char *label, int16_t defaultSize, ui
 void Button::drawSymbolFromLabel(const char *label, int16_t x, int16_t y, uint16_t color)
 {
     // Farbe kann durch Label überschrieben werden
-    uint16_t symbolColor = color;
+    const bool isHome = strncmp(label, "^HOME", 5) == 0;
+    uint16_t symbolColor = isHome ? Theme::ActiveMainScreen.iconTints[Theme::IC_OFF] : color;
     int16_t size = parseSymbolAttributes(label, 24, symbolColor);
 
     if (strncmp(label, "^BACKSPACE", 10) == 0)
@@ -311,7 +313,7 @@ void Button::drawSymbolFromLabel(const char *label, int16_t x, int16_t y, uint16
         drawRefreshSymbol(x, y, size, symbolColor);
     else if (strncmp(label, "^DEL", 4) == 0)
         drawDeleteSymbol(x, y, size, symbolColor);
-    else if (strncmp(label, "^HOME", 5) == 0)
+    else if (isHome)
         drawHomeSymbol(x, y, size, symbolColor);
     else if (strncmp(label, "^SET", 4) == 0)
         drawSettingsSymbol(x, y, size, symbolColor);
@@ -603,23 +605,27 @@ void Button::drawDeleteSymbol(int16_t x, int16_t y, int16_t size, uint16_t color
 }
 
 /**
- * @brief Zeichnet Home-Symbol
+ * @brief Zeichnet die Hauskontur nach House Bold von Phosphor Icons (MIT).
  */
 void Button::drawHomeSymbol(int16_t x, int16_t y, int16_t size, uint16_t color)
 {
-    int16_t half = size / 2;
-    int16_t quarter = size / 4;
+    static constexpr int8_t OUTLINE[][2] = { ///< Mittellinie von Dach, Wänden und offener Tür im 32er-Raster
+        {0, -12}, {11, -1}, {11, 11}, {3, 11}, {3, 3}, {-3, 3}, {-3, 11}, {-11, 11}, {-11, -1}};
+    constexpr size_t LAST_POINT = sizeof(OUTLINE) / sizeof(OUTLINE[0]) - 1; ///< Startpunkt zum Schließen der Kontur
+    constexpr float GRID_SIZE = 32.0f;    ///< Bezugsgröße der Kontur in Bildpunkten
+    constexpr float STROKE_RADIUS = 1.5f; ///< Halbe Strichbreite im Bezugsraster
+    const float scale = size / GRID_SIZE;
 
-    // Dach
-    target()->drawLine(x, y - half, x - quarter, y - quarter, color);
-    target()->drawLine(x, y - half, x + quarter, y - quarter, color);
-
-    // Haus
-    target()->drawRect(x - quarter, y - quarter, half, half, color);
-
-    // Tür
-    int16_t door_width = quarter / 2;
-    target()->drawRect(x - door_width / 2, y, door_width, quarter, color);
+    int16_t lastX = x + std::lround(OUTLINE[LAST_POINT][0] * scale);
+    int16_t lastY = y + std::lround(OUTLINE[LAST_POINT][1] * scale);
+    for (const auto &point : OUTLINE)
+    {
+        const int16_t nextX = x + std::lround(point[0] * scale);
+        const int16_t nextY = y + std::lround(point[1] * scale);
+        target()->drawWideLine(lastX, lastY, nextX, nextY, STROKE_RADIUS * scale, color);
+        lastX = nextX;
+        lastY = nextY;
+    }
 }
 
 /**

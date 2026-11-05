@@ -70,6 +70,9 @@ void notifyRadioStationChange(int stationId);
  */
 void notifyDisplayLockChanged(bool locked);
 
+/** @brief Sendet den aktuellen PIN-Modus und Sperrzustand an die verbundenen Browser. */
+void notifyPinLockModeChanged();
+
 // ============================================================================
 // Stations-Reload-Flag (WebUI -> RetroRadio)
 // ============================================================================

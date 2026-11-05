@@ -262,9 +262,9 @@ bool LockScreen::update()
         return false;
 
     // Externe Entsperrung (z. B. korrekter Code im Webinterface) hat Vorrang
-    if (APP_STATE.consumeDisplayUnlockRequest())
+    if (APP_STATE.consumeDisplayUnlockRequest() || !APP_STATE.isPinLockEnabled())
     {
-        LOG_SUCCESS("Sperrbildschirm extern entsperrt");
+        LOG_SUCCESS("Sperrbildschirm freigegeben");
         notifyDisplayLockChanged(false);
         return true;
     }
@@ -576,12 +576,7 @@ bool LockScreen::handleKeyPress(int8_t keyIndex)
  */
 bool LockScreen::validatePin() const
 {
-    const char *storedPin = APP_STATE.getLockPin();
-
-    if (!storedPin)
-        return false;
-
-    return strcmp(m_input, storedPin) == 0;
+    return APP_STATE.matchesLockPin(m_input);
 }
 
 /**

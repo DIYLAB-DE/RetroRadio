@@ -2,7 +2,7 @@
 
 [RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > Weboberfläche
 
-Verbinde Rechner und Radio mit demselben erreichbaren Netzwerk. Die Adresse des Radios steht im Hauptmenü und unter **Einstellungen -> Info**. Öffne diese Adresse im Browser mit `http://` davor. Gib den am Radio eingestellten vierstelligen Sperrcode ein. Die voreingestellte Start-PIN lautet **`0000`**. Falls Du den Sperrcode bereits geändert hast, verwende Deinen eigenen Code. Die Oberfläche funktioniert im Browser unter Windows, Linux und macOS, für die Bedienung ist kein serieller Monitor erforderlich.
+Verbinde Rechner und Radio mit demselben erreichbaren Netzwerk. Die Adresse des Radios steht im Hauptmenü und unter **Einstellungen -> Info**. Öffne diese Adresse im Browser mit `http://` davor. Bei eingeschalteter PIN-Sperre gib den am Radio eingestellten vierstelligen Sperrcode ein. Die voreingestellte Start-PIN lautet **`0000`**. Falls Du den Sperrcode bereits geändert hast, verwende Deinen eigenen Code. Die Oberfläche funktioniert im Browser unter Windows, Linux und macOS, für die Bedienung ist kein serieller Monitor erforderlich.
 
 [![Weboberfläche entsperren](bilder/web/sperre-klein.png)](bilder/web/sperre.png)
 
@@ -24,11 +24,17 @@ Klicke den kleinen farbigen **Sendermarker** auf der Skala an. Die Aktionsleiste
 
 [![Sender bearbeiten](bilder/web/sender-bearbeiten-klein.png)](bilder/web/sender-bearbeiten.png)
 
+**Sichern** lädt alle 70 Senderplätze einschließlich der Favoriten als Datei `retroradio-sender_JJJJ-MM-TT.json` herunter. Die Datei lässt sich auf RetroRadio und RetroRadioTab5 laden.
+
+Mit **Laden** wählst Du eine Sicherungsdatei aus. Das Portal prüft die Datei und zeigt Dir die Zahl der belegten Plätze und Favoriten. Erst wenn Du bestätigst, ersetzt es die gesamte Liste. Bei einem Fehler gibt die Meldung den betroffenen Platz oder die Zeile und Spalte an. Nach dem Laden kann der laufende Sender kurz neu starten.
+
 **Reset** bei der Senderliste stellt die Werkssender wieder her und überschreibt die eigene Liste. Die getrennte EQ-Rücksetztaste setzt die Klangregelung zurück.
 
 ## Systemeinstellungen
 
-Hier richtest Du Zeitzone, Zeitserver, Synchronisationsintervall, Wetterstandort, Sprache, Nachrichtenressort und Gerätenamen ein. Die Browser-Zeit kann in das Eingabefeld übernommen und mit **Zeit setzen** an das Gerät übergeben werden. Ein geänderter Sperrcode wird zweimal eingegeben, bleiben beide Felder leer, bleibt der bisherige Code erhalten.
+Hier richtest Du Zeitzone, Zeitserver, Synchronisationsintervall, Wetterstandort, Sprache, Nachrichtenressort und Gerätenamen ein. Die Browser-Zeit kann in das Eingabefeld übernommen und mit **Zeit setzen** an das Gerät übergeben werden.
+
+Unter **Netzwerkname** und **Sprache** zeigt die Zeile **PIN-Sperre für Radio und Web**, ob die Sperre ein- oder ausgeschaltet ist. Klicke auf **Ein**, gib Deine aktuelle PIN ein und bestätige mit **Ausschalten**. Mit **Aus** schaltest Du die Sperre sofort wieder ein. Dann gilt wieder Deine bisherige PIN. Unter **PIN ändern** gibst Du die aktuelle und die neue vierstellige PIN ein. Mit **Speichern** gilt die neue PIN sofort.
 
 [![Systemeinstellungen](bilder/web/system-klein.png)](bilder/web/system.png)
 

@@ -46,7 +46,7 @@ void SleepTimer::setBounds(int x, int y, int w, int h)
  */
 void SleepTimer::setTitle(const char *title)
 {
-    titleText = title ? title : "AUSSCHALTEN";
+    titleText = title ? title : "Sleep-Timer";
 }
 
 /**

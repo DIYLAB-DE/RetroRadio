@@ -91,6 +91,7 @@ private:
     bool m_offButtonHeld = false;        ///< Off-Button wird aktuell gehalten
     bool m_offLongPressFired = false;    ///< Langer Druck in diesem Halten bereits ausgelöst
     unsigned long m_offPressStartMs = 0; ///< Zeitstempel des Halte-Beginns
+    bool m_ignoreWakeTouch = false;      ///< Wartet nach dem Aufwecken ohne PIN auf das Loslassen
     bool m_wakeRequiresRelease = false;  ///< Nach dem Einschlafen mit liegendem Finger erst Loslassen abwarten
 
     // Zeitfenster-Schlaf
@@ -125,7 +126,7 @@ private:
 
     // Sperrbildschirm
     LockScreen m_lockScreen;            ///< Non-blocking PIN-Eingabe
-    bool m_lockScreenActive = true;     ///< true = Sperrbildschirm wird angezeigt (beim Boot initial aktiv)
+    bool m_lockScreenActive = false;    ///< true während der PIN-Eingabe
 
     // Touch-Zustand pro Frame (einmalig gelesen, von allen Methoden verwendet)
     bool m_frameTouched = false; ///< Touch aktiv im aktuellen Frame
@@ -172,6 +173,7 @@ private:
      * @brief Aktiviert den Sperrbildschirm
      */
     void triggerLockScreen();
+    void showUnlockedMainScreen(); ///< Zeichnet das Hauptmenü nach dem Start oder Aufwecken ohne aktive Sperre
 
     /**
      * @brief Mapping: Button-Index -> AppModule

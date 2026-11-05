@@ -453,7 +453,7 @@ bool Weather::init(LGFX &tft, const WeatherCallbacks &callbacks)
         WeatherLayout::BUTTON_SIZE, WeatherLayout::BUTTON_SIZE,
         WeatherLayout::BUTTON_RADIUS,
         WeatherColors::BTN_FILL, static_cast<uint16_t>(TFT_BLACK), static_cast<uint16_t>(TFT_DARKGREY),
-        "^POWER:32:D206^",
+        Button::HOME_LABEL,
         nullptr);
 
     // Ladescreen anzeigen

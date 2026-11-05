@@ -2,6 +2,8 @@
 #define APP_STATE_H
 
 #include <Arduino.h>
+#include <atomic>
+#include <mutex>
 #include <cmath>         // Für std::isnan
 #include <Preferences.h> // Für Flash-basierte Key-Value-Persistenz
 
@@ -20,14 +22,31 @@ class TwoWire;
 class AppState
 {
 public:
+    /** @brief Ergebnis beim Speichern der PIN-Sperre. */
+    enum class PinLockResult : uint8_t
+    {
+        Saved,        ///< Der angeforderte Zustand ist gespeichert
+        WrongPin,     ///< Die aktuelle PIN fehlt oder stimmt nicht
+        StorageError  ///< Der Zustand konnte nicht gespeichert werden
+    };
+
+    static constexpr bool DEFAULT_PIN_LOCK_ENABLED = true; ///< PIN-Abfrage ab Werk und bei fehlender Einstellung
     static constexpr uint8_t TIME_WINDOW_DAY_COUNT = 7;   ///< Anzahl Wochentage im Zeitfenster
     static constexpr uint8_t TIME_WINDOW_HOUR_COUNT = 24; ///< Anzahl voller Stunden im Zeitfenster
     static constexpr size_t I2C_SCAN_RESULT_CAP = 96;     ///< Puffergröße für die I2C-Startscan-Anzeige
+    static constexpr int8_t DEFAULT_BALANCE = 0;           ///< Standardbalance in Mittelstellung
     static constexpr int8_t DEFAULT_GAIN_LOW_PASS_DB = 10; ///< Standardverstärkung der Tiefen
     static constexpr int8_t DEFAULT_GAIN_BAND_PASS_DB = 1; ///< Standardverstärkung der Mitten
     static constexpr int8_t DEFAULT_GAIN_HIGH_PASS_DB = 10; ///< Standardverstärkung der Höhen
     static constexpr uint8_t DEFAULT_VOLUME = 30;           ///< Standard-Lautstärke
     static constexpr bool DEFAULT_SPEAKERS_ENABLED = true; ///< Lautsprecher sind ab Werk eingeschaltet
+
+    // Werksvorgaben der Visualisierungen
+    static constexpr uint8_t DEFAULT_VIS_MODE = 0;            ///< Analoge VU-Instrumente
+    static constexpr uint8_t DEFAULT_RAINBOW_STYLE = 1;       ///< Farbwahl für digitale VU-Balken, Spektren, Wasserfall und Goniometer
+    static constexpr uint8_t DEFAULT_WAVEFORM_STYLE = 0;      ///< Wellenform mit überlagerten Kanälen
+    static constexpr uint8_t DEFAULT_ANALOG_VU_STYLE = 0;     ///< Klassisches Skalenblatt der analogen Instrumente
+    static constexpr uint8_t DEFAULT_AURORA_STYLE = 0;        ///< Kühle Farbwelt des Nordlichts
 
 private:
     static constexpr uint8_t LOTTO_SUPER_UNSET_VALUE = 10; ///< Noch nicht gesetzte Lotto-Superzahl
@@ -62,7 +81,7 @@ private:
     uint8_t m_currentRetroStation = 0; ///< Aktuelle Station (0-69)
     uint8_t m_currentVolume = DEFAULT_VOLUME;    ///< Lautstärke (0-100)
     uint8_t m_volumeBeforeMute = DEFAULT_VOLUME; ///< Lautstärke vor Mute (0-100)
-    int8_t m_currentBalance = 0;       ///< Balance (-16 bis +16)
+    int8_t m_currentBalance = DEFAULT_BALANCE;       ///< Balance (-16 bis +16)
     int8_t m_currentGainLowPass = DEFAULT_GAIN_LOW_PASS_DB;   ///< Tiefen (-12 bis +12 dB)
     int8_t m_currentGainBandPass = DEFAULT_GAIN_BAND_PASS_DB; ///< Mitten (-12 bis +12 dB)
     int8_t m_currentGainHighPass = DEFAULT_GAIN_HIGH_PASS_DB; ///< Höhen (-12 bis +12 dB)
@@ -74,26 +93,28 @@ private:
     bool m_speakersEnabled = DEFAULT_SPEAKERS_ENABLED; ///< Gespeicherte Freigabe der internen Lautsprecher
     bool m_isMuted = false;            ///< Stumm-Schaltung
     bool m_forceMono = false;          ///< Mono-/Stereo-Flag
-    bool m_eqNVRAMInitialized = false; ///< true, wenn die EQ-Werte im RTC-NVRAM gekennzeichnet sind
+    bool m_eqNVRAMInitialized = false; ///< true, wenn die RTC-Kennung für EQ und Visualisierungen gültig ist
 
-    uint8_t m_visMode = 0;           ///< 0..7 (VisMode)
-    uint8_t m_digitalVUStyle = 0;    ///< 0..1
-    uint8_t m_spectrumStyle = 0;     ///< 0..1
-    uint8_t m_centeredSpectrumStyle = 0; ///< Mittiges Spektrum: 0 = grün, 1 = Regenbogen
-    uint8_t m_waterfallStyle = 1; ///< Wasserfall: 0 = grün, 1 = mehrfarbig
-    uint8_t m_auroraStyle = 0; ///< Nordlicht: 0 = kühl, 1 = warm
-    uint8_t m_waveformStyle = 0;     ///< 0..1
-    uint8_t m_gonioStyle = 0;        ///< 0..1
+    uint8_t m_visMode = DEFAULT_VIS_MODE; ///< 0..7 (VisMode)
+    uint8_t m_digitalVUStyle = DEFAULT_RAINBOW_STYLE; ///< 0..1
+    uint8_t m_spectrumStyle = DEFAULT_RAINBOW_STYLE; ///< 0..1
+    uint8_t m_centeredSpectrumStyle = DEFAULT_RAINBOW_STYLE; ///< Mittiges Spektrum: 0 = grün, 1 = Regenbogen
+    uint8_t m_waterfallStyle = DEFAULT_RAINBOW_STYLE; ///< Wasserfall: 0 = grün, 1 = mehrfarbig
+    uint8_t m_auroraStyle = DEFAULT_AURORA_STYLE; ///< Nordlicht: 0 = kühl, 1 = warm
+    uint8_t m_waveformStyle = DEFAULT_WAVEFORM_STYLE; ///< 0..1
+    uint8_t m_gonioStyle = DEFAULT_RAINBOW_STYLE; ///< 0..1
     uint8_t m_magicEyeStyle = 0;     ///< 0 = EM11, 1 = EM34, 2 = EM80, 3 = EM84
     uint8_t m_vuBallistics = 1;      ///< Trägheit des analogen VU-Zeigers: 0 = 150 ms, 1 = 300 ms, 2 = 600 ms
     uint8_t m_vuSensitivity = 2;     ///< Bezugspegel des analogen VU: 0 = -2 dBFS bis 4 = -18 dBFS
-    uint8_t m_analogVUStyle = 0;     ///< Farbfassung des analogen VU: 0 = klassisch, 1 = grün
+    uint8_t m_analogVUStyle = DEFAULT_ANALOG_VU_STYLE; ///< Farbfassung des analogen VU: 0 = klassisch, 1 = grün
     bool m_toDoShowCompleted = true; ///< Zeige erledigte Aufgaben
 
     // Sperrbildschirm
+    std::atomic<bool> m_pinLockEnabled{DEFAULT_PIN_LOCK_ENABLED}; ///< Gemeinsame PIN-Sperre für Gerät und Browser
+    mutable std::mutex m_pinMutex; ///< Schützt PIN und Änderungen der Sperre durch Display und Weboberfläche
     char m_lockPin[5] = "0000";            ///< 4-stellige PIN für den Sperrbildschirm (Standard: 0000)
     bool m_lockRequested = false;          ///< Flag: Sperrbildschirm angefordert (von beliebigem Modul setzbar)
-    bool m_displayUnlockRequested = false; ///< Flag: Sperrbildschirm soll extern entsperrt werden (z. B. via Webinterface)
+    std::atomic<bool> m_displayUnlockRequested{false}; ///< Flag: Sperrbildschirm soll extern entsperrt werden (z. B. via Webinterface)
 
     // UI-Einstellungen
     char m_uiLanguage[8] = "de"; ///< UI-Sprache, z.B. "de" oder "en"
@@ -163,6 +184,7 @@ private:
     static const char *P_KEY_OPENSKY_CLIENT_SECRET; ///< "openSkySecret"
 
     // Sperrbildschirm Preferences Key
+    static const char *P_KEY_PIN_LOCK_ENABLED; ///< Einstellung der PIN-Sperre im Flash
     static const char *P_KEY_LOCK_PIN; ///< "lockPin"
 
     // UI Preferences Key
@@ -238,7 +260,13 @@ private:
     void loadFromPreferences();
 
     /**
-     * @brief Speichert alle drei EQ-Werte und ihre Kennung im RTC-NVRAM
+     * @brief Schreibt Modus und Farbstile des RTC-Visualisierungsblocks in einem Zugriff.
+     * @return true bei vollständig erfolgreichem Schreiben
+     */
+    bool saveRtcVisualization();
+
+    /**
+     * @brief Speichert die EQ-Werte im RTC-NVRAM. Vor der ersten gültigen Kennung wird auch die Modus- und Stilwahl geschrieben.
      * @return true bei vollständig erfolgreichem Schreiben
      */
     bool saveEqToNVRAM();
@@ -516,16 +544,29 @@ public:
     // Sperrbildschirm
 
     /**
-     * @brief Gibt die gespeicherte Lock-PIN zurück
-     * @return Zeiger auf internen 4-Zeichen-Puffer
+     * @brief Prüft die aktuelle PIN ohne sie herauszugeben
+     * @param pin Eingegebene vierstellige PIN
+     * @return true bei übereinstimmender PIN
      */
-    const char *getLockPin() const { return m_lockPin; }
+    bool matchesLockPin(const char *pin) const;
+
+    /** @brief Gibt an, ob Gerät und Browser die PIN abfragen. */
+    bool isPinLockEnabled() const { return m_pinLockEnabled.load(); }
+
+    /**
+     * @brief Speichert die PIN-Sperre für Gerät und Browser.
+     * @param enabled Gewünschter Zustand
+     * @param currentPin Zum Ausschalten erforderliche aktuelle PIN
+     * @return Ergebnis der Prüfung und Speicherung
+     */
+    PinLockResult setPinLockEnabled(bool enabled, const char *currentPin);
 
     /**
      * @brief Setzt die Lock-PIN und speichert persistent
      * @param pin Genau 4 Ziffern als C-String
+     * @return true wenn die PIN gespeichert wurde
      */
-    void setLockPin(const char *pin);
+    bool setLockPin(const char *pin);
 
     /**
      * @brief Fordert den Sperrbildschirm an (von jedem Modul aufrufbar)
@@ -558,11 +599,7 @@ public:
      */
     bool consumeDisplayUnlockRequest()
     {
-        if (!m_displayUnlockRequested)
-            return false;
-
-        m_displayUnlockRequested = false;
-        return true;
+        return m_displayUnlockRequested.exchange(false);
     }
 
     // Wetter-Preferences
@@ -958,6 +995,18 @@ public:
     const char *getHostname() const { return m_hostname; }
 
     // Reset
+
+    /**
+     * @brief Setzt Lautstärke, Balance und alle drei EQ-Regler auf ihre Werksvorgaben und hebt die Stummschaltung auf.
+     * @param persist Wenn true, werden die Audiowerte einschließlich der Lautstärke vor dem Stummschalten im RTC-NVRAM gespeichert.
+     */
+    void resetAudioToDefaults(bool persist = true);
+
+    /**
+     * @brief Setzt die in der RTC geführte Modus- und Stilwahl auf die Werksvorgaben.
+     * @param persist Wenn true, werden die fünf Werte auch ins RTC-NVRAM geschrieben.
+     */
+    void resetRtcVisualizationToDefaults(bool persist = true);
 
     /**
      * @brief Setzt alle Einstellungen auf Standardwerte zurück

@@ -45,6 +45,11 @@ class FlacDecoder : public Decoder {
     uint8_t               getChannels() override;
     uint32_t              getSampleRate() override;
     uint32_t              getOutputSamples();
+    /**
+     * @brief Meldet noch auszugebende Teile des bereits dekodierten Rahmens
+     * @return true, wenn decode() weitere Samples ohne neue Eingangsbytes liefern kann
+     */
+    bool                  hasPendingOutput() const;
     uint8_t               getBitsPerSample() override;
     uint32_t              getBitRate() override;
     uint32_t              getAudioDataStart() override;
@@ -72,7 +77,7 @@ class FlacDecoder : public Decoder {
   private:
 #define FLAC_MAX_CHANNELS    2
 #define FLAC_MAX_BLOCKSIZE   24576 // 24 * 1024
-#define FLAC_MAX_OUTBUFFSIZE 4096 * 2
+#define FLAC_MAX_OUTBUFFSIZE 1024 ///< Höchstzahl der Frames je Ausgabeteil
 
     enum : uint8_t { FLACDECODER_INIT, FLACDECODER_READ_IN, FLACDECODER_WRITE_OUT };
     enum : uint8_t { DECODE_FRAME, DECODE_SUBFRAMES, OUT_SAMPLES };

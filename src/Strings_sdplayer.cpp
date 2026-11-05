@@ -46,7 +46,7 @@ namespace
     const char DE_MSG_RESET_MESSAGE[] PROGMEM = "Die Lautstärke, der Ton und die Visualisierungen werden zurückgesetzt.";
 
     // SleepTimer-Texte
-    const char DE_SLEEP_TITLE[]   PROGMEM = "AUSSCHALTEN";
+    const char DE_SLEEP_TITLE[]   PROGMEM = "SLEEP-TIMER";
     const char DE_SLEEP_MESSAGE[] PROGMEM = "Player verlassen nach:";
 
     // FileExplorer-Texte (Sub-Komponente)
@@ -94,7 +94,7 @@ namespace
     const char EN_MSG_RESET_TITLE[]   PROGMEM = "RESET?";
     const char EN_MSG_RESET_MESSAGE[] PROGMEM = "Volume, audio and visualisations will be reset.";
 
-    const char EN_SLEEP_TITLE[]   PROGMEM = "TURN OFF";
+    const char EN_SLEEP_TITLE[]   PROGMEM = "SLEEP TIMER";
     const char EN_SLEEP_MESSAGE[] PROGMEM = "Quit player after:";
 
     // FileExplorer-Texte (Sub-Komponente)

@@ -83,6 +83,11 @@ void handleButtonPressed(uint16_t btnIdx, bool buttonState);
 void handleStationPressed(uint16_t staIdx);
 
 /**
+ * @brief Übernimmt Lautstärke, Balance und Klangregelung aus den aktuellen Geräteeinstellungen in die Audioausgabe.
+ */
+void applyAudioControls();
+
+/**
  * @brief Handler für Lautstärkeänderungen.
  * @param volume Neue Lautstärke (0-100).
  */

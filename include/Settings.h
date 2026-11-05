@@ -205,7 +205,7 @@ private:
     int m_lastDrawnSecond = -1;              ///< Letzte gezeichnete Sekunde der Uhr
 
     Button m_saveButton; ///< Fußzeile: Speichern
-    Button m_exitButton; ///< Fußzeile: Verlassen (Power-Symbol)
+    Button m_exitButton; ///< Fußzeile: Zum Hauptmenü
     Button m_btnScan;     ///< WLAN: Scannen
     Button m_btnPassword; ///< WLAN: Passwort
     Button m_btnTest;     ///< WLAN: Test
@@ -237,6 +237,8 @@ private:
     char m_pinFirst[5] = {0};   ///< Erste PIN-Eingabe während der Wiederholung
     char m_pinPending[5] = {0}; ///< Vorgemerkte PIN (leer = keine), erst beim Speichern gesetzt
     bool m_pinConfirming = false; ///< true während der Wiederholungseingabe
+    bool m_confirmPinDisable = false; ///< Nummernblock erwartet die aktuelle PIN zum Ausschalten der Sperre
+    bool m_displayedPinLock = true;   ///< Zuletzt gezeichneter Zustand der PIN-Sperre
     bool m_pinMismatch = false;   ///< true nach abweichender Wiederholung, bis zur nächsten Eingabe
     int m_pendingLangIndex = -1; ///< Vorgemerkte Sprache (0=de, 1=en), -1 = keine Auswahl
     WorkshopNumpad m_numpad;  ///< Nummernblock für die PIN-Eingabe
@@ -313,6 +315,7 @@ private:
     std::unique_ptr<MessageBox> m_activeMessageBox;   ///< Aktive MessageBox
     std::unique_ptr<ProgressBox> m_activeProgressBox; ///< Aktive ProgressBox
 
+    bool m_pinSaveErrorPending = false; ///< Speicherfehler nach dem Schließen des aktiven Dialogs anzeigen
     bool m_exitRequested = false;    ///< Exit verzögert anfordern
     bool m_restartRequested = false; ///< Neustart verzögert anfordern
 
@@ -378,6 +381,8 @@ private:
     void handleWifiTouch(int sx, int sy);
     void handleLanguageTouch(int sx, int sy);
     void handleSecurityTouch(int sx, int sy);
+    Rect pinLockToggleRect() const; ///< Lage des Umschalters auf der Sicherheitsseite
+    void changePinLock(bool enabled, const char *pin); ///< Wendet den Wechsel an und zeigt Fehler an
     void handleNewsTouch(int sx, int sy);
     void handleWeatherTouch(int sx, int sy);
     void handleCloudTouch(int sx, int sy);
