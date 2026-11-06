@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | [![Radio](bilder/bedienung/radio-uebersicht-klein.png)](bilder/bedienung/radio-uebersicht.png) | [![Favoriten](bilder/bedienung/radio-senderspeicher-klein.png)](bilder/bedienung/radio-senderspeicher.png) | [![Sleep-Timer](bilder/bedienung/radio-sleeptimer-klein.png)](bilder/bedienung/radio-sleeptimer.png) |
 
-Links in der Infozeile unter der Radioskala erscheint das erkannte Audioformat, beispielsweise MP3, AAC, Vorbis oder FLAC. Beim Senderwechsel wird das bisherige Format ausgeblendet, bis das neue erkannt wurde. Das Stereo-Symbol rechts berücksichtigt die tatsächliche Mono-Erkennung des Audiosignals; kurze Schwankungen unter einer halben Sekunde ändern die Anzeige nicht.
+Links in der Infozeile unter der Radioskala erscheint das erkannte Audioformat, beispielsweise MP3, AAC, Vorbis oder FLAC. Beim Senderwechsel wird das bisherige Format ausgeblendet, bis das neue erkannt wurde. Das Stereo-Symbol rechts berücksichtigt die tatsächliche Mono-Erkennung des Audiosignals, kurze Schwankungen unter einer halben Sekunde ändern die Anzeige nicht.
 
 Der Lautstärkeknopf reagiert auf eine Drehbewegung am äußeren Bereich. Ein Tipp in die Mitte schaltet stumm beziehungsweise hebt die Stummschaltung auf. Auch beim Herunterdrehen auf Lautstärke null erscheint das Mute-Symbol und die Visualisierungen gehen auf null. Durch Hochdrehen wird die Wiedergabe wieder hörbar, sofern sie nicht zusätzlich per Tipp stummgeschaltet wurde. Balance, Tiefen, Mitten und Höhen stellst Du durch Ziehen ein. Hältst Du einen Reglerkreis etwa 0,8 Sekunden ruhig gedrückt, springt nur dieser Regler auf die Mittellinie (Balance 0 oder 0 dB). Sendernamen, Streamadressen und Favoriten lassen sich in der [Weboberfläche](Weboberfläche.md) pflegen.
 
@@ -67,7 +67,7 @@ Der SD-Player verbindet eine animierte Kassette, Coveranzeige, Titelinformatione
 
 ### SD-Karte auswählen
 
-Für den SD-Player wird eine schnelle microSD-Karte mit **mindestens Class 10 und höchstens 32 GB** empfohlen. Die bisherigen Geräteerfahrungen zeigen zuverlässigere Wiedergabe mit schnellen Karten. Im RetroRadio wurden **SanDisk Extreme 32 GB** und **SanDisk Ultra 32 GB** erprobt. Für andere Kartenmodelle liegt keine vergleichbare Bestätigung vor; Karten mit mehr als 32 GB werden für dieses Projekt nicht empfohlen.
+Für den SD-Player wird eine schnelle microSD-Karte mit **mindestens Class 10 und höchstens 32 GB** empfohlen. Die bisherigen Geräteerfahrungen zeigen zuverlässigere Wiedergabe mit schnellen Karten. Im RetroRadio wurden **SanDisk Extreme 32 GB** und **SanDisk Ultra 32 GB** erprobt. Für andere Kartenmodelle liegt keine vergleichbare Bestätigung vor, Karten mit mehr als 32 GB werden für dieses Projekt nicht empfohlen.
 
 ### Musik auswählen
 
@@ -79,7 +79,7 @@ Für den SD-Player wird eine schnelle microSD-Karte mit **mindestens Class 10 un
 
 Die Titel werden über die Wiedergabetaste gestartet. Für die Coveranzeige wird zuerst ein Ordnerbild verwendet, danach das eingebettete Cover der Musikdatei. Ohne nutzbares Bild erscheint der Platzhalter. **Leeren** entfernt die Titelliste, nicht die Musikdateien auf der SD-Karte. Das Haus unten rechts öffnet wie im Radio den Sleep-Timer. Lautstärke, Balance, Klang und Visualisierungswechsel funktionieren wie im Radio.
 
-Die Abbildungen zeigen vorhandene Musikdateien und ein Ordnercover zur Demonstration. Titel, Künstlernamen und Coverabbildungen dienen als Beispiele; Musikdateien sind nicht Bestandteil des Repositorys.
+Die Abbildungen zeigen vorhandene Musikdateien und ein Ordnercover zur Demonstration. Titel, Künstlernamen und Coverabbildungen dienen als Beispiele, Musikdateien sind nicht Bestandteil des Repositorys.
 
 [![Lautstärke null im SD-Player](bilder/bedienung/sdplayer-lautstaerke-null-klein.png)](bilder/bedienung/sdplayer-lautstaerke-null.png)
 
@@ -94,7 +94,7 @@ Fehlt das Ordnerbild oder ist es zu groß, beschädigt oder nicht ladbar, versuc
 | Bildgröße | Höchstens 1.000.000 Bytes pro Bilddatei oder eingebettetem Cover. Die Größe der gesamten Musikdatei ist dafür unerheblich. |
 | JPEG | Keine feste Pixelobergrenze. Große Bilder werden bei Bedarf auf 1/2, 1/4 oder 1/8 verkleinert. Sehr große Abmessungen können das Laden dennoch verlangsamen oder verhindern. |
 | Eingebettetes PNG | Höchstens 500 x 500 Pixel. |
-| Darstellung | 230 x 220 Pixel, ohne Verzerrung skaliert; überstehende Ränder werden mittig beschnitten. |
+| Darstellung | 230 x 220 Pixel, ohne Verzerrung skaliert, überstehende Ränder werden mittig beschnitten. |
 
 ### Kassetten wechseln
 
