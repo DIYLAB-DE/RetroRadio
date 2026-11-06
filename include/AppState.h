@@ -118,6 +118,7 @@ private:
 
     // UI-Einstellungen
     char m_uiLanguage[8] = "de"; ///< UI-Sprache, z.B. "de" oder "en"
+    bool m_serialLogsEnabled = false; ///< Serielle Logs sind ab Werk ausgeschaltet
 
     // Zeitfenster
     uint32_t m_timeWindowMasks[TIME_WINDOW_DAY_COUNT] = {}; ///< Tagesmasken, Bit 0..23 steht für Stunde 0..23
@@ -189,6 +190,7 @@ private:
 
     // UI Preferences Key
     static const char *P_KEY_UI_LANGUAGE; ///< "uiLanguage"
+    static const char *P_KEY_SERIAL_LOGS_ENABLED; ///< "serialLogsOn"
 
     // Geräte-Netzwerkname Preferences Key
     static const char *P_KEY_HOSTNAME; ///< "hostname"
@@ -826,6 +828,19 @@ public:
      * @brief Löscht die UI-Sprach-Preference und setzt Deutsch als Standard
      */
     void resetPreferencesUiLanguage();
+
+    /**
+     * @brief Gibt die gespeicherte Freigabe der seriellen Logs zurück.
+     * @return true bei eingeschalteten Logs, ab Werk false
+     */
+    bool getSerialLogsEnabled() const { return m_serialLogsEnabled; }
+
+    /**
+     * @brief Speichert die Log-Freigabe ausschließlich in Preferences und schaltet den Logger sofort um.
+     * @param enabled true schaltet die seriellen Logs ein, false aus
+     * @return true bei gespeicherter Einstellung, false bei einem Schreibfehler ohne Zustandsänderung
+     */
+    bool setSerialLogsEnabled(bool enabled);
 
     // Zeitfenster
 

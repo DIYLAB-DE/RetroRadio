@@ -188,6 +188,7 @@ const char *AppState::P_KEY_LOCK_PIN = "lockPin";
 
 // UI Preferences Key
 const char *AppState::P_KEY_UI_LANGUAGE = "uiLanguage";
+const char *AppState::P_KEY_SERIAL_LOGS_ENABLED = "serialLogsOn";
 
 // Geräte-Netzwerkname Preferences Key
 const char *AppState::P_KEY_HOSTNAME = "hostname";
@@ -534,6 +535,8 @@ bool AppState::begin(bool skipRtcInit, TwoWire *wire)
         LOG_ERROR("AppState: Preferences konnten nicht geöffnet werden!");
         return false;
     }
+    m_serialLogsEnabled = m_prefs.getBool(P_KEY_SERIAL_LOGS_ENABLED, false);
+    Logger::getInstance().setEnabled(m_serialLogsEnabled);
     LOG_SUCCESS("AppState: Preferences bereit");
 
     // RTC initialisieren mit Retry. Bei Fehler läuft das System weiter, NVRAM-Zugriffe werden intern zu No-Ops.
@@ -1077,6 +1080,21 @@ void AppState::setUiLanguage(const char *language)
 }
 
 /**
+ * @brief Speichert die Freigabe der seriellen Logs und übernimmt sie sofort.
+ */
+bool AppState::setSerialLogsEnabled(bool enabled)
+{
+    if (enabled == m_serialLogsEnabled)
+        return true;
+    if (!m_prefs.putBool(P_KEY_SERIAL_LOGS_ENABLED, enabled))
+        return false;
+
+    m_serialLogsEnabled = enabled;
+    Logger::getInstance().setEnabled(enabled);
+    return true;
+}
+
+/**
  * @brief Löscht die UI-Sprach-Preference und setzt Deutsch als Standard
  */
 void AppState::resetPreferencesUiLanguage()
@@ -1590,6 +1608,10 @@ void AppState::resetToDefaults(bool clearNVRAM, bool clearPrefs)
     // Preferences löschen
     if (clearPrefs)
     {
+        m_prefs.remove(P_KEY_SERIAL_LOGS_ENABLED);
+        m_serialLogsEnabled = false;
+        Logger::getInstance().setEnabled(false);
+
         m_prefs.remove(P_KEY_PIN_LOCK_ENABLED);
         m_pinLockEnabled = DEFAULT_PIN_LOCK_ENABLED;
         resetPreferencesWeather();

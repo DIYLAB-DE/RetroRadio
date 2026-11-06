@@ -111,11 +111,13 @@ Links den Einstellbereich auswählen, rechts dessen Felder bearbeiten. Längere 
 | Wetter | Deutsche Postleitzahl eingeben, Ort und Koordinaten werden ermittelt. | [![Wetter einstellen](bilder/bedienung/einstellungen-wetter-klein.png)](bilder/bedienung/einstellungen-wetter.png) |
 | Nachrichten | Gewünschtes Nachrichtenressort für die Laufzeile auswählen. | [![Nachrichten](bilder/bedienung/einstellungen-nachrichten-klein.png)](bilder/bedienung/einstellungen-nachrichten.png) |
 | Cloud-Anbindung | Eigene Google-Web-App-Adressen und OpenSky-Zugang eintragen, [Dienste einrichten](dienste/README.md). | [![Cloud-Anbindung](bilder/bedienung/einstellungen-cloud-klein.png)](bilder/bedienung/einstellungen-cloud.png) |
-| Sprache | Deutsch oder Englisch auswählen. | [![Sprache](bilder/bedienung/einstellungen-sprache-klein.png)](bilder/bedienung/einstellungen-sprache.png) |
+| Allgemein | Deutsch oder Englisch auswählen und die serielle Protokollausgabe über USB ein- oder ausschalten. | [![Allgemein](bilder/bedienung/einstellungen-allgemein-klein.png)](bilder/bedienung/einstellungen-allgemein.png) |
 | Sicherheit | PIN-Sperre für Radio und Weboberfläche ein- oder ausschalten und den vierstelligen Code ändern. | [![Sicherheit](bilder/bedienung/einstellungen-sicherheit-klein.png)](bilder/bedienung/einstellungen-sicherheit.png) |
 | Klang | Lautstärke, Balance, Tiefen, Mitten, Höhen und Lautsprecherfreigabe einstellen. | [![Klang](bilder/bedienung/einstellungen-klang-klein.png)](bilder/bedienung/einstellungen-klang.png) |
 | Anzeige | Die angebotenen Darstellungs- und Anzeigeoptionen wählen. | [![Anzeige](bilder/bedienung/einstellungen-anzeige-klein.png)](bilder/bedienung/einstellungen-anzeige.png) |
 | Info & Neustart | Netzwerk- und Geräteinformationen lesen, Neustart oder Zurücksetzen gezielt auslösen. | [![Informationen](bilder/bedienung/einstellungen-info-klein.png)](bilder/bedienung/einstellungen-info.png) |
+
+Unter **Allgemein -> Serielle Logs** schaltet **Ausgabe über USB** die Diagnosemeldungen für den seriellen Monitor ein oder aus. Die Änderung wirkt sofort, wird automatisch gespeichert und bleibt nach einem Neustart erhalten. Ab Werk und nach dem Zurücksetzen auf Werkseinstellungen ist die Ausgabe ausgeschaltet. Die Sprachauswahl steht darüber im selben Bereich.
 
 Unter **Klang -> Lautsprecher** schaltet Minus die beiden eingebauten Lautsprecher aus, Plus schaltet sie ein. Die Änderung wirkt sofort. **Speichern** übernimmt sie dauerhaft, beim Verwerfen wird der gespeicherte Zustand wiederhergestellt. Der Stereo-Line-Out bleibt bei abgeschalteten Lautsprechern aktiv. Diese Funktion ist unabhängig von Mute und von der gewählten Wiedergabelautstärke.
 

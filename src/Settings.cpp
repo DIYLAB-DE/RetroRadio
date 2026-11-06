@@ -107,9 +107,15 @@ namespace
     constexpr int TOGGLE_INSET = 2;   ///< Randbreite des Gehäuses
     constexpr int TOGGLE_KNOB_R = 10; ///< Radius des Schaltknopfes
 
+    // Rubriken im Allgemein-Panel
+    constexpr int GENERAL_HEADING_H = 32; ///< Höhe einer Rubriküberschrift
+    constexpr int GENERAL_SECTION_GAP = 24; ///< Abstand zwischen den Rubriken
+
     // Sprachzeilen
     constexpr int LANG_ROW_H = 54;   ///< Höhe einer Sprachzeile
     constexpr int LANG_ROW_GAP = 12; ///< Abstand zwischen Sprachzeilen
+    constexpr int LANG_ROWS_Y = CONTENT_Y + GENERAL_HEADING_H; ///< Beginn der Sprachauswahl
+    constexpr int LOGS_HEADING_Y = LANG_ROWS_Y + 2 * LANG_ROW_H + LANG_ROW_GAP + GENERAL_SECTION_GAP; ///< Beginn der Log-Rubrik
 
     // Info-Knöpfe
     constexpr int FOOTER_ACTION_BTN_MIN_W = 120;  ///< Mindestbreite eines Textknopfes im Footer
@@ -701,8 +707,8 @@ const Settings::MenuEntry Settings::s_menu[] = {
     {EntryType::PANEL_ITEM, Section::SERVICES, Panel::NEWS, SettingsKey::SETTINGS_MENU_NEWS},
     {EntryType::PANEL_ITEM, Section::SERVICES, Panel::CLOUD, SettingsKey::SETTINGS_MENU_CLOUD},
 
-    {EntryType::SECTION_HEADER, Section::SYSTEM, Panel::LANGUAGE, SettingsKey::SETTINGS_SEC_SYSTEM},
-    {EntryType::PANEL_ITEM, Section::SYSTEM, Panel::LANGUAGE, SettingsKey::SETTINGS_MENU_LANGUAGE},
+    {EntryType::SECTION_HEADER, Section::SYSTEM, Panel::GENERAL, SettingsKey::SETTINGS_SEC_SYSTEM},
+    {EntryType::PANEL_ITEM, Section::SYSTEM, Panel::GENERAL, SettingsKey::SETTINGS_MENU_GENERAL},
     {EntryType::PANEL_ITEM, Section::SYSTEM, Panel::SECURITY, SettingsKey::SETTINGS_MENU_SECURITY},
     {EntryType::PANEL_ITEM, Section::SYSTEM, Panel::AUDIO, SettingsKey::SETTINGS_MENU_AUDIO},
     {EntryType::PANEL_ITEM, Section::SYSTEM, Panel::APPEARANCE, SettingsKey::SETTINGS_MENU_APPEARANCE},
@@ -1376,8 +1382,8 @@ SettingsKey Settings::panelTitleKey(Panel p) const
     {
     case Panel::WIFI:
         return SettingsKey::SETTINGS_WIFI_TITLE;
-    case Panel::LANGUAGE:
-        return SettingsKey::SETTINGS_LANG_TITLE;
+    case Panel::GENERAL:
+        return SettingsKey::SETTINGS_GENERAL_TITLE;
     case Panel::SECURITY:
         return SettingsKey::SETTINGS_SEC_TITLE;
     case Panel::INFO:
@@ -1410,8 +1416,8 @@ SettingsKey Settings::panelSubtitleKey(Panel p) const
     {
     case Panel::WIFI:
         return SettingsKey::SETTINGS_WIFI_SUBTITLE;
-    case Panel::LANGUAGE:
-        return SettingsKey::SETTINGS_LANG_SUBTITLE;
+    case Panel::GENERAL:
+        return SettingsKey::SETTINGS_GENERAL_SUBTITLE;
     case Panel::SECURITY:
         return SettingsKey::SETTINGS_SEC_SUBTITLE;
     case Panel::INFO:
@@ -1463,8 +1469,8 @@ void Settings::drawWorkPanel()
     case Panel::WIFI:
         drawPanelWifi(m_workSprite);
         break;
-    case Panel::LANGUAGE:
-        drawPanelLanguage(m_workSprite);
+    case Panel::GENERAL:
+        drawPanelGeneral(m_workSprite);
         break;
     case Panel::SECURITY:
         drawPanelSecurity(m_workSprite);
@@ -1711,7 +1717,7 @@ void Settings::drawPanelWifi(Gfx_Sprite *spr)
 }
 
 // ===================================================================
-// Sprache-Panel
+// Allgemein-Panel
 // ===================================================================
 
 /**
@@ -1719,18 +1725,33 @@ void Settings::drawPanelWifi(Gfx_Sprite *spr)
  */
 Settings::Rect Settings::langRowRect(int idx) const
 {
-    const int y = CONTENT_Y + idx * (LANG_ROW_H + LANG_ROW_GAP);
+    const int y = LANG_ROWS_Y + idx * (LANG_ROW_H + LANG_ROW_GAP);
     return {CONTENT_X, y, CONTENT_W, LANG_ROW_H};
 }
 
 /**
- * @brief Zeichnet das Sprach-Panel.
+ * @brief Bestimmt die Lage des Schalters für serielle Logs.
  */
-void Settings::drawPanelLanguage(Gfx_Sprite *spr)
+Settings::Rect Settings::serialLogsToggleRect() const
+{
+    return {CONTENT_X + CONTENT_W - TOGGLE_W, LOGS_HEADING_Y + GENERAL_HEADING_H, TOGGLE_W, TOGGLE_H};
+}
+
+/**
+ * @brief Zeichnet das Allgemein-Panel mit getrennten Rubriken für Sprache und serielle Logs.
+ */
+void Settings::drawPanelGeneral(Gfx_Sprite *spr)
 {
     const int selectedIdx = (m_pendingLangIndex >= 0) ? m_pendingLangIndex : currentLangIndex();
     const int activeSysIdx = currentLangIndex();
     const SettingsKey names[2] = {SettingsKey::SETTINGS_LANG_NAME_DE, SettingsKey::SETTINGS_LANG_NAME_EN};
+
+    spr->loadFont(ComfortaaBold16);
+    spr->setTextDatum(ML_DATUM);
+    spr->setTextColor(C_SEC_SYSTEM);
+    spr->drawString(I18n::str(SettingsKey::SETTINGS_LANG_SECTION), CONTENT_X, CONTENT_Y + GENERAL_HEADING_H / 2);
+    spr->drawString(I18n::str(SettingsKey::SETTINGS_LOGS_SECTION), CONTENT_X, LOGS_HEADING_Y + GENERAL_HEADING_H / 2);
+    spr->drawFastHLine(CONTENT_X, LOGS_HEADING_Y - GENERAL_SECTION_GAP / 2, CONTENT_W, C_SEP_LINE);
 
     for (int i = 0; i < 2; ++i)
     {
@@ -1740,21 +1761,23 @@ void Settings::drawPanelLanguage(Gfx_Sprite *spr)
         if (selected)
             spr->fillRect(r.x, r.y + 8, ITEM_ACCENT_W, r.h - 16, C_SEC_SYSTEM);
 
-        spr->loadFont(ComfortaaBold16);
         spr->setTextDatum(ML_DATUM);
         spr->setTextColor(selected ? C_TEXT_BRIGHT : C_TEXT);
         spr->drawString(I18n::str(names[i]), r.x + 24, r.y + r.h / 2);
-        spr->unloadFont();
-
-        if (i == activeSysIdx)
-        {
-            spr->loadFont(ComfortaaBold14);
-            spr->setTextDatum(MR_DATUM);
-            spr->setTextColor(C_SEC_SYSTEM);
-            spr->drawString(I18n::str(SettingsKey::SETTINGS_LANG_ACTIVE), r.x + r.w - 20, r.y + r.h / 2);
-            spr->unloadFont();
-        }
     }
+
+    const Rect toggle = serialLogsToggleRect();
+    drawToggle(spr, toggle, APP_STATE.getSerialLogsEnabled(), C_WORK_BG);
+    spr->setTextColor(C_TEXT);
+    spr->drawString(I18n::str(SettingsKey::SETTINGS_LOGS_TOGGLE), CONTENT_X, toggle.y + toggle.h / 2);
+    spr->unloadFont();
+
+    spr->loadFont(ComfortaaBold14);
+    const Rect activeRow = langRowRect(activeSysIdx);
+    spr->setTextDatum(MR_DATUM);
+    spr->setTextColor(C_SEC_SYSTEM);
+    spr->drawString(I18n::str(SettingsKey::SETTINGS_LANG_ACTIVE), activeRow.x + activeRow.w - 20, activeRow.y + activeRow.h / 2);
+    spr->unloadFont();
 }
 
 // ===================================================================
@@ -2612,8 +2635,8 @@ void Settings::handleWorkTouch(int32_t tx, int32_t ty)
     case Panel::WIFI:
         handleWifiTouch(sx, sy);
         break;
-    case Panel::LANGUAGE:
-        handleLanguageTouch(sx, sy);
+    case Panel::GENERAL:
+        handleGeneralTouch(sx, sy);
         break;
     case Panel::SECURITY:
         handleSecurityTouch(sx, sy);
@@ -2705,10 +2728,19 @@ void Settings::handleWifiTouch(int sx, int sy)
 }
 
 /**
- * @brief Behandelt Taps im Sprach-Panel.
+ * @brief Behandelt Sprachwahl und Log-Schalter im Allgemein-Panel.
  */
-void Settings::handleLanguageTouch(int sx, int sy)
+void Settings::handleGeneralTouch(int sx, int sy)
 {
+    const Rect toggle = serialLogsToggleRect();
+    if (pointIn(sx, sy, CONTENT_X, toggle.y, CONTENT_W, toggle.h))
+    {
+        if (!APP_STATE.setSerialLogsEnabled(!APP_STATE.getSerialLogsEnabled()))
+            showInfoBox(SettingsKey::SETTINGS_LOGS_SECTION, SettingsKey::SETTINGS_LOGS_WRITE_ERROR);
+        m_workDirty = true;
+        return;
+    }
+
     for (int i = 0; i < 2; ++i)
     {
         const Rect r = langRowRect(i);
@@ -3558,7 +3590,7 @@ void Settings::startSaving()
 {
     switch (m_panel)
     {
-    case Panel::LANGUAGE:
+    case Panel::GENERAL:
         startLanguageRestartDialog();
         return;
 
@@ -3856,7 +3888,7 @@ bool Settings::panelDirty(Panel p) const
     {
     case Panel::WIFI:
         return hasProfileChanges() || hostnamePending();
-    case Panel::LANGUAGE:
+    case Panel::GENERAL:
         return languagePending();
     case Panel::SECURITY:
         return pinPending();

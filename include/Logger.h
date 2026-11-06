@@ -2,6 +2,7 @@
 #define LOGGER_H
 
 #include <Arduino.h>
+#include <atomic>
 
 #if defined(ARDUINO_ARCH_ESP32)
 #include <freertos/FreeRTOS.h>
@@ -275,7 +276,7 @@ private:
 
     static Logger *_instance; ///< Singleton-Instanz
 
-    bool _enabled;                    ///< Gibt an, ob Logging aktiv ist
+    std::atomic<bool> _enabled;       ///< Gemeinsam von UI und Hintergrundaufgaben gelesene Log-Freigabe
     bool _withTime;                   ///< Gibt an, ob Zeitangaben ausgegeben werden
     uint32_t _start;                  ///< Startzeit für Zeitberechnungen (Millisekunden)
     char *_buffer;                    ///< Interner Buffer für Log-Ausgaben

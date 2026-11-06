@@ -4,7 +4,7 @@
 
 Diese Anleitung führt Dich vom fabrikneuen Waveshare-Display zum gestarteten RetroRadio. Du bereitest das Projekt unter Windows, Linux oder macOS in Visual Studio Code mit PlatformIO vor, überträgst die Firmware zunächst über UART1 und wechselst anschließend auf die USB-Buchse. Danach kannst Du denselben Projektordner zum Lesen und Bearbeiten des Quellcodes und für spätere Aktualisierungen verwenden.
 
-**Stand: 02.11.2026.** Der vollständige Installationsablauf wurde am 23.09.2026 unter Linux mit einem ESP32-S3-Touch-LCD-7, PCB 1.1, 8 MB Flash und 8 MB PSRAM praktisch bestätigt: Erstinstallation über UART1, Wechsel auf USB und erneuter erfolgreicher Upload. Die Schritte für Windows und macOS stützen sich auf die offiziellen Software- und Treiberunterlagen, eigene Durchläufe auf diesen Systemen stehen noch aus. Die 16-MB-Projektumgebung ist vorhanden, eine Erstinstallation auf dieser Boardvariante ist noch nicht praktisch bestätigt.
+**Stand: 06.11.2026.** Der vollständige Installationsablauf wurde am 23.09.2026 unter Linux mit einem ESP32-S3-Touch-LCD-7, PCB 1.1, 8 MB Flash und 8 MB PSRAM praktisch bestätigt: Erstinstallation über UART1, Wechsel auf USB und erneuter erfolgreicher Upload. Die Schritte für Windows und macOS stützen sich auf die offiziellen Software- und Treiberunterlagen, eigene Durchläufe auf diesen Systemen stehen noch aus. Die 16-MB-Projektumgebung ist vorhanden, eine Erstinstallation auf dieser Boardvariante ist noch nicht praktisch bestätigt.
 
 > Beginne mit dem Displayboard ohne angeschlossene Audio-Hardware und weitere externe Module. RetroRadio aktiviert den USB-Anschluss selbst. Eine Zwischen-Firmware ist nicht erforderlich, die ab Werk installierte Demo kann direkt ersetzt werden.
 

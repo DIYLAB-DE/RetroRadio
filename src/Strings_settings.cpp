@@ -21,7 +21,7 @@ namespace
     const char DE_MENU_WEATHER[] PROGMEM = "Wetter";
     const char DE_MENU_NEWS[] PROGMEM = "Nachrichten";
     const char DE_MENU_CLOUD[] PROGMEM = "Cloud-Anbindung";
-    const char DE_MENU_LANGUAGE[] PROGMEM = "Sprache";
+    const char DE_MENU_GENERAL[] PROGMEM = "Allgemein";
     const char DE_MENU_SECURITY[] PROGMEM = "Sicherheit";
     const char DE_MENU_AUDIO[] PROGMEM = "Klang";
     const char DE_MENU_APPEARANCE[] PROGMEM = "Anzeige";
@@ -86,8 +86,12 @@ namespace
     const char DE_EXIT_MSG[] PROGMEM = "Änderungen speichern?";
     const char DE_EXIT_DISCARD_BTN[] PROGMEM = "verwerfen";
 
-    const char DE_LANG_TITLE[] PROGMEM = "Sprache";
-    const char DE_LANG_SUBTITLE[] PROGMEM = "Sprache der Oberfläche";
+    const char DE_GENERAL_TITLE[] PROGMEM = "Allgemein";
+    const char DE_GENERAL_SUBTITLE[] PROGMEM = "Sprache und Protokollausgabe";
+    const char DE_LANG_SECTION[] PROGMEM = "Sprache";
+    const char DE_LOGS_SECTION[] PROGMEM = "Serielle Logs";
+    const char DE_LOGS_TOGGLE[] PROGMEM = "Ausgabe über USB";
+    const char DE_LOGS_WRITE_ERROR[] PROGMEM = "Die Log-Einstellung konnte nicht gespeichert werden.";
     const char DE_LANG_ACTIVE[] PROGMEM = "aktiv";
     const char DE_LANG_NAME_DE[] PROGMEM = "Deutsch";
     const char DE_LANG_NAME_EN[] PROGMEM = "English";
@@ -301,7 +305,7 @@ namespace
     const char EN_MENU_WEATHER[] PROGMEM = "Weather";
     const char EN_MENU_NEWS[] PROGMEM = "News";
     const char EN_MENU_CLOUD[] PROGMEM = "Cloud sync";
-    const char EN_MENU_LANGUAGE[] PROGMEM = "Language";
+    const char EN_MENU_GENERAL[] PROGMEM = "General";
     const char EN_MENU_SECURITY[] PROGMEM = "Security";
     const char EN_MENU_AUDIO[] PROGMEM = "Sound";
     const char EN_MENU_APPEARANCE[] PROGMEM = "Display";
@@ -366,8 +370,12 @@ namespace
     const char EN_EXIT_MSG[] PROGMEM = "Save changes?";
     const char EN_EXIT_DISCARD_BTN[] PROGMEM = "discard";
 
-    const char EN_LANG_TITLE[] PROGMEM = "Language";
-    const char EN_LANG_SUBTITLE[] PROGMEM = "Interface language";
+    const char EN_GENERAL_TITLE[] PROGMEM = "General";
+    const char EN_GENERAL_SUBTITLE[] PROGMEM = "Language and logging";
+    const char EN_LANG_SECTION[] PROGMEM = "Language";
+    const char EN_LOGS_SECTION[] PROGMEM = "Serial logs";
+    const char EN_LOGS_TOGGLE[] PROGMEM = "Output via USB";
+    const char EN_LOGS_WRITE_ERROR[] PROGMEM = "The logging setting could not be saved.";
     const char EN_LANG_ACTIVE[] PROGMEM = "active";
     const char EN_LANG_NAME_DE[] PROGMEM = "Deutsch";
     const char EN_LANG_NAME_EN[] PROGMEM = "English";
@@ -587,7 +595,7 @@ namespace
         {DE_MENU_WEATHER, EN_MENU_WEATHER},
         {DE_MENU_NEWS, EN_MENU_NEWS},
         {DE_MENU_CLOUD, EN_MENU_CLOUD},
-        {DE_MENU_LANGUAGE, EN_MENU_LANGUAGE},
+        {DE_MENU_GENERAL, EN_MENU_GENERAL},
         {DE_MENU_SECURITY, EN_MENU_SECURITY},
         {DE_MENU_AUDIO, EN_MENU_AUDIO},
         {DE_MENU_APPEARANCE, EN_MENU_APPEARANCE},
@@ -652,8 +660,12 @@ namespace
         {DE_EXIT_MSG, EN_EXIT_MSG},
         {DE_EXIT_DISCARD_BTN, EN_EXIT_DISCARD_BTN},
 
-        {DE_LANG_TITLE, EN_LANG_TITLE},
-        {DE_LANG_SUBTITLE, EN_LANG_SUBTITLE},
+        {DE_GENERAL_TITLE, EN_GENERAL_TITLE},
+        {DE_GENERAL_SUBTITLE, EN_GENERAL_SUBTITLE},
+        {DE_LANG_SECTION, EN_LANG_SECTION},
+        {DE_LOGS_SECTION, EN_LOGS_SECTION},
+        {DE_LOGS_TOGGLE, EN_LOGS_TOGGLE},
+        {DE_LOGS_WRITE_ERROR, EN_LOGS_WRITE_ERROR},
         {DE_LANG_ACTIVE, EN_LANG_ACTIVE},
         {DE_LANG_NAME_DE, EN_LANG_NAME_DE},
         {DE_LANG_NAME_EN, EN_LANG_NAME_EN},

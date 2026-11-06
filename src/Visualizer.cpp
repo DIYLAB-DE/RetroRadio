@@ -27,6 +27,7 @@ namespace
 {
     constexpr uint32_t VIS_FRAME_MS = 35; ///< Höchstens 28,6 Aktualisierungen pro Sekunde
     constexpr float VU_RAD_TO_DEG = 57.29578f; ///< Umrechnung von Radiant in Grad
+    constexpr uint8_t VU_RAINBOW_GREEN = 64; ///< Grüner Startpunkt des VU-Farbverlaufs bis Rot bei Index 0
 
     // Lage und Länge der Nadel, wie sie das Sprite und sein Drehpunkt vorgeben. Daraus folgt,
     // welchen Bereich sie in einer Bildzeile bedeckt.
@@ -1223,8 +1224,8 @@ void Visualizer::drawDigitalVU(bool init, float rmsLeft, float rmsRight, float p
                 {
                     if (m_digitalVUStyle == DigitalVUStyle::RAINBOW)
                     {
-                        // Regenbogen-Farbverlauf
-                        color = rainbowColors(map(x, 0, VU_W, 96, 0));
+                        // Fließender Farbverlauf von Grün bis Rot
+                        color = rainbowColors(map(x, 0, VU_W, VU_RAINBOW_GREEN, 0));
                     }
                     else
                     {
@@ -3010,8 +3011,7 @@ void Visualizer::drawGonioVU(bool init, float rmsLeft, float rmsRight)
         // Farbwahl je Pixel-Zeile (von unten nach oben gemessen)
         uint16_t segColor;
         if (m_gonioStyle == GonioStyle::RAINBOW)
-            // 0..(cfg.size-1) -> Hues 96..0
-            segColor = rainbowColors(96 - (y * 96 / (cfg.size - 1)));
+            segColor = rainbowColors(VU_RAINBOW_GREEN - (y * VU_RAINBOW_GREEN / (cfg.size - 1)));
         else
             segColor = (y >= yCutRed) ? TFT_RED : (y >= yCutOrange) ? TFT_ORANGE
                                                                     : 0x6c64; // Grün

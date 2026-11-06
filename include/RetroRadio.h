@@ -80,6 +80,10 @@ namespace RetroRadioConfig
             constexpr int STEREO_INDICATOR_Y = 319; ///< Y-Position des Stereo-Indikators auf dem Display
             constexpr int STEREO_INDICATOR_W = 41;  ///< Breite des Stereo-Indikator-Sprites
             constexpr int STEREO_INDICATOR_H = 25;  ///< Höhe des Stereo-Indikator-Sprites
+            constexpr int CODEC_INDICATOR_X = 1;   ///< X-Position der Codec-Anzeige auf dem Display
+            constexpr int CODEC_INDICATOR_Y = 319; ///< Y-Position der Codec-Anzeige auf dem Display
+            constexpr int CODEC_INDICATOR_W = 43;  ///< Breite des Codec-Sprites innerhalb des linken Rands
+            constexpr int CODEC_INDICATOR_H = 25;  ///< Höhe des Codec-Sprites
         }
 
         /**
@@ -335,6 +339,11 @@ private:
 
     // Footer
     char m_truncatedTitle[256]; ///< Gekürzter Titel für Footer-Anzeige
+    char m_codecName[8] = {0};             ///< Name des initialisierten Decoders, leer solange unbekannt
+    bool m_codecIndicatorDirty = true;     ///< Codec-Anzeige muss neu gezeichnet werden
+    int8_t m_lastStereoState = -1;          ///< Gezeichneter Zustand: -1 unbekannt, 0 Stereo, 1 Mono
+    bool m_stereoCandidateMono = true;      ///< Zuletzt erkannter Mono-Zustand vor der Entprellung
+    uint32_t m_stereoCandidateSince = 0;    ///< Beginn des unveränderten Erkennungszustands in Millisekunden
 
     // Lautstärke-Regler
     KnobTouchState m_knobTouchState = KnobTouchState::IDLE; ///< Touch-Status des Lautstärke-Reglers
@@ -388,6 +397,7 @@ private:
     Gfx_Sprite *m_sprRetroScale = nullptr;        ///< Sprite für Retro-Skala
     Gfx_Sprite *m_sprRetroNeedle = nullptr;       ///< Sprite für Retro-Zeiger
     Gfx_Sprite *m_sprRetroStereo = nullptr;       ///< Sprite für Stereo-Anzeige (persistent)
+    Gfx_Sprite *m_sprRetroCodec = nullptr;        ///< Sprite für Codec-Anzeige mit dauerhaft geladenem Font
     Gfx_Sprite *m_sprRetroFooter = nullptr;       ///< Sprite für Footer-Bereich
     Gfx_Sprite *m_sprRetroKnob = nullptr;         ///< Sprite für Lautstärke-Regler
     Gfx_Sprite *m_sprRetroTracks = nullptr;       ///< Sprite für Equalizer-Regler
@@ -474,9 +484,16 @@ private:
      * @brief Aktualisiert das Stereo/Mono-Symbol basierend auf dem Audiosignal
      * @param isMono true für Mono, false für Stereo
      *
-     * Zeichnet das Stereo/Mono-Symbol in der Metadaten-Zeile rechts. Die Symbolfarbe wechselt automatisch basierend auf dem aktuellen Audiosignal.
+     * Zeichnet das Symbol rechts in der Infozeile nur bei einem mindestens 500 ms stabilen Zustandswechsel. Der erste Aufbau erfolgt sofort. Bei blockierter Grafik wird der erkannte Zustand weiter erfasst, aber nicht gezeichnet.
      */
     void updateStereoIndicator(bool isMono);
+
+    /**
+     * @brief Aktualisiert die Codec-Anzeige links in der Infozeile
+     *
+     * Zeichnet nur bei geändertem Codec. Ein unbekanntes Format lässt den Bereich leer. Bei blockierter Grafik bleibt die Aktualisierung vorgemerkt.
+     */
+    void updateCodecIndicator();
 
     // ===================================================================
     // Footer

@@ -721,9 +721,8 @@ void AudioManager::task_processAudioSamples32(int32_t *outBuff, int16_t validSam
     m_peakLeft = static_cast<float>(currentMaxL) * PEAK_SCALE_FACTOR;
     m_peakRight = static_cast<float>(currentMaxR) * PEAK_SCALE_FACTOR;
 
-    // Stumm heißt: alle Anzeigen auf null. Die Stummschaltung senkt die Lautstärke, und die
-    // liegt hinter der Messstelle; ohne diese Abfrage liefen Zeiger und Balken einfach weiter.
-    if (APP_STATE.getIsMuted())
+    // Mute und Lautstärke 0 setzen Messwerte und Samples für alle Anzeigen auf null, da der Lautstärkeregler hinter der Messstelle liegt.
+    if (APP_STATE.getIsMuted() || APP_STATE.getCurrentVolume() == 0)
     {
         memset(dstL, 0, static_cast<size_t>(samplesToProcess) * sizeof(int16_t));
         memset(dstR, 0, static_cast<size_t>(samplesToProcess) * sizeof(int16_t));

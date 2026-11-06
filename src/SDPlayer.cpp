@@ -559,6 +559,7 @@ void SdPlayer::cleanupFilename(const char *filename, char *output, size_t maxLen
 void SdPlayer::resetCover()
 {
     m_hasCover = false;
+    m_folderCoverFile[0] = '\0';
     m_coverOffsets.clear();
     m_eventCoverData.clear();
     m_needsCoverRedraw = true;
@@ -572,17 +573,47 @@ void SdPlayer::resetCover()
 }
 
 /**
- * @brief Lädt und zeichnet das eingebettete Cover-Bild
+ * @brief Zeigt vorrangig das Ordnerbild, sonst das eingebettete Cover oder den Platzhalter
  */
 bool SdPlayer::loadAndDrawCover()
 {
-    // Prüfen ob das Cover bereits angezeigt wird
-    if (m_hasCover && strcmp(m_currentAudioFile, m_lastDisplayedCoverFile) == 0 && m_coverOffsets == m_lastDisplayedCoverOffsets)
+    if (m_folderCoverFile[0] != '\0')
     {
-        LOG_AUDIO_F("Das Cover-Bild von '%s' wird bereits angezeigt und daher übersprungen.", m_currentAudioFile);
-        return true;
+        if (m_hasCover && strcmp(m_folderCoverFile, m_lastDisplayedCoverFile) == 0)
+            return true;
+
+        if (loadCoverImage(m_folderCoverFile, false))
+        {
+            stringutils::safeCopy(m_lastDisplayedCoverFile, m_folderCoverFile);
+            m_lastDisplayedCoverOffsets.clear();
+            return true;
+        }
+
+        m_folderCoverFile[0] = '\0';
     }
 
+    if (m_coverOffsets.size() >= 2)
+    {
+        if (m_hasCover && strcmp(m_currentAudioFile, m_lastDisplayedCoverFile) == 0 && m_coverOffsets == m_lastDisplayedCoverOffsets)
+            return true;
+
+        if (loadCoverImage(m_currentAudioFile, true))
+        {
+            stringutils::safeCopy(m_lastDisplayedCoverFile, m_currentAudioFile);
+            m_lastDisplayedCoverOffsets = m_coverOffsets;
+            return true;
+        }
+    }
+
+    drawCoverFallback(nullptr);
+    return false;
+}
+
+/**
+ * @brief Lädt Bilddaten aus einer Bild- oder Audiodatei und zeichnet sie skaliert in die Cover-Fläche
+ */
+bool SdPlayer::loadCoverImage(const char *filePath, bool embedded)
+{
     // Konstanten
     constexpr uint32_t MAX_COVER_FILE_SIZE = 1 * 1000 * 1000; // Max. 1 MB für Cover-Datei
     constexpr uint32_t MIN_IMAGE_SIZE = 100;                  // Minimale sinnvolle Bilddatengröße
@@ -590,14 +621,21 @@ bool SdPlayer::loadAndDrawCover()
     constexpr int MAX_IMAGE_DIMENSION = 500;                  // Maximale PNG-Auflösung; größere PNGs werden abgelehnt, JPEG wird stattdessen herunterskaliert
 
     // Eingangsprüfung: Offset/Länge aus dem Event
-    if (m_coverOffsets.size() < 2)
+    if (embedded && m_coverOffsets.size() < 2)
     {
         LOG_ERROR("Cover-Offsets ungültig");
         return false;
     }
 
-    const uint32_t coverOffset = m_coverOffsets[0];
-    const uint32_t coverLength = m_coverOffsets[1];
+    File f = SD.open(filePath, FILE_READ);
+    if (!f || f.isDirectory())
+    {
+        LOG_ERROR_F("Cover-Quelle '%s' kann nicht geöffnet werden.", filePath);
+        return false;
+    }
+
+    const uint32_t coverOffset = embedded ? m_coverOffsets[0] : 0;
+    const size_t coverLength = embedded ? m_coverOffsets[1] : f.size();
 
     // Validierung der Cover-Dateigröße
     if (coverLength == 0 || coverLength > MAX_COVER_FILE_SIZE)
@@ -634,14 +672,6 @@ bool SdPlayer::loadAndDrawCover()
         LOG_INFO_F("Cover-Buffer vergrößert: %u Bytes", newCapacity);
     }
 
-    // File-Handling mit automatischem Close
-    File f = SD.open(m_currentAudioFile, FILE_READ);
-    if (!f)
-    {
-        LOG_ERROR_F("Datei '%s' kann nicht geöffnet werden.", m_currentAudioFile);
-        return false;
-    }
-
     // Schließt automatisch die Datei beim Verlassen
     struct FileGuard
     {
@@ -662,6 +692,7 @@ bool SdPlayer::loadAndDrawCover()
 
     // Cover-Daten in wiederverwendbaren Buffer lesen
     const size_t n = f.read(m_coverBuffer, coverLength);
+    f.close();
 
     if (n != coverLength)
     {
@@ -726,8 +757,8 @@ bool SdPlayer::loadAndDrawCover()
         return true;
     };
 
-    uint8_t *img = nullptr; // Zeiger auf den Anfang der eigentlichen Bilddaten
-    uint32_t imgLen = 0;    // exakte Länge der Bilddaten
+    uint8_t *img = embedded ? nullptr : m_coverBuffer; // Zeiger auf den Anfang der eigentlichen Bilddaten
+    uint32_t imgLen = embedded ? 0 : coverLength;      // exakte Länge der Bilddaten
 
     // ID3v2 APIC (MP3): [encoding(1)][MIME bis NUL][picType(1)][desc (term.)][Bilddaten ...]
     if (!img && coverLength >= 10 && m_coverBuffer[0] <= 0x03)
@@ -860,7 +891,10 @@ bool SdPlayer::loadAndDrawCover()
         return false;
     }
 
-    // Ziel-Sprite vorbereiten / leeren
+    // Der bisherige Bildinhalt ist nach dem Leeren nicht mehr für den Cache verfügbar
+    m_hasCover = false;
+    m_lastDisplayedCoverFile[0] = '\0';
+    m_lastDisplayedCoverOffsets.clear();
     m_sprCover->clear(0x1082);
 
     bool ok = false; // Gesamterfolg
@@ -994,7 +1028,6 @@ bool SdPlayer::loadAndDrawCover()
     // Anzeige / Rückgabe
     if (!ok)
     {
-        drawCoverFallback(nullptr);
         LOG_ERROR("Cover-Dekodierung fehlgeschlagen");
         return false;
     }
@@ -1002,10 +1035,6 @@ bool SdPlayer::loadAndDrawCover()
     // Erfolgsfall: Sprite aufs Panel pushen
     m_sprCover->pushSprite(COVER_X, COVER_Y);
     m_hasCover = true;
-
-    // Cover-Tracking aktualisieren
-    stringutils::safeCopy(m_lastDisplayedCoverFile, m_currentAudioFile);
-    m_lastDisplayedCoverOffsets = m_coverOffsets;
 
     LOG_SUCCESS("Cover angezeigt");
     return true;
@@ -1642,9 +1671,9 @@ void SdPlayer::redrawAll()
     drawCassetteLabel(true);
 
     // Cover neu zeichnen (echtes Cover, falls vorhanden, sonst Fallback)
-    if (m_hasCover && m_currentAudioFile[0] != '\0' && !m_coverOffsets.empty())
+    if (m_hasCover && m_sprCover)
     {
-        loadAndDrawCover();
+        m_sprCover->pushSprite(COVER_X, COVER_Y);
     }
     else
     {
@@ -2385,17 +2414,7 @@ void SdPlayer::draw()
             {
                 lastCoverCheck = now;
 
-                if (m_coverOffsets.empty())
-                {
-                    // Fallback zeichnen (schnell)
-                    if (m_lastDisplayedCoverFile[0] == '\0' || strcmp(m_currentAudioFile, m_lastDisplayedCoverFile) != 0)
-                        drawCoverFallback(nullptr);
-                }
-                else
-                {
-                    // Cover laden (langsam - SD-Read + JPEG-Decode)
-                    loadAndDrawCover();
-                }
+                loadAndDrawCover();
                 m_needsCoverRedraw = false;
             }
             // Sonst: Cover-Loading auf nächsten Frame verschieben
@@ -3111,6 +3130,11 @@ void SdPlayer::drawKnob(bool init, uint8_t vol, bool skipCallbacks)
                                                                                  : (2 * newVolTextW);
                 m_sprKnob->drawString(newVolStr, mid - xOffset, mid - 15);
             }
+            else
+            {
+                m_sprKnob->pushImage(mid - 14, mid - 14, 28, 28,
+                                    IconShapes::cached(IconId::Mute, ICON_MUTE_COLOR, ICON_MUTE_BACKGROUND));
+            }
 
             m_sprKnob->pushSprite(x, y);
 
@@ -3754,6 +3778,25 @@ void SdPlayer::playCurrentTrack()
 
         // Audio-Dateipfad für Cover-Zugriff speichern
         stringutils::safeCopy(m_currentAudioFile, sizeof(m_currentAudioFile), m_playlist[m_currentTrackIndex].path);
+
+        // Ordnerbild einmal je Titel prüfen, bevor die Audiowiedergabe startet
+        m_folderCoverFile[0] = '\0';
+        const char *lastSlash = strrchr(m_currentAudioFile, '/');
+        const size_t folderLength = lastSlash ? static_cast<size_t>(lastSlash - m_currentAudioFile + 1) : 0;
+        constexpr char FOLDER_COVER_NAME[] = "folder.jpg"; ///< Bevorzugter Cover-Dateiname im Titelordner
+        if (folderLength + sizeof(FOLDER_COVER_NAME) <= sizeof(m_folderCoverFile))
+        {
+            stringutils::safeCopy(m_folderCoverFile, folderLength + 1, m_currentAudioFile);
+            stringutils::safeAppend(m_folderCoverFile, FOLDER_COVER_NAME);
+            // FAT vergleicht Dateinamen unabhängig von Groß- und Kleinschreibung
+            if (!SD.exists(m_folderCoverFile))
+                m_folderCoverFile[0] = '\0';
+        }
+        if (m_folderCoverFile[0] != '\0')
+        {
+            m_waitingForCoverEvent = false;
+            m_needsCoverRedraw = true;
+        }
 
         // EOF-Verarbeitung für neuen Track zurücksetzen
         m_trackFinishedProcessing = false;

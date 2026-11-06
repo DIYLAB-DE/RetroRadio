@@ -568,8 +568,8 @@ void setup()
     // Lenkt die mbedTLS-Allokationen über einen Zuteiler
     mbedtls_platform_set_calloc_free(mbedtlsCalloc, free);
 
-    // Logger initialisieren
-    Logger::init(true, true, 512);
+    // Bis zum Laden der Preferences bleiben die seriellen Logs ausgeschaltet.
+    Logger::init(false, true, 512);
 
     // I2C-Bus starten
     Wire.begin(i2cPins::I2C_MASTER_SDA_IO, i2cPins::I2C_MASTER_SCL_IO);

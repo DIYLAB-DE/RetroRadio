@@ -37,7 +37,7 @@ struct SettingsCallbacks
 /**
  * @brief Einstellungs-Modul im Split-Screen-Layout.
  *
- * Links eine feste Liste aus Sektionsköpfen und Panel-Einträgen, rechts der Arbeitsbereich des gewählten Panels. Voll bedienbar sind WLAN, Nachrichten, Wetter, Sprache, Sicherheit und Info; die übrigen Dienste-Panels sind Platzhalter. Alle Bereiche werden in PSRAM-Sprites gezeichnet und atomar gepusht.
+ * Links eine feste Liste aus Sektionsköpfen und Panel-Einträgen, rechts der Arbeitsbereich des gewählten Panels. Voll bedienbar sind WLAN, Nachrichten, Wetter, Allgemein, Sicherheit und Info; die übrigen Dienste-Panels sind Platzhalter. Alle Bereiche werden in PSRAM-Sprites gezeichnet und atomar gepusht.
  *
  * @note Änderungen an WLAN-Profilen, Nachrichten-Filtern und Wetter-Standort
  *       werden über AppState persistent gespeichert.
@@ -113,7 +113,7 @@ private:
         WEATHER,
         NEWS,
         CLOUD,
-        LANGUAGE,
+        GENERAL,
         SECURITY,
         AUDIO,
         APPEARANCE,
@@ -340,7 +340,7 @@ private:
 
     void drawPanelWifi(Gfx_Sprite *spr);
     void drawWifiRow(Gfx_Sprite *spr, int idx, const Rect &r, bool selected);
-    void drawPanelLanguage(Gfx_Sprite *spr);
+    void drawPanelGeneral(Gfx_Sprite *spr);
     void drawPanelSecurity(Gfx_Sprite *spr);
     void drawPanelInfo(Gfx_Sprite *spr);
     void drawPanelNews(Gfx_Sprite *spr);
@@ -366,6 +366,7 @@ private:
     Rect wifiActionRect(int slot) const;
     Rect hostnameFieldRect() const;
     Rect langRowRect(int idx) const;
+    Rect serialLogsToggleRect() const; ///< Lage des Log-Schalters im Allgemein-Panel
     Rect footerInfoButtonRect(int slot) const;
     Rect footerTimeWindowResetButtonRect() const;
     Rect footerCloudClearButtonRect() const;
@@ -379,7 +380,7 @@ private:
     void handleMenuTouch(int32_t tx, int32_t ty);
     void handleWorkTouch(int32_t tx, int32_t ty);
     void handleWifiTouch(int sx, int sy);
-    void handleLanguageTouch(int sx, int sy);
+    void handleGeneralTouch(int sx, int sy);
     void handleSecurityTouch(int sx, int sy);
     Rect pinLockToggleRect() const; ///< Lage des Umschalters auf der Sicherheitsseite
     void changePinLock(bool enabled, const char *pin); ///< Wendet den Wechsel an und zeigt Fehler an

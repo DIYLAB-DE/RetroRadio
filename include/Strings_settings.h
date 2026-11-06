@@ -28,7 +28,7 @@ enum class SettingsKey : uint16_t
     SETTINGS_MENU_WEATHER,  ///< "Wetter" / "Weather"
     SETTINGS_MENU_NEWS,     ///< "Nachrichten" / "News"
     SETTINGS_MENU_CLOUD,    ///< "Cloud-Anbindung" / "Cloud sync"
-    SETTINGS_MENU_LANGUAGE, ///< "Sprache" / "Language"
+    SETTINGS_MENU_GENERAL, ///< "Allgemein" / "General"
     SETTINGS_MENU_SECURITY, ///< "Sicherheit" / "Security"
     SETTINGS_MENU_AUDIO,    ///< "Klang" / "Sound"
     SETTINGS_MENU_APPEARANCE,  ///< "Anzeige" / "Display"
@@ -106,10 +106,14 @@ enum class SettingsKey : uint16_t
     SETTINGS_EXIT_DISCARD_BTN, ///< "verwerfen" / "discard"
 
     // ===================================================================
-    // Sprache-Panel
+    // Allgemein-Panel
     // ===================================================================
-    SETTINGS_LANG_TITLE,    ///< "Sprache" / "Language"
-    SETTINGS_LANG_SUBTITLE, ///< "Sprache der Oberfläche" / "Interface language"
+    SETTINGS_GENERAL_TITLE,    ///< "Allgemein" / "General"
+    SETTINGS_GENERAL_SUBTITLE, ///< "Sprache und Protokollausgabe" / "Language and logging"
+    SETTINGS_LANG_SECTION, ///< "Sprache" / "Language"
+    SETTINGS_LOGS_SECTION, ///< "Serielle Logs" / "Serial logs"
+    SETTINGS_LOGS_TOGGLE, ///< "Ausgabe über USB" / "Output via USB"
+    SETTINGS_LOGS_WRITE_ERROR, ///< Fehlermeldung bei nicht gespeicherter Log-Einstellung
     SETTINGS_LANG_ACTIVE,   ///< "aktiv" / "active"
     SETTINGS_LANG_NAME_DE,  ///< "Deutsch" / "Deutsch" (Endonym, in beiden Sprachen gleich)
     SETTINGS_LANG_NAME_EN,  ///< "English" / "English" (Endonym, in beiden Sprachen gleich)

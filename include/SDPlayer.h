@@ -301,27 +301,22 @@ private:
     // ===================================================================
 
     /**
-     * @brief Lädt und zeichnet das eingebettete Cover-Bild (JPEG/PNG) in m_sprCover.
+     * @brief Zeigt das Ordnerbild, das eingebettete Cover oder einen Platzhalter in der vorhandenen Cover-Fläche
+     * @return true bei angezeigtem Cover, false bei Platzhalter
      *
-     * Ablauf:
-     * 1) Cover-Block aus der Datei in PSRAM lesen.
-     * 2) Container-Parse:
-     *      - ID3v2 APIC (MP3)
-     *      - FLAC PICTURE (FLAC)
-     *    Falls nicht erkannt: Fallback auf JPEG/PNG-Magic-Suche.
-     * 3) Dekodierung / Skalierung:
-     *      - JPEG:
-     *          * JPEGDEC nur bei "großen" Bildern über DOWNSCALE_THRESHOLD mit 1/2, 1/4 oder 1/8 verwenden, so dass die Decoder-Ausgabe COVER_W x COVER_H in beiden Richtungen noch abdeckt. Danach isotrop ausfüllend in m_sprCover skalieren, der Überstand wird mittig beschnitten.
-     *          * Kleinere Bilder bis zum Schwellwert werden 1:1 decodiert und mit LGFX isotrop eingepasst.
-     *      - PNG:
-     *          * Quellgröße aus IHDR (breit kompatibel).
-     *          * isotrop "Contain"-Zoom via LGFX::drawPng und zentrierte Position.
-     * 4) m_sprCover (COVER_W x COVER_H = 220x220) aufs Panel pushen.
-     *
-     * @return true  bei Erfolg (Cover angezeigt)
-     * @return false bei Fehler (es wird ein Platzhalter gezeichnet)
+     * Ein Ordnerbild namens folder.jpg im Titelordner hat unabhängig von Groß- und Kleinschreibung Vorrang. Fehlt das Bild oder kann es nicht geladen werden, wird das eingebettete Cover versucht. Bereits angezeigte Ordnerbilder bleiben bei weiteren Titeln desselben Ordners erhalten.
      */
     bool loadAndDrawCover();
+
+    /**
+     * @brief Lädt und zeichnet ein JPEG-/PNG-Cover aus einer Bild- oder Audiodatei
+     * @param filePath Pfad der zu lesenden Datei auf der SD-Karte
+     * @param embedded true für den Cover-Block aus m_coverOffsets, false für die vollständige Bilddatei
+     * @return true bei Erfolg, false bei ungültigen Daten, Lese- oder Dekodierfehlern
+     *
+     * Verwendet den wiederverwendbaren PSRAM-Puffer und skaliert ohne Verzerrung auf COVER_W x COVER_H; Überstände werden mittig beschnitten. JPEG wird bei Bedarf im Decoder verkleinert, PNG bleibt auf 500 x 500 Pixel begrenzt. Die Dateigröße beziehungsweise der Cover-Block darf höchstens 1 MB betragen. Erst das fertige Bild wird auf das Display übertragen.
+     */
+    bool loadCoverImage(const char *filePath, bool embedded);
 
     /**
      * @brief Setzt das Cover zurück (Platzhalter)
@@ -329,9 +324,7 @@ private:
     void resetCover();
 
     /**
-     * @brief Zeichnet einen dynamischen Platzhalter in die Cover-Fläche,
-     *        wenn kein eingebettetes Cover vorhanden ist. Nutzt Dateiname/Metadaten
-     *        zur Akzentfarbe, Initialen und Unterzeile.
+     * @brief Zeichnet einen dynamischen Platzhalter in die Cover-Fläche, wenn kein Cover angezeigt werden kann. Nutzt Dateiname/Metadaten zur Akzentfarbe, Initialen und Unterzeile.
      * @param preferredText Optionaler Titel/Name; wenn leer, wird der Dateiname bereinigt.
      */
     void drawCoverFallback(const char *preferredText = nullptr);
@@ -497,10 +490,11 @@ private:
     bool m_hasCover = false;              ///< Flag: Cover verfügbar
     std::vector<uint32_t> m_coverOffsets; ///< Cover-Offsets aus AudioManager [pos, len, pos, len, ...]
     char m_currentAudioFile[256] = {0};   ///< Aktueller Audio-Dateipfad für Cover-Zugriff
+    char m_folderCoverFile[256] = {0};    ///< Ordnerbild des aktuellen Titels; leer, wenn nicht vorhanden oder nicht ladbar
     bool m_needsCoverRedraw = false;      ///< Flag: Cover muss neu gezeichnet werden
 
     // Cover-Tracking für intelligentes Caching
-    char m_lastDisplayedCoverFile[256] = {0};          ///< Pfad der Datei, deren Cover aktuell angezeigt wird
+    char m_lastDisplayedCoverFile[256] = {0};          ///< Pfad der Bild- oder Audiodatei des angezeigten Covers; beim Platzhalter der Audiopfad
     std::vector<uint32_t> m_lastDisplayedCoverOffsets; ///< Offsets des aktuell angezeigten Covers
 
     // ===================================================================

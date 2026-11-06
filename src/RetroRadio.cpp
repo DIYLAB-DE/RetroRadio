@@ -1,5 +1,6 @@
 #include "RetroRadio.h"
 
+#include <algorithm>
 #include <time.h>
 
 #include "Clocks.h"              // Uhren
@@ -37,6 +38,7 @@ namespace
 
     constexpr unsigned long MAGIC_EYE_MIN_REDRAW_MS = 8;  ///< Mindestpause zwischen zwei Aufbauten des magischen Auges, begrenzt es auf 125 Bilder je Sekunde; die EM80 rechnet dabei rund die doppelte Fläche der runden Bauformen
     constexpr unsigned long MAGIC_EYE_LONG_PRESS_MS = 800; ///< Haltedauer, ab der ein Druck auf das Auge die Darstellung umschaltet
+    constexpr uint32_t STEREO_STABLE_MS = 500; ///< Mindestdauer eines unveränderten Mono-/Stereo-Ergebnisses vor dem Farbwechsel
 }
 
 // ===================================================================
@@ -88,6 +90,7 @@ RetroRadio::~RetroRadio()
         m_tft->safeDeleteSprite(m_sprRetroScale);
         m_tft->safeDeleteSprite(m_sprRetroNeedle);
         m_tft->safeDeleteSprite(m_sprRetroStereo);
+        m_tft->safeDeleteSprite(m_sprRetroCodec);
         m_tft->safeDeleteSprite(m_sprRetroFooter);
         m_tft->safeDeleteSprite(m_sprRetroKnob);
         m_tft->safeDeleteSprite(m_sprRetroTracks);
@@ -142,6 +145,11 @@ bool RetroRadio::init(LGFX &tft, DS1307_RTC &rtc, StationManager &stationManager
 
     // Footer initialisieren
     memset(m_truncatedTitle, 0, sizeof(m_truncatedTitle));
+    m_codecName[0] = '\0';
+    m_codecIndicatorDirty = true;
+    m_lastStereoState = -1;
+    m_stereoCandidateMono = true;
+    m_stereoCandidateSince = 0;
 
     // Lautstärke-Regler initialisieren
     m_totalDegrees = 0.0f;
@@ -239,6 +247,18 @@ bool RetroRadio::init(LGFX &tft, DS1307_RTC &rtc, StationManager &stationManager
             LOG_ERROR("Konnte m_sprRetroStereo Sprite nicht erstellen!");
             return false;
         }
+        updateStereoIndicator(true);
+
+        if (!m_tft->safeCreateSprite(m_sprRetroCodec, RRLayout::Footer::CODEC_INDICATOR_W, RRLayout::Footer::CODEC_INDICATOR_H))
+        {
+            LOG_ERROR("Konnte m_sprRetroCodec Sprite nicht erstellen!");
+            return false;
+        }
+        m_sprRetroCodec->loadFont(ComfortaaBold10);
+        m_sprRetroCodec->setTextWrap(false);
+        m_sprRetroCodec->setTextDatum(MC_DATUM);
+        m_sprRetroCodec->clear(RRColors::BACKGROUND);
+        updateCodecIndicator();
 
         // Datum im Footer aus der Systemzeit bilden. Bei ungültiger Zeit steht der Platzhalter, bis NTP oder RTC die Zeit setzen.
         char buffer[64];
@@ -508,6 +528,8 @@ void RetroRadio::draw()
             m_showstreamtitle[0] = '\0';
             m_finalBitrate[0] = '\0';
             m_finalStation[0] = '\0';
+            m_codecName[0] = '\0';
+            m_codecIndicatorDirty = true;
             m_lastProcessedStation = currentStation;
             footerNeedsUpdate = true; // Sofort UI aktualisieren
         }
@@ -522,6 +544,35 @@ void RetroRadio::draw()
 
             switch (eventType)
             {
+            case AudioManagerEventType::INFO:
+            {
+                const char *decoderInfo = strstr(m_eventText, "Decoder has been ");
+                if (!decoderInfo)
+                    break;
+
+                if (strcmp(decoderInfo, "Decoder has been initialized") == 0)
+                {
+                    const size_t codecLength = decoderInfo - m_eventText;
+                    if (codecLength > 0 && codecLength < sizeof(m_codecName))
+                    {
+                        char codecName[sizeof(m_codecName)];
+                        stringutils::safeCopy(codecName, m_eventText);
+                        codecName[codecLength] = '\0';
+                        if (strcmp(m_codecName, codecName) != 0)
+                        {
+                            stringutils::safeCopy(m_codecName, codecName);
+                            m_codecIndicatorDirty = true;
+                        }
+                    }
+                }
+                else if (strcmp(decoderInfo, "Decoder has been destroyed") == 0 && m_codecName[0] != '\0')
+                {
+                    m_codecName[0] = '\0';
+                    m_codecIndicatorDirty = true;
+                }
+                break;
+            }
+
             case AudioManagerEventType::STATION_NAME:
                 // Nur Name aktualisieren, NICHT Titel/Bitrate löschen (das passiert oben bei echtem Senderwechsel via Station-ID)
                 stringutils::safeCopy(m_finalStation, m_eventText);
@@ -562,9 +613,6 @@ void RetroRadio::draw()
             {
                 drawFooterText(false, bestStation, m_showstreamtitle, m_finalBitrate);
 
-                // Stereo/Mono-Symbol automatisch aktualisieren basierend auf Audiosignal
-                updateStereoIndicator(APP_STATE.getForceMono());
-
                 stringutils::safeCopy(m_showstation, bestStation);
             }
 
@@ -573,6 +621,8 @@ void RetroRadio::draw()
             updateRadioMetadata(bestStation, m_showstreamtitle, m_finalBitrate);
         }
     }
+
+    updateCodecIndicator();
 
     // Audio-Daten für Visualisierung abrufen
     if (g_audioManager.isAudioDataReady())
@@ -591,8 +641,12 @@ void RetroRadio::draw()
             g_audioManager.getValidSamplesCount(),
             g_audioManager.getSampleRate());
 
+        const bool isMono = g_audioManager.isMono();
+
         // Audio-Daten als verarbeitet markieren
         g_audioManager.consumeAudioData();
+
+        updateStereoIndicator(isMono);
     }
 
     // Visualisierungen zeichnen
@@ -1137,11 +1191,65 @@ void RetroRadio::updateStereoIndicator(bool isMono)
         return;
     }
 
+    const uint32_t now = millis();
+    if (isMono != m_stereoCandidateMono)
+    {
+        m_stereoCandidateMono = isMono;
+        m_stereoCandidateSince = now;
+    }
+
+    if (APP_STATE.getBlockGFX())
+        return;
+
+    const int8_t state = isMono ? 1 : 0;
+    if (m_lastStereoState >= 0 && (state == m_lastStereoState || static_cast<uint32_t>(now - m_stereoCandidateSince) < STEREO_STABLE_MS))
+        return;
+
     // Symbol zeichnen: gedimmte Farbe für Mono, helle Farbe für Stereo
     m_sprRetroStereo->clear(RRColors::BACKGROUND);
     m_sprRetroStereo->drawSmoothCircle(13, 12, 11.0f, 2.0f, isMono ? RRColors::DIMMED : TFT_SILVER, RRColors::BACKGROUND);
     m_sprRetroStereo->drawSmoothCircle(28, 12, 11.0f, 2.0f, isMono ? RRColors::DIMMED : TFT_SILVER, RRColors::BACKGROUND);
     m_sprRetroStereo->pushSprite(RRConfig::Display::WIDTH - m_sprRetroStereo->width() - 1, RRLayout::Footer::STEREO_INDICATOR_Y);
+    m_lastStereoState = state;
+}
+
+/**
+ * @brief Aktualisiert die Codec-Anzeige bei Änderungen
+ */
+void RetroRadio::updateCodecIndicator()
+{
+    if (!m_codecIndicatorDirty || !m_sprRetroCodec || APP_STATE.getBlockGFX())
+        return;
+
+    m_sprRetroCodec->clear(RRColors::BACKGROUND);
+    if (m_codecName[0] != '\0')
+    {
+        constexpr int BADGE_HEIGHT = 18;          ///< Höhe des farbigen Codec-Felds
+        constexpr int BADGE_PADDING = 8;          ///< Gesamter horizontaler Innenabstand
+        constexpr uint16_t COLOR_AAC = 0x7BEF;    ///< Farbe für AAC
+        constexpr uint16_t COLOR_WAV = 0xFD20;    ///< Farbe für WAV
+        uint16_t badgeColor = TFT_DARKGREY;
+        if (strcmp(m_codecName, "MP3") == 0)
+            badgeColor = RRColors::ACCENT;
+        else if (strcmp(m_codecName, "FLAC") == 0)
+            badgeColor = TFT_GREEN;
+        else if (strcmp(m_codecName, "AAC") == 0)
+            badgeColor = COLOR_AAC;
+        else if (strcmp(m_codecName, "WAV") == 0)
+            badgeColor = COLOR_WAV;
+        else if (strcmp(m_codecName, "VORBIS") == 0)
+            badgeColor = TFT_MAGENTA;
+
+        const char *label = strcmp(m_codecName, "VORBIS") == 0 ? "Vorbis" : m_codecName;
+        const int badgeWidth = std::min<int>(m_sprRetroCodec->textWidth(label) + BADGE_PADDING, m_sprRetroCodec->width());
+        const int badgeX = (m_sprRetroCodec->width() - badgeWidth) / 2;
+        const int badgeY = (m_sprRetroCodec->height() - BADGE_HEIGHT) / 2;
+        m_sprRetroCodec->fillRect(badgeX, badgeY, badgeWidth, BADGE_HEIGHT, badgeColor);
+        m_sprRetroCodec->setTextColor(TFT_BLACK, badgeColor);
+        m_sprRetroCodec->drawString(label, badgeX + badgeWidth / 2, badgeY + BADGE_HEIGHT / 2);
+    }
+    m_sprRetroCodec->pushSprite(RRLayout::Footer::CODEC_INDICATOR_X, RRLayout::Footer::CODEC_INDICATOR_Y);
+    m_codecIndicatorDirty = false;
 }
 
 // ===================================================================
@@ -1156,6 +1264,16 @@ void RetroRadio::drawFooterText(bool init, const char *sender, const char *title
     static const uint8_t *fonts[] = {ComfortaaBold18, ComfortaaBold16, ComfortaaBold14};
     static const int fontCount = sizeof(fonts) / sizeof(fonts[0]);
     static const char *ellipsis = "...";
+
+    // Codec und Stereo-Symbol vor dem Display-Transfer einfügen, damit die Infozeile sie nicht kurzzeitig löscht.
+    auto pushFooter = [&]()
+    {
+        if (m_sprRetroCodec)
+            m_sprRetroCodec->pushSprite(m_sprRetroFooter, RRLayout::Footer::CODEC_INDICATOR_X, RRLayout::Footer::CODEC_INDICATOR_Y - RRLayout::Footer::Y);
+        if (m_sprRetroStereo && m_lastStereoState >= 0)
+            m_sprRetroStereo->pushSprite(m_sprRetroFooter, RRConfig::Display::WIDTH - m_sprRetroStereo->width() - 1, RRLayout::Footer::STEREO_INDICATOR_Y - RRLayout::Footer::Y);
+        m_sprRetroFooter->pushSprite(0, RRLayout::Footer::Y);
+    };
 
     // Initialisierung
     if (init)
@@ -1172,7 +1290,7 @@ void RetroRadio::drawFooterText(bool init, const char *sender, const char *title
         m_sprRetroFooter->clear(backgroundColor);
         m_sprRetroFooter->drawFastHLine(0, 0, RRLayout::Footer::WIDTH, RRColors::BORDER);
         m_sprRetroFooter->drawFastHLine(0, RRLayout::Footer::HEIGHT - 1, RRLayout::Footer::WIDTH, RRColors::BORDER);
-        m_sprRetroFooter->pushSprite(0, RRLayout::Footer::Y);
+        pushFooter();
 
         return;
     }
@@ -1279,7 +1397,7 @@ void RetroRadio::drawFooterText(bool init, const char *sender, const char *title
             int startX = (RRLayout::Footer::WIDTH - totalWidth) / 2;
             drawFooter(sender, title, bitrate, startX);
             m_sprRetroFooter->unloadFont();
-            m_sprRetroFooter->pushSprite(0, RRLayout::Footer::Y);
+            pushFooter();
             return;
         }
     }
@@ -1348,7 +1466,7 @@ void RetroRadio::drawFooterText(bool init, const char *sender, const char *title
 
     drawFooter(sender, finalTitle, bitrate, startX);
     m_sprRetroFooter->unloadFont();
-    m_sprRetroFooter->pushSprite(0, RRLayout::Footer::Y);
+    pushFooter();
 }
 
 // ===================================================================
@@ -1538,13 +1656,21 @@ void RetroRadio::drawKnob(bool init, uint8_t vol, bool skipCallbacks)
                 m_sprRetroKnob->drawSmoothGauge(mid, mid, mid - 1, 3.0f, 0, 360, 0, 100, newVol, colorActive, colorTrack, true, TFT_BLACK);
                 m_sprRetroKnob->drawSmoothCircle(markerX, markerY, markerCircleRadius, markerCircleThickness, colorMarker, TFT_BLACK);
 
-                char volStr[5];
-                stringutils::safeFormat(volStr, "%d", newVol);
-                char firstDigit[2] = {volStr[0], '\0'};
-                int32_t volTextW = m_sprRetroKnob->textWidth(firstDigit);
-                int xOffset = (newVol < 10) ? (volTextW / 2) : (newVol < 100) ? volTextW
-                                                                              : (2 * volTextW);
-                m_sprRetroKnob->drawString(volStr, mid - xOffset, mid - 15);
+                if (newVol > 0)
+                {
+                    char volStr[5];
+                    stringutils::safeFormat(volStr, "%d", newVol);
+                    char firstDigit[2] = {volStr[0], '\0'};
+                    int32_t volTextW = m_sprRetroKnob->textWidth(firstDigit);
+                    int xOffset = (newVol < 10) ? (volTextW / 2) : (newVol < 100) ? volTextW
+                                                                                  : (2 * volTextW);
+                    m_sprRetroKnob->drawString(volStr, mid - xOffset, mid - 15);
+                }
+                else
+                {
+                    m_sprRetroKnob->pushImage(mid - 14, mid - 14, 28, 28,
+                                            IconShapes::cached(IconId::Mute, ICON_MUTE_COLOR, ICON_MUTE_BACKGROUND));
+                }
                 m_sprRetroKnob->pushSprite(x, y);
 
                 if (m_callbacks.onVolumeChanged)
