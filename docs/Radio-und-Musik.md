@@ -91,7 +91,7 @@ Fehlt das Ordnerbild oder ist es zu groß, beschädigt oder nicht ladbar, versuc
 
 | Eigenschaft | Grenze oder Verhalten |
 | --- | --- |
-| Bildgröße | Höchstens 1.000.000 Bytes pro Bilddatei oder eingebettetem Cover. Die Größe der gesamten Musikdatei ist dafür unerheblich. |
+| Bildgröße | Höchstens 1 MB pro Bilddatei oder eingebettetem Cover. Die Größe der gesamten Musikdatei ist dafür unerheblich. |
 | JPEG | Keine feste Pixelobergrenze. Große Bilder werden bei Bedarf auf 1/2, 1/4 oder 1/8 verkleinert. Sehr große Abmessungen können das Laden dennoch verlangsamen oder verhindern. |
 | Eingebettetes PNG | Höchstens 500 x 500 Pixel. |
 | Darstellung | 230 x 220 Pixel, ohne Verzerrung skaliert, überstehende Ränder werden mittig beschnitten. |
