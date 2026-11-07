@@ -159,6 +159,14 @@ public:
     void setTextColor(const T &clr) { m_textcolor = clr; }
 
     /**
+     * @brief Schaltet den Hintergrund der Beschriftung aus oder ein
+     * @param transparent true für transparente Beschriftung, false für die Button-Füllfarbe als Texthintergrund
+     *
+     * Standardmäßig ist die Beschriftung deckend. Rahmen und Button-Fläche werden weiterhin vor der Beschriftung vollständig gezeichnet. Icons und Zahlenkreise sind von dieser Einstellung unabhängig.
+     */
+    void setLabelTransparent(bool transparent) { m_labelTransparent = transparent; }
+
+    /**
      * @brief Lenkt alle Zeichenoperationen in ein Sprite um
      * @param target Sprite-Zeichenziel (PSRAM-Sprite). nullptr = wie clearDrawTarget()
      * @param spriteOriginX X-Position, an der das Sprite später auf dem Display gepusht wird
@@ -389,6 +397,7 @@ private:
     uint16_t m_outlinecolor = TFT_LIGHTGREY; ///< Rahmenfarbe
     uint16_t m_fillcolor = TFT_BLUE;         ///< Füllfarbe
     uint16_t m_textcolor = TFT_WHITE;        ///< Textfarbe
+    bool m_labelTransparent = false;        ///< Beschriftung ohne zusätzlichen Texthintergrund
     uint8_t m_textdatum = MC_DATUM;          ///< Text-Ausrichtung
     static constexpr size_t label_length = 30;
     char m_label[label_length + 1];                ///< Button-Text

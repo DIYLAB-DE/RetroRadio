@@ -803,7 +803,7 @@ void WorkshopTool_RcFilter::drawChipSelector()
         }
 
         spr->setTextDatum(MC_DATUM);
-        spr->setTextColor(fg, bg);
+        spr->setTextColor(fg);
         spr->drawString(CHIP_LABELS[i], ox + r.x + r.w / 2, oy + r.y + r.h / 2);
     }
 

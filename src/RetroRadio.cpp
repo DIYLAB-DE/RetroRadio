@@ -1140,7 +1140,8 @@ bool RetroRadio::setStation(uint8_t id)
     if (id >= m_stationCounter)
         return false;
 
-    if (m_handCounter == -1 || m_stationList[id].lastPos < 0 || m_stationList[id].lastPos > 794)
+    const bool redrawNeedle = m_handCounter == -1 || m_stationList[id].lastPos < 0 || m_stationList[id].lastPos > 794;
+    if (redrawNeedle)
     {
         if (m_stationList[id].lastPos < 0 || m_stationList[id].lastPos > 794)
             m_stationList[id].lastPos = m_stationList[id].x;
@@ -1150,18 +1151,21 @@ bool RetroRadio::setStation(uint8_t id)
         m_lastMoveTime = 0;
     }
 
-    if (m_handCounter == m_stationList[id].x)
+    const bool atTarget = m_handCounter == m_stationList[id].x;
+    if (atTarget)
     {
         m_stationList[id].lastPos = m_handCounter;
-        return true;
+        if (!redrawNeedle)
+            return true;
     }
 
     unsigned long currentTime = millis();
     float timePerPixel = 1000.0f / 166.60f;
 
-    if (currentTime - m_lastMoveTime >= timePerPixel)
+    if (redrawNeedle || currentTime - m_lastMoveTime >= timePerPixel)
     {
-        m_handCounter += (m_handCounter < m_stationList[id].x) ? 1 : -1;
+        if (!atTarget)
+            m_handCounter += (m_handCounter < m_stationList[id].x) ? 1 : -1;
 
         if (m_handCounter < 0 || m_handCounter > (RRConfig::Display::WIDTH - RRLayout::Scale::NEEDLE_WIDTH))
             return false;
@@ -1176,7 +1180,7 @@ bool RetroRadio::setStation(uint8_t id)
         m_lastMoveTime = currentTime;
     }
 
-    return false;
+    return atTarget;
 }
 
 /**

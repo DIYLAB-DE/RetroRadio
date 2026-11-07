@@ -36,9 +36,9 @@ Eine besondere Herausforderung waren die wenigen noch freien Ein- und Ausgänge 
 
 Das Internetradio zeigt die Sender auf einer nachgebildeten Analogskala mit beweglichem Zeiger. Senderspeicher erleichtern die Auswahl der Lieblingssender. Verschiedene magische Augen und Visualisierungen begleiten die Wiedergabe. Lautstärke, Balance und Klang lassen sich am Gerät einstellen.
 
-Der SD-Player spielt Musik von der eingelegten Karte. Ordnerauswahl, Playlist, Coveranzeige und die Kassettenansicht gehören zur Bedienoberfläche. Die Lautsprecher können in den Klangeinstellungen abgeschaltet werden, der Line-Out bleibt dabei aktiv.
+Der SD-Player spielt Musik von der eingelegten Karte. Ordnerauswahl, Playlist mit Titel- und Listenwiederholung, Coveranzeige und die Kassettenansicht mit Listenfortschritt gehören zur Bedienoberfläche. Die Lautsprecher können in den Klangeinstellungen abgeschaltet werden, der Line-Out bleibt dabei aktiv.
 
-Über die Weboberfläche im lokalen Netzwerk lassen sich das Radio bedienen, Sender pflegen und Einstellungen bearbeiten. Zur Dateiübertragung auf die SD-Karte steht auch FTP zur Verfügung.
+Über die Weboberfläche im lokalen Netzwerk lassen sich das Radio bedienen, Sender pflegen und sortieren sowie Einstellungen bearbeiten. Zur Dateiübertragung auf die SD-Karte steht auch FTP zur Verfügung.
 
 | Radio | SD-Player | Werkstatt |
 | --- | --- | --- |

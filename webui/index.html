@@ -583,8 +583,12 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     section .headlines span {
       margin-left: 8px;
       font-family: Arial, sans-serif;
-      font-size: 28px;
+      font-size: inherit;
       color: var(--headline-light);
+    }
+
+    section .headlines h2 > span:first-child {
+      color: var(--headline-dark);
     }
 
     svg.bigTriangleColor {
@@ -1197,12 +1201,9 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       color: var(--danger-color);
     }
 
-    /* Header-Zeile mit inline-Status (z.B. Ort: Überschrift + Geocode-Ergebnis nebeneinander).
-       h4 und small als inline-block: die Zeilenhöhe wird vom h4 (14 px) dominiert,
-       der kleinere small (13 px) erweitert sie nicht, deshalb bleibt der Abstand
-       zum Input-Feld identisch zu Items ohne Status. */
     .settings-item-head {
       margin-bottom: var(--settings-label-gap);
+      font-size: 14px;
     }
 
     .settings-item-head h4 {
@@ -1214,6 +1215,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
 
     .settings-item-head small {
       display: inline-block;
+      font-size: 13px;
       vertical-align: baseline;
     }
 
@@ -1608,6 +1610,178 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       min-width: 100px;
     }
 
+    /* Sender sortieren */
+    .station-sort-dialog {
+      margin: auto;
+      padding: 0;
+      width: min(560px, calc(100vw - 32px));
+      max-width: none;
+      height: 720px;
+      max-height: 90vh;
+      max-height: calc(100dvh - 32px);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--card-bg);
+      color: var(--text-color);
+      overflow: hidden;
+    }
+
+    .station-sort-dialog[open] {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .station-sort-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .station-sort-header, .station-sort-footer {
+      padding: 16px;
+      flex-shrink: 0;
+    }
+
+    .station-sort-header h3 {
+      margin-bottom: 8px;
+      color: var(--navbar-color);
+    }
+
+    .station-sort-header p, .station-sort-target p {
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .station-sort-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      border-top: 1px solid var(--border-color);
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+
+    .station-sort-footer .btn {
+      min-height: 48px;
+    }
+
+    .station-sort-list, .station-sort-target {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 0 12px;
+    }
+
+    .station-sort-dialog [hidden] {
+      display: none !important;
+    }
+
+    .station-sort-list {
+      scroll-behavior: auto;
+    }
+
+    .station-sort-row {
+      display: flex;
+      align-items: stretch;
+      min-height: 60px;
+      border-bottom: 1px solid var(--border-color);
+      border-radius: 5px;
+      background: var(--card-bg);
+    }
+
+    .station-sort-name, .station-sort-handle {
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .station-sort-name {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .station-sort-number {
+      min-width: 24px;
+      font-size: 13px;
+      color: var(--section-text-color);
+    }
+
+    .station-sort-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14px;
+    }
+
+    .station-sort-handle {
+      flex: 0 0 48px;
+      min-height: 48px;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .station-sort-grip {
+      display: inline-block;
+      width: 16px;
+      height: 24px;
+      background: radial-gradient(circle, currentColor 1.5px, transparent 2px) 0 0 / 8px 8px;
+      pointer-events: none;
+    }
+
+    .station-sort-row:focus-within {
+      outline: 2px solid var(--navbar-color);
+      outline-offset: -2px;
+    }
+
+    .station-sort-row.sort-source {
+      opacity: 0.35;
+    }
+
+    .station-sort-row.sort-before {
+      box-shadow: inset 0 3px var(--navbar-color);
+    }
+
+    .station-sort-row.sort-after {
+      box-shadow: inset 0 -3px var(--navbar-color);
+    }
+
+    .station-sort-ghost {
+      position: fixed;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.95;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      outline: 2px solid var(--navbar-color);
+    }
+
+    .station-sort-target {
+      padding: 16px;
+    }
+
+    .station-sort-target input {
+      margin: 12px 0;
+      min-height: 48px;
+      font-size: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .station-sort-dialog {
+        width: calc(100vw - 16px);
+        height: calc(100vh - 16px);
+        height: calc(100dvh - 16px);
+        max-height: calc(100dvh - 16px);
+      }
+    }
+
     /* Screenshot */
     .screenshot-section {
       width: 100%;
@@ -1705,6 +1879,13 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
 
     /* Responsive: Allgemein */
     @media screen and (max-width: 768px) {
+      section .headlines h2 {
+        max-width: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+        font-size: clamp(20px, 4.5vw, 28px);
+      }
+
       .navbar #btnHamburger {
         display: block;
       }
@@ -1809,29 +1990,6 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 
-    .now-playing::before {
-      content: "";
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
-      animation: shimmer 3s ease-in-out infinite;
-    }
-
-    @keyframes shimmer {
-
-      0%,
-      100% {
-        transform: translate(0, 0);
-      }
-
-      50% {
-        transform: translate(10%, 10%);
-      }
-    }
-
     .now-playing-content {
       position: relative;
       z-index: 1;
@@ -1881,10 +2039,6 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     .now-playing-inactive {
       background: var(--input-bg);
       color: var(--section-text-color);
-    }
-
-    .now-playing-inactive::before {
-      display: none;
     }
 
     .now-playing-inactive .now-playing-label::before {
@@ -2428,7 +2582,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       display: flex;
       flex-direction: row;
       gap: 12px;
-      align-items: center;
+      align-items: stretch;
       justify-content: center;
       align-self: center;
     }
@@ -2525,13 +2679,13 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     .knob-mute-btn {
-      width: 44px;
-      height: 44px;
+      width: 54px;
+      height: 54px;
       border: 2px solid var(--border-color);
       border-radius: 50%;
       background: var(--card-bg);
       color: var(--text-color);
-      font-size: 18px;
+      font-size: 20px;
       cursor: pointer;
       transition: all 0.2s ease;
       display: flex;
@@ -2559,20 +2713,38 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     .knob-round-group {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 0;
+      transform: translateX(15px);
     }
 
     .knob-pill-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
       width: 100px;
       height: 28px;
+      flex-shrink: 0;
       border: 2px solid var(--border-color);
-      border-radius: 14px;
+      border-radius: 6px;
       background: var(--card-bg);
       color: var(--section-text-color);
-      font-size: 11px;
+      font-size: 14px;
       cursor: pointer;
       transition: all 0.2s ease;
       opacity: 0.5;
+    }
+
+    .knob-pill-btn span {
+      font-size: 16px;
+    }
+
+    .knob-pill-btn svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
     }
 
     .knob-pill-btn:hover {
@@ -2678,7 +2850,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     /* Responsive: Mobilgeräte */
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
       .retro-controls {
         flex-direction: column;
         align-items: center;
@@ -3250,7 +3422,11 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
             <!-- Steuer-Buttons -->
             <div class="knob-buttons">
               <div class="knob-pill-group">
-                <button id="btnStationReset" class="knob-pill-btn" title="Senderliste auf Werkseinstellungen" data-i18n-title="remote.stationFactoryReset">🗘
+                <button id="btnStationSort" class="knob-pill-btn" title="Sender sortieren" data-i18n-title="station.sortTitle">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16m-4-4 4 4 4-4M17 20V4m-4 4 4-4 4 4" /></svg>
+                  <span data-i18n="station.sortButton">Sortieren</span></button>
+                <button id="btnStationReset" class="knob-pill-btn" title="Senderliste auf Werkseinstellungen" data-i18n-title="remote.stationFactoryReset">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10a9 9 0 1 1 2 8M3 4v6h6" /></svg>
                   <span data-i18n="remote.reset">Reset</span></button>
                 <button id="btnStationBackup" class="knob-pill-btn" title="Senderliste als Datei sichern" data-i18n-title="remote.stationBackupTitle">💾
                   <span data-i18n="remote.stationBackup">Sichern</span></button>
@@ -3260,8 +3436,12 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
               </div>
               <div class="knob-round-group">
                 <div class="knob-buttons-row">
-                  <button id="stationPrevBtn" class="knob-mute-btn" title="Vorheriger Sender" data-i18n-title="remote.previousStation">◀</button>
-                  <button id="stationNextBtn" class="knob-mute-btn" title="Nächster Sender" data-i18n-title="remote.nextStation">▶</button>
+                  <button id="stationPrevBtn" class="knob-mute-btn" title="Vorheriger Sender" data-i18n-title="remote.previousStation">
+                    <svg viewBox="0 0 20 20" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M14 2 2 10 14 18Z" /></svg>
+                  </button>
+                  <button id="stationNextBtn" class="knob-mute-btn" title="Nächster Sender" data-i18n-title="remote.nextStation">
+                    <svg viewBox="0 0 20 20" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M6 2 18 10 6 18Z" /></svg>
+                  </button>
                 </div>
                 <div class="knob-buttons-row">
                   <button id="knobMuteBtn" class="knob-mute-btn" title="Stummschalten" data-i18n-title="remote.mute">🔊</button>
@@ -3652,8 +3832,8 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
             <option value="theme-nordisch" data-i18n="theme.nordic">Nordisch Blau</option>
           </select>
         </div>
-        <p class="footer-right">©<span id="CopyrightYear">2025</span> <a href="https://burda-audio.de" target="_blank"
-            rel="noopener">BurdaAudio</a></p>
+        <p class="footer-right">©<span id="CopyrightYear">2026</span> <a href="https://github.com/DIYLAB-DE/RetroRadio" target="_blank"
+            rel="noopener">DIYLAB</a></p>
       </div>
     </footer>
     <!-- // Footer -->
@@ -3678,6 +3858,30 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         <button type="submit" id="pinSubmit" class="btn"></button>
       </div>
     </form>
+  </dialog>
+
+  <!-- Sortierreihenfolge bleibt bis zum Speichern im Dialog. -->
+  <dialog id="stationSortDialog" class="station-sort-dialog" aria-labelledby="stationSortTitle" aria-describedby="stationSortHint">
+    <div class="station-sort-header">
+      <h3 id="stationSortTitle" data-i18n="station.sortTitle">Sender sortieren</h3>
+      <p id="stationSortHint" data-i18n="station.sortHint">Am Griff ziehen oder Sender antippen, um einen Zielplatz zu wählen. Erst Speichern übernimmt die Reihenfolge.</p>
+      <p id="stationSortStatus" role="status" aria-live="polite"></p>
+    </div>
+    <div id="stationSortList" class="station-sort-list" role="list"></div>
+    <form id="stationSortTarget" class="station-sort-target" hidden>
+      <div class="modal-field">
+        <label id="stationSortTargetLabel" for="stationSortPosition"></label>
+        <input id="stationSortPosition" class="settings-input" type="number" min="1" max="70" step="1" inputmode="numeric" enterkeyhint="done" required aria-describedby="stationSortDestination">
+        <p id="stationSortDestination"></p>
+      </div>
+      <p data-i18n="station.sortShiftHint">Die Einträge dazwischen rücken nach. Es wird kein Sender überschrieben.</p>
+    </form>
+    <div class="station-sort-footer">
+      <button id="btnStationSortCancel" type="button" class="btn btn-secondary" data-i18n="core.cancel">Abbrechen</button>
+      <button id="btnStationSortSave" type="button" class="btn" data-i18n="core.save">Speichern</button>
+      <button id="btnStationSortBack" type="button" class="btn btn-secondary" data-i18n="station.sortBack" hidden>Zurück</button>
+      <button id="btnStationSortApply" type="submit" form="stationSortTarget" class="btn" data-i18n="station.sortApply" hidden>Übernehmen</button>
+    </div>
   </dialog>
 
   <!-- Sender-Modal -->
@@ -3752,7 +3956,11 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'status.ntp.localWeek': 'lokal KW:',
         'status.ntp.lastSync': 'l.Sync:',
         'status.ntp.interval': 'Interv.:',
-        'status.value.bytesFree': 'Bytes frei',
+        'status.ntp.dstActive': 'aktiv',
+        'status.ntp.dstInactive': 'inaktiv',
+        'status.ntp.dayWeekValue': '{0}. Tag im Jahr, KW {1}',
+        'status.ntp.lastSyncValue': '{0} Uhr',
+        'status.value.fragmented': 'fragm.',
         'status.value.kbFree': 'KB frei',
         'status.uptime.d': 'T',
         'status.uptime.h': 'Std',
@@ -3864,6 +4072,20 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'theme.rose': 'Altrosa',
         'theme.orange': 'Retro Orange',
         'theme.nordic': 'Nordisch Blau',
+        'station.sortButton': 'Sortieren',
+        'station.sortTitle': 'Sender sortieren',
+        'station.sortHint': 'Am Griff ziehen oder Sender antippen, um einen Zielplatz zu wählen. Erst Speichern übernimmt die Reihenfolge.',
+        'station.sortShiftHint': 'Die Einträge dazwischen rücken nach. Es wird kein Sender überschrieben.',
+        'station.sortEmpty': 'Freier Platz',
+        'station.sortHandle': '{0} verschieben',
+        'station.sortTarget': '„{0}“ auf Platz verschieben:',
+        'station.sortDestination': 'Bisher auf Platz {0}: {1}',
+        'station.sortRange': 'Bitte einen Platz von 1 bis {0} wählen.',
+        'station.sortMoved': '„{0}“ ist jetzt auf Platz {1}. Noch nicht gespeichert.',
+        'station.sortConflict': 'Die Senderliste wurde inzwischen geändert. Bitte den Dialog schließen und erneut öffnen.',
+        'station.sortSaving': 'Reihenfolge wird gespeichert...',
+        'station.sortBack': 'Zurück',
+        'station.sortApply': 'Übernehmen',
         'station.editTitle': 'Sender bearbeiten',
         'station.shortName': 'Kurzname (für Skala)',
         'station.shortNamePlaceholder': 'z.B. RADIOEINS',
@@ -4023,7 +4245,11 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'status.ntp.localWeek': 'local week:',
         'status.ntp.lastSync': 'last sync:',
         'status.ntp.interval': 'interval:',
-        'status.value.bytesFree': 'bytes free',
+        'status.ntp.dstActive': 'active',
+        'status.ntp.dstInactive': 'inactive',
+        'status.ntp.dayWeekValue': 'Day {0} of year, week {1}',
+        'status.ntp.lastSyncValue': '{0}',
+        'status.value.fragmented': 'frag.',
         'status.value.kbFree': 'KB free',
         'status.uptime.d': 'd',
         'status.uptime.h': 'h',
@@ -4135,6 +4361,20 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'theme.rose': 'Dusky rose',
         'theme.orange': 'Retro orange',
         'theme.nordic': 'Nordic blue',
+        'station.sortButton': 'Sort',
+        'station.sortTitle': 'Sort stations',
+        'station.sortHint': 'Drag a handle or tap a station to choose its destination. The order is only applied when you save.',
+        'station.sortShiftHint': 'The entries in between move along. No station will be overwritten.',
+        'station.sortEmpty': 'Empty slot',
+        'station.sortHandle': 'Move {0}',
+        'station.sortTarget': 'Move "{0}" to position:',
+        'station.sortDestination': 'Currently at position {0}: {1}',
+        'station.sortRange': 'Please choose a position from 1 to {0}.',
+        'station.sortMoved': '"{0}" is now at position {1}. Not saved yet.',
+        'station.sortConflict': 'The station list has changed in the meantime. Please close and reopen this dialog.',
+        'station.sortSaving': 'Saving order...',
+        'station.sortBack': 'Back',
+        'station.sortApply': 'Apply',
         'station.editTitle': 'Edit station',
         'station.shortName': 'Short name (for scale)',
         'station.shortNamePlaceholder': 'e.g. RADIOEINS',
@@ -4383,11 +4623,32 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       });
     }
 
-    let statsCache = { heapFree: null, psramFree: null, psramTotal: null, uptimeSeconds: null, reconnects: null };
+    let statsCache = { heapFree: null, heapFragmentation: null, psramFree: null, psramTotal: null, uptimeSeconds: null, reconnects: null, ntpDst: null, ntpDayKW: null, ntpLastSync: null };
 
     function renderLocalizedStats() {
-      if (statsCache.heapFree !== null)
-        setTextContent('heap', statsCache.heapFree + ' ' + t('status.value.bytesFree'));
+      // NTP-Werte kommen als formatierte deutsche Texte vom Gerät.
+      if (statsCache.ntpDst !== null) {
+        const value = statsCache.ntpDst.replace(/^(aktiv|inaktiv)(?=,)/,
+          state => t(state === 'aktiv' ? 'status.ntp.dstActive' : 'status.ntp.dstInactive'));
+        setTextContent('ntpDst', value);
+      }
+      if (statsCache.ntpDayKW !== null) {
+        const value = statsCache.ntpDayKW.replace(/^(\d+)\.\s*Tag im Jahr,\s*KW\s*(\d+)$/,
+          (_, day, week) => tf('status.ntp.dayWeekValue', day, week));
+        setTextContent('ntpDayKW', value);
+      }
+      if (statsCache.ntpLastSync !== null) {
+        const value = statsCache.ntpLastSync.replace(/^(.*) Uhr$/,
+          (_, dateTime) => tf('status.ntp.lastSyncValue', dateTime));
+        setTextContent('ntpLastSync', value);
+      }
+      if (statsCache.heapFree !== null) {
+        const kb = Math.floor(statsCache.heapFree / 1024);
+        const fragmentation = statsCache.heapFragmentation !== null
+          ? ' (' + statsCache.heapFragmentation + '% ' + t('status.value.fragmented') + ')'
+          : '';
+        setTextContent('heap', kb + ' ' + t('status.value.kbFree') + fragmentation);
+      }
       if (statsCache.psramFree !== null && statsCache.psramTotal) {
         const kb = Math.floor(statsCache.psramFree / 1024);
         const pct = Math.floor(statsCache.psramFree * 100 / statsCache.psramTotal);
@@ -4417,9 +4678,9 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         setTextContent('ntpServer', data.ntp.server);
         setTextContent('ntpRegion', data.ntp.region);
         setTextContent('ntpZone', data.ntp.zone);
-        setTextContent('ntpDst', data.ntp.dst);
-        setTextContent('ntpDayKW', data.ntp.dayKW);
-        setTextContent('ntpLastSync', data.ntp.lastSync);
+        if (data.ntp.dst !== undefined) statsCache.ntpDst = data.ntp.dst;
+        if (data.ntp.dayKW !== undefined) statsCache.ntpDayKW = data.ntp.dayKW;
+        if (data.ntp.lastSync !== undefined) statsCache.ntpLastSync = data.ntp.lastSync;
         setTextContent('ntpInterval', data.ntp.interval);
       }
       if (data.system) {
@@ -4429,6 +4690,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         setTextContent('fwVersion', data.system.firmware);
         setTextContent('uart', data.system.uart);
         if (data.system.heapFree !== undefined) statsCache.heapFree = data.system.heapFree;
+        if (data.system.heapFragmentation !== undefined) statsCache.heapFragmentation = data.system.heapFragmentation;
         if (data.system.psramFree !== undefined) statsCache.psramFree = data.system.psramFree;
         if (data.system.psramTotal !== undefined) statsCache.psramTotal = data.system.psramTotal;
         if (data.system.uptimeSeconds !== undefined) statsCache.uptimeSeconds = data.system.uptimeSeconds;
@@ -5473,7 +5735,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
             timezoneStr: selectedTimezone.posix,
             syncIntervalMs: selectedSyncInterval,
             newsRegion: selectedNewsRegion,
-            ressort: selectedRessort || undefined,
+            ressort: selectedRessort,
             plz:  locationResolved ? plz : undefined,
             city: locationResolved ? city || undefined : undefined,
             lat:  locationResolved ? resolvedLat : undefined,
@@ -5678,18 +5940,27 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     // Senderliste auf ESP speichern und UI aktualisieren; liefert true, wenn das Gerät gespeichert hat
-    async function saveAndRefresh() {
+    async function saveAndRefresh(stations = allStationsRemote, order = null) {
       try {
         const response = await fetch('/api/stations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(allStationsRemote)
+          body: JSON.stringify(order ? { stations, order } : stations)
         });
 
+        if (response.status === 409) {
+          alert(t('station.sortConflict'));
+          return false;
+        }
         if (!response.ok) throw new Error('Speichern fehlgeschlagen');
+
+        const result = await response.json();
+        allStationsRemote = stations;
+        if (order && Number.isInteger(result.stationId)) remoteState.stationId = result.stationId;
 
         // ScaleWidget und Presets aktualisieren
         ScaleWidget.updateStations(allStationsRemote);
+        if (order) ScaleWidget.setStation(remoteState.stationId);
         loadPresets();
         return true;
       } catch (error) {
@@ -5698,6 +5969,266 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         return false;
       }
     }
+
+    // Sender sortieren
+    const StationSort = (() => {
+      const dialog = document.getElementById('stationSortDialog');
+      const list = document.getElementById('stationSortList');
+      const targetForm = document.getElementById('stationSortTarget');
+      const positionInput = document.getElementById('stationSortPosition');
+      const status = document.getElementById('stationSortStatus');
+      const saveButton = document.getElementById('btnStationSortSave');
+      const cancelButton = document.getElementById('btnStationSortCancel');
+      const backButton = document.getElementById('btnStationSortBack');
+      const applyButton = document.getElementById('btnStationSortApply');
+      const DRAG_THRESHOLD = 8; // Mindestbewegung in Bildpunkten
+      const SCROLL_EDGE = 72; // Randbereich für automatisches Scrollen
+      const SCROLL_SPEED = 960; // Maximale Bildpunkte pro Sekunde
+      let entries = [], selected = -1, saving = false, drag = null;
+      let previousOverflow = '', suppressClickUntil = 0, listScrollTop = 0;
+
+      /** @brief Liefert den Namen eines Senders oder die Beschriftung eines freien Platzes. */
+      function entryName(index) {
+        return entries[index].station.name || t('station.sortEmpty');
+      }
+
+      /** @brief Zeichnet die lokale Reihenfolge ohne Änderungen am Gerät. */
+      function renderList(focusIndex = -1) {
+        const scrollTop = list.scrollTop;
+        list.replaceChildren();
+        entries.forEach((entry, index) => {
+          const row = document.createElement('div');
+          row.className = 'station-sort-row';
+          row.dataset.index = index;
+          row.setAttribute('role', 'listitem');
+          const nameButton = document.createElement('button');
+          nameButton.type = 'button';
+          nameButton.className = 'station-sort-name';
+          nameButton.setAttribute('aria-label', tf('station.sortHandle', entryName(index)));
+          const number = document.createElement('span');
+          number.className = 'station-sort-number';
+          number.textContent = String(index + 1).padStart(2, '0');
+          const name = document.createElement('span');
+          name.className = 'station-sort-label';
+          name.textContent = entryName(index);
+          nameButton.append(number, name);
+          const handle = document.createElement('button');
+          handle.type = 'button';
+          handle.className = 'station-sort-handle';
+          handle.setAttribute('aria-label', tf('station.sortHandle', entryName(index)));
+          handle.innerHTML = '<span class="station-sort-grip" aria-hidden="true"></span>';
+          row.append(nameButton, handle);
+          list.append(row);
+        });
+        list.scrollTop = scrollTop;
+        saveButton.disabled = saving || entries.every((entry, index) => entry.source === index);
+        if (focusIndex >= 0) {
+          const row = list.children[focusIndex];
+          row.querySelector('button').focus({ preventScroll: true });
+          row.scrollIntoView({ block: 'nearest' });
+        }
+      }
+
+      /** @brief Öffnet eine frische Kopie der gespeicherten Senderliste. */
+      async function open() {
+        const opener = document.getElementById('btnStationSort');
+        if (opener.disabled || dialog.open || saving || LockUI.isLocked()) return;
+        opener.disabled = true;
+        try {
+          const response = await fetch('/api/stations');
+          if (!response.ok) throw new Error('Senderliste nicht verfügbar');
+          const stations = await response.json();
+          if (!Array.isArray(stations) || stations.length !== 70) throw new Error('Ungültige Senderliste');
+          if (LockUI.isLocked()) return;
+          entries = stations.map((station, source) => ({ station, source }));
+          selected = -1;
+          status.textContent = '';
+          showList();
+          renderList();
+          previousOverflow = document.body.style.overflow;
+          document.body.style.overflow = 'hidden';
+          dialog.showModal();
+          list.scrollTop = 0;
+        } catch (error) {
+          alert(t('js.stationBackupError'));
+        } finally {
+          opener.disabled = false;
+        }
+      }
+
+      /** @brief Verschiebt einen Eintrag und erhält die Reihenfolge aller anderen Einträge. */
+      function move(from, to) {
+        if (from === to) return;
+        const [entry] = entries.splice(from, 1);
+        entries.splice(to, 0, entry);
+        status.textContent = tf('station.sortMoved', entryName(to), to + 1);
+      }
+
+      /** @brief Zeigt die Liste und ihre gemeinsamen Abschlussaktionen. */
+      function showList(focusIndex = -1) {
+        targetForm.hidden = true;
+        list.hidden = false;
+        backButton.hidden = applyButton.hidden = true;
+        cancelButton.hidden = saveButton.hidden = false;
+        selected = -1;
+        list.scrollTop = listScrollTop;
+        if (focusIndex >= 0) renderList(focusIndex);
+      }
+
+      /** @brief Zeigt die Zielplatzwahl innerhalb desselben Dialogs. */
+      function selectTarget(index) {
+        if (saving || drag) return;
+        selected = index;
+        listScrollTop = list.scrollTop;
+        list.hidden = true;
+        targetForm.hidden = false;
+        cancelButton.hidden = saveButton.hidden = true;
+        backButton.hidden = applyButton.hidden = false;
+        document.getElementById('stationSortTargetLabel').textContent = tf('station.sortTarget', entryName(index));
+        positionInput.max = entries.length;
+        positionInput.value = index + 1;
+        updateDestination();
+        positionInput.focus();
+        positionInput.select();
+      }
+
+      /** @brief Zeigt den bisherigen Inhalt des gewählten Zielplatzes. */
+      function updateDestination() {
+        const position = positionInput.valueAsNumber;
+        const valid = Number.isInteger(position) && position >= 1 && position <= entries.length;
+        applyButton.disabled = !valid;
+        document.getElementById('stationSortDestination').textContent = valid
+          ? tf('station.sortDestination', position, entryName(position - 1))
+          : tf('station.sortRange', entries.length);
+      }
+
+      /** @brief Bewegt die Vorschau und scrollt die Liste am Rand während des Ziehens. */
+      function updateDrag(time) {
+        if (!drag || !drag.ghost) return;
+        const bounds = list.getBoundingClientRect();
+        const elapsed = Math.min(time - drag.lastTime, 32) / 1000;
+        drag.lastTime = time;
+        const edge = Math.min(SCROLL_EDGE, bounds.height / 3);
+        const speed = drag.y < bounds.top + edge
+          ? -Math.min(1, (bounds.top + edge - drag.y) / edge)
+          : Math.max(0, Math.min(1, (drag.y - bounds.bottom + edge) / edge));
+        list.scrollTop += speed * SCROLL_SPEED * elapsed;
+        drag.ghost.style.top = Math.max(bounds.top, Math.min(bounds.bottom - drag.height, drag.y - drag.offsetY)) + 'px';
+        let boundary = entries.length;
+        Array.from(list.children).forEach((row, index) => {
+          row.classList.remove('sort-before', 'sort-after');
+          const rect = row.getBoundingClientRect();
+          if (boundary === entries.length && drag.y < rect.top + rect.height / 2) boundary = index;
+        });
+        const marker = list.children[Math.min(boundary, entries.length - 1)];
+        marker.classList.add(boundary === entries.length ? 'sort-after' : 'sort-before');
+        drag.to = boundary > drag.from ? boundary - 1 : boundary;
+        drag.frame = requestAnimationFrame(updateDrag);
+      }
+
+      /** @brief Beendet das Ziehen und übernimmt bei Bedarf die markierte Position. */
+      function finishDrag(apply) {
+        if (!drag) return;
+        const finished = drag;
+        drag = null;
+        cancelAnimationFrame(finished.frame);
+        if (finished.handle.hasPointerCapture(finished.pointerId)) finished.handle.releasePointerCapture(finished.pointerId);
+        if (finished.ghost) {
+          finished.ghost.remove();
+          suppressClickUntil = performance.now() + 300;
+          if (apply) move(finished.from, finished.to);
+          renderList(apply ? finished.to : finished.from);
+        }
+      }
+
+      list.addEventListener('pointerdown', event => {
+        const handle = event.target.closest('.station-sort-handle');
+        if (!handle || saving || drag || !event.isPrimary || event.button !== 0) return;
+        const row = handle.closest('.station-sort-row');
+        const rect = row.getBoundingClientRect();
+        drag = { from: Number(row.dataset.index), to: Number(row.dataset.index), pointerId: event.pointerId,
+          startY: event.clientY, y: event.clientY, offsetY: event.clientY - rect.top, height: rect.height,
+          row, handle, ghost: null, frame: 0, lastTime: performance.now() };
+        handle.setPointerCapture(event.pointerId);
+      });
+
+      list.addEventListener('pointermove', event => {
+        if (!drag || event.pointerId !== drag.pointerId) return;
+        drag.y = event.clientY;
+        if (!drag.ghost && Math.abs(drag.y - drag.startY) >= DRAG_THRESHOLD) {
+          const rect = drag.row.getBoundingClientRect();
+          drag.ghost = drag.row.cloneNode(true);
+          drag.ghost.className = 'station-sort-row station-sort-ghost';
+          drag.ghost.setAttribute('aria-hidden', 'true');
+          drag.ghost.inert = true;
+          drag.ghost.style.width = rect.width + 'px';
+          drag.ghost.style.left = rect.left + 'px';
+          dialog.append(drag.ghost);
+          drag.row.classList.add('sort-source');
+          drag.lastTime = performance.now();
+          updateDrag(drag.lastTime);
+        }
+      });
+
+      list.addEventListener('pointerup', event => {
+        if (!drag || event.pointerId !== drag.pointerId) return;
+        if (drag.ghost) {
+          cancelAnimationFrame(drag.frame);
+          drag.y = event.clientY;
+          updateDrag(performance.now());
+        }
+        finishDrag(true);
+      });
+      list.addEventListener('pointercancel', event => {
+        if (drag && event.pointerId === drag.pointerId) finishDrag(false);
+      });
+      list.addEventListener('lostpointercapture', event => {
+        if (drag && event.pointerId === drag.pointerId) finishDrag(false);
+      });
+      list.addEventListener('click', event => {
+        if (performance.now() < suppressClickUntil) return;
+        const row = event.target.closest('.station-sort-row');
+        if (row) selectTarget(Number(row.dataset.index));
+      });
+      positionInput.addEventListener('input', updateDestination);
+      backButton.addEventListener('click', () => showList(selected));
+      targetForm.addEventListener('submit', event => {
+        event.preventDefault();
+        if (selected < 0 || !targetForm.reportValidity()) return;
+        const to = positionInput.valueAsNumber - 1;
+        move(selected, to);
+        showList(to);
+      });
+      cancelButton.addEventListener('click', () => { if (!saving) dialog.close(); });
+      dialog.addEventListener('cancel', event => {
+        if (saving || drag || selected >= 0) {
+          event.preventDefault();
+          if (drag) finishDrag(false);
+          else if (!saving && selected >= 0) showList(selected);
+        }
+      });
+      dialog.addEventListener('close', () => {
+        finishDrag(false);
+        entries = [];
+        list.replaceChildren();
+        document.body.style.overflow = previousOverflow;
+      });
+      saveButton.addEventListener('click', async () => {
+        if (saving || drag || saveButton.disabled) return;
+        saving = true;
+        list.inert = true;
+        saveButton.disabled = cancelButton.disabled = true;
+        status.textContent = t('station.sortSaving');
+        const saved = await saveAndRefresh(entries.map(entry => entry.station), entries.map(entry => entry.source));
+        saving = false;
+        list.inert = false;
+        saveButton.disabled = cancelButton.disabled = false;
+        if (saved) dialog.close();
+        else status.textContent = t('js.stationSaveError');
+      });
+
+      return { open };
+    })();
 
     // Sendersicherung: eine JSON-Datei mit allen 70 Plätzen, je Platz eine Zeile, damit sie sich im Texteditor bearbeiten lässt
     const STATION_BACKUP_FORMAT = 'RetroRadioTab5-Sender';
@@ -6083,6 +6614,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       let _tooltip, _ttName, _ttPreset, _ttPlay, _ttEdit, _ttDelete;
       let _hoveredIdx = -1, _pinnedIdx = -1;
       let _hideTimeout = null;
+      let _eventsBound = false;
 
       function _calcEyeValue() {
         const VMIN = 35, VMAX = 100, APPROACH = 30, LEAVE = 6;
@@ -6645,6 +7177,8 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       }
 
       function _setupEvents() {
+        if (_eventsBound) return;
+        _eventsBound = true;
         _tooltip = document.getElementById('scaleTooltip');
         _ttName = _tooltip.querySelector('.tt-name');
         _ttPreset = _tooltip.querySelector('.tt-preset');
@@ -6652,19 +7186,12 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         _ttEdit = _tooltip.querySelector('.tt-edit');
         _ttDelete = _tooltip.querySelector('.tt-delete');
 
-        // Canvas-Klick: Tooltip pinnen oder Sender wechseln
+        // Einfachklick öffnet das Aktionsmenü ohne Senderwechsel.
         _canvas.addEventListener('click', e => {
           const c = _canvasCoords(e.clientX, e.clientY);
           const i = _hitTest(c.x, c.y);
           if (i >= 0) {
-            if (_pinnedIdx === i) {
-              _unpinTooltip();
-              if (_stations[i].url) setStation(i, true);
-            } else if (_pinnedIdx >= 0) {
-              _pinTooltip(i);
-            } else {
-              _pinTooltip(i);
-            }
+            _pinTooltip(i);
           } else {
             _unpinTooltip();
           }
@@ -6883,6 +7410,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       });
 
       // Senderliste als Datei sichern und zurückspielen
+      document.getElementById('btnStationSort').addEventListener('click', StationSort.open);
       document.getElementById('btnStationBackup').addEventListener('click', backupStations);
       const stationRestoreInput = document.getElementById('stationRestoreInput');
       document.getElementById('btnStationRestore').addEventListener('click', () => stationRestoreInput.click());
@@ -7621,6 +8149,8 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       function lock() {
         if (enabled === false) return;
         if (pinDialog.open) pinDialog.close();
+        const sortDialog = document.getElementById('stationSortDialog');
+        if (sortDialog.open) sortDialog.close();
         ++lockRevision;
         locked = true;
         setInput('');

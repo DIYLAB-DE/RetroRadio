@@ -4,7 +4,7 @@
 
 38 Werkzeuge in sieben Kategorien. Im linken Menü nach oben oder unten wischen und das gewünschte Werkzeug antippen. Rechts stehen Inhalt und Eingaben, die Tasten am unteren Rand gehören zum gewählten Werkzeug. Die Taste ganz rechts verlässt die Werkstatt.
 
-Die kleinen Vorschaubilder öffnen die vollständigen Screenshots mit 800 x 480 Pixeln. Jede Werkzeugseite erklärt Zweck und Bedienung.
+Die kleinen Vorschaubilder öffnen die vollständigen Screenshots mit 800 x 480 Pixeln. Jede Werkzeugseite erklärt Zweck und Bedienung. Die früheren Website-Links und ihre QR-Code-Tasten in den Werkzeugüberschriften entfallen seit v26.11.7. Ältere Werkzeugaufnahmen können diese Tasten noch zeigen.
 
 ## Werkzeuge
 

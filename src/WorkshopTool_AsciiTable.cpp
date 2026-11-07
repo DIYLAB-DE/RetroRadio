@@ -24,7 +24,7 @@ namespace
     constexpr int CELL_W = 63;    ///< Breite einer Zeichenzelle in Pixeln
     constexpr int HEADER_H = 20;  ///< Höhe der Spalten-Kopfzeile in Pixeln
     constexpr int HEADER_GAP = 2; ///< Abstand zwischen Content-Ursprung und Kopfzeile in Pixeln
-    constexpr int ROW_H = 18;     ///< Höhe einer Datenzeile in Pixeln (18px für Akzentzeichen)
+    constexpr int ROW_H = 18;     ///< Höhe einer Datenzeile einschließlich Trennlinie in Pixeln
     constexpr int INFO_GAP = 0;   ///< Abstand zum Info-Streifen
 
     // X-Positionen der Felder im Info-Streifen (sprite-relativ)
@@ -170,6 +170,42 @@ namespace
             out[i] = ((val >> (7 - i)) & 1) ? '1' : '0';
 
         out[8] = '\0';
+    }
+
+    /**
+     * @brief Passt die mittige Y-Position eines Zeichens von ComfortaaBold14 in Originalgröße an die verfügbare Höhe an.
+     */
+    int fitGlyphY(Gfx_Sprite *spr, uint16_t codepoint, int top, int height)
+    {
+        constexpr size_t VLW_HEADER_BYTES = 24;   ///< Länge des VLW-Kopfes
+        constexpr size_t VLW_GLYPH_BYTES = 28;    ///< Länge eines Zeicheneintrags
+        constexpr size_t GLYPH_HEIGHT_OFFSET = 4; ///< Position der Zeichenhöhe im Eintrag
+        constexpr size_t GLYPH_TOP_OFFSET = 16;   ///< Position der Oberlänge im Eintrag
+
+        int y = top + height / 2;
+        const auto *loadedFont = spr->getFont();
+        if (loadedFont->getType() != lgfx::IFont::ft_vlw)
+            return y;
+
+        const auto *font = static_cast<const lgfx::VLWfont *>(loadedFont);
+        uint16_t glyphIndex = 0;
+        if (!font->getUnicodeIndex(codepoint, &glyphIndex))
+            return y;
+
+        lgfx::PointerWrapper data(ComfortaaBold14);
+        const size_t entry = VLW_HEADER_BYTES + glyphIndex * VLW_GLYPH_BYTES;
+        data.seek(entry + GLYPH_HEIGHT_OFFSET);
+        const int glyphHeight = static_cast<int>(lgfx::getSwap32(data.read32()));
+        data.seek(entry + GLYPH_TOP_OFFSET);
+        const int glyphTop = static_cast<int32_t>(lgfx::getSwap32(data.read32()));
+        const int topOffset = font->maxAscent - font->yAdvance / 2 - glyphTop;
+
+        if (y + topOffset < top)
+            y = top - topOffset;
+        if (y + topOffset + glyphHeight > top + height)
+            y = top + height - topOffset - glyphHeight;
+
+        return y;
     }
 
 } // namespace
@@ -413,7 +449,7 @@ void WorkshopTool_AsciiTable::drawTable(Gfx_Sprite *spr, int ox, int oy, int w, 
     spr->fillRect(ox, tableTop, w, HEADER_H, m_colors.headerBg);
     spr->loadFont(ComfortaaBold14);
     spr->setTextDatum(MC_DATUM);
-    spr->setTextColor(m_colors.headerTx, m_colors.headerBg);
+    spr->setTextColor(m_colors.headerTx);
 
     char hdrBuf[8];
     memset(hdrBuf, 0, sizeof(hdrBuf));
@@ -442,7 +478,7 @@ void WorkshopTool_AsciiTable::drawTable(Gfx_Sprite *spr, int ox, int oy, int w, 
         // Zeilenbeschriftung "+0" bis "+F"
         spr->fillRect(ox, rowY, LABEL_W - 1, ROW_H, m_colors.headerBg);
         spr->setTextDatum(ML_DATUM);
-        spr->setTextColor(m_colors.labelTx, m_colors.headerBg);
+        spr->setTextColor(m_colors.labelTx);
         stringutils::safeFormat(labelBuf, "+%X", row);
         spr->drawString(labelBuf, ox, rowY + ROW_H / 2);
 
@@ -453,7 +489,12 @@ void WorkshopTool_AsciiTable::drawTable(Gfx_Sprite *spr, int ox, int oy, int w, 
             const int cellX = ox + LABEL_W + col * CELL_W;
             const bool sel = (ch == m_selectedChar);
             const int textCx = cellX + CELL_W / 2;
-            const int textCy = rowY + ROW_H / 2;
+            int textCy = rowY + ROW_H / 2;
+            if (ch >= 33 && ch != 127 && ch != 160)
+            {
+                const uint16_t codepoint = (ch >= 128 && ch <= 159) ? WIN1252_MAP[ch - 128] : ch;
+                textCy = fitGlyphY(spr, codepoint, rowY, ROW_H - 1);
+            }
 
             if (sel)
                 spr->fillRect(cellX, rowY, CELL_W, ROW_H, m_colors.selBg);
@@ -465,19 +506,19 @@ void WorkshopTool_AsciiTable::drawTable(Gfx_Sprite *spr, int ox, int oy, int w, 
                 // Standard-Bereich 0-127
                 if (ch == 32)
                 {
-                    spr->setTextColor(sel ? m_colors.selTx : m_colors.ctrlTx, sel ? m_colors.selBg : m_colors.tableBg);
+                    spr->setTextColor(sel ? m_colors.selTx : m_colors.ctrlTx);
                     spr->drawString("SPC", textCx, textCy);
                 }
                 else if (ch < 32 || ch == 127)
                 {
-                    spr->setTextColor(sel ? m_colors.selTx : m_colors.ctrlTx, sel ? m_colors.selBg : m_colors.tableBg);
+                    spr->setTextColor(sel ? m_colors.selTx : m_colors.ctrlTx);
                     spr->drawString(ctrlName(ch), textCx, textCy);
                 }
                 else
                 {
                     cellBuf[0] = static_cast<char>(ch);
                     cellBuf[1] = '\0';
-                    spr->setTextColor(sel ? m_colors.selTx : m_colors.printTx, sel ? m_colors.selBg : m_colors.tableBg);
+                    spr->setTextColor(sel ? m_colors.selTx : m_colors.printTx);
                     spr->drawString(cellBuf, textCx, textCy);
                 }
             }
@@ -491,7 +532,7 @@ void WorkshopTool_AsciiTable::drawTable(Gfx_Sprite *spr, int ox, int oy, int w, 
                     if (cp != 0)
                     {
                         unicodeToUtf8(cp, cellBuf);
-                        spr->setTextColor(sel ? m_colors.selTx : m_colors.printTx, sel ? m_colors.selBg : m_colors.tableBg);
+                        spr->setTextColor(sel ? m_colors.selTx : m_colors.printTx);
                         spr->drawString(cellBuf, textCx, textCy);
                     }
                     // cp == 0: Position nicht definiert -> Zelle bleibt leer
@@ -499,7 +540,7 @@ void WorkshopTool_AsciiTable::drawTable(Gfx_Sprite *spr, int ox, int oy, int w, 
                 else if (ch == 160)
                 {
                     // Non-Breaking Space: wie Steuerzeichen behandeln
-                    spr->setTextColor(sel ? m_colors.selTx : m_colors.ctrlTx, sel ? m_colors.selBg : m_colors.tableBg);
+                    spr->setTextColor(sel ? m_colors.selTx : m_colors.ctrlTx);
                     spr->drawString("NBS", textCx, textCy);
                 }
                 else
@@ -517,8 +558,7 @@ void WorkshopTool_AsciiTable::drawTable(Gfx_Sprite *spr, int ox, int oy, int w, 
                     }
                     cellBuf[2] = '\0';
 
-                    spr->setTextColor(sel ? m_colors.selTx : m_colors.printTx,
-                                      sel ? m_colors.selBg : m_colors.tableBg);
+                    spr->setTextColor(sel ? m_colors.selTx : m_colors.printTx);
                     spr->drawString(cellBuf, textCx, textCy);
                 }
             }
@@ -554,16 +594,15 @@ void WorkshopTool_AsciiTable::drawTable(Gfx_Sprite *spr, int ox, int oy, int w, 
  */
 void WorkshopTool_AsciiTable::drawInfoStrip(Gfx_Sprite *spr, int ox, int oy, int w, int h)
 {
-    constexpr int CLEAR_EXTRA = 4;
-    spr->fillRect(ox, oy, w, h + CLEAR_EXTRA, m_colors.infoBg);
-    const int cy = oy + h / 2 + 4;
+    spr->fillRect(ox, oy, w, h, m_colors.infoBg);
+    const int cy = oy + h / 2;
 
     spr->loadFont(ComfortaaBold14);
 
     if (m_selectedChar < 0)
     {
         spr->setTextDatum(MC_DATUM);
-        spr->setTextColor(m_colors.infoHint, m_colors.infoBg);
+        spr->setTextColor(m_colors.infoHint);
         spr->drawString(I18n::str(WorkshopKey::WORKSHOP_ASCII_TABLE_HINT_TAP), ox + w / 2, cy);
         spr->unloadFont();
         return;
@@ -636,19 +675,26 @@ void WorkshopTool_AsciiTable::drawInfoStrip(Gfx_Sprite *spr, int ox, int oy, int
 
     // Labels (gedimmt)
     spr->setTextDatum(ML_DATUM);
-    spr->setTextColor(m_colors.infoKey, m_colors.infoBg);
+    spr->setTextColor(m_colors.infoKey);
     spr->drawString("DEC", ox + INFO_DEC_LBL, cy);
     spr->drawString("HEX", ox + INFO_HEX_LBL, cy);
     spr->drawString("OCT", ox + INFO_OCT_LBL, cy);
     spr->drawString("BIN", ox + INFO_BIN_LBL, cy);
 
     // Werte (hell)
-    spr->setTextColor(m_colors.infoVal, m_colors.infoBg);
+    spr->setTextColor(m_colors.infoVal);
     spr->drawString(decBuf, ox + INFO_DEC_VAL, cy);
     spr->drawString(hexBuf, ox + INFO_HEX_VAL, cy);
     spr->drawString(octBuf, ox + INFO_OCT_VAL, cy);
     spr->drawString(binBuf, ox + INFO_BIN_VAL, cy);
-    spr->drawString(nameBuf, ox + INFO_CHAR_X, cy);
+    int nameY = cy;
+    if (ch >= 33 && ch != 127 && ch != 160)
+    {
+        const uint16_t codepoint = (ch >= 128 && ch <= 159) ? WIN1252_MAP[ch - 128] : ch;
+        if (codepoint != 0)
+            nameY = fitGlyphY(spr, codepoint, oy, h);
+    }
+    spr->drawString(nameBuf, ox + INFO_CHAR_X, nameY);
 
     spr->unloadFont();
 }

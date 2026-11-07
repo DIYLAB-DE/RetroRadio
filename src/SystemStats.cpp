@@ -4,6 +4,7 @@
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <esp_ota_ops.h>
+#include <esp_heap_caps.h>
 #include <time.h>
 #include <ESPAsyncWebServer.h>
 
@@ -41,6 +42,7 @@ SystemStats::SystemStats()
     , m_lastNtpSyncTimestamp(0)
     , m_heapFree(0)
     , m_heapTotal(0)
+    , m_heapFragmentation(0)
     , m_psramFree(0)
     , m_psramTotal(0)
     , m_uptimeSeconds(0)
@@ -49,6 +51,7 @@ SystemStats::SystemStats()
     , m_initialized(false)
     , m_lastWifiQuality(0)
     , m_lastHeapFree(0)
+    , m_lastHeapFragmentation(0)
 {
     // Alle Puffer leeren
     m_wifiSSID[0] = '\0';
@@ -264,14 +267,14 @@ void SystemStats::updateTimeStats()
         strftime(zoneOffset, sizeof(zoneOffset), "%z", &timeinfo);
         stringutils::safeFormat(m_dstStatus, "%s, %s %s", m_dstActive ? "aktiv" : "inaktiv", zoneName, zoneOffset);
         
-        // Tag im Jahr und Kalenderwoche: "021.Tag im Jahr, KW04"
+        // Tag im Jahr und Kalenderwoche: "021. Tag im Jahr, KW 04"
         int dayOfYear = timeinfo.tm_yday + 1;  // tm_yday ist 0-basiert
         int weekNum = getWeekNumber(
             timeinfo.tm_year + 1900, 
             timeinfo.tm_mon + 1, 
             timeinfo.tm_mday
         );
-        stringutils::safeFormat(m_dayOfYearKW, "%03d.Tag im Jahr, KW%02d", dayOfYear, weekNum);
+        stringutils::safeFormat(m_dayOfYearKW, "%03d. Tag im Jahr, KW %02d", dayOfYear, weekNum);
     }
     else
     {
@@ -308,6 +311,11 @@ void SystemStats::updateSystemStats()
     // Heap: "105256 Bytes frei"
     m_heapFree = ESP.getFreeHeap();
     m_heapTotal = ESP.getHeapSize();
+    const size_t freeTotal = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+    const size_t largestBlock = heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL);
+    m_heapFragmentation = (freeTotal > 0 && largestBlock <= freeTotal)
+        ? static_cast<uint8_t>(100UL - (largestBlock * 100UL) / freeTotal)
+        : 0;
     stringutils::safeFormat(m_heap, "%lu Bytes frei", (unsigned long)m_heapFree);
     
     // PSRAM
@@ -451,6 +459,7 @@ size_t SystemStats::toJson(char* buffer, size_t bufferSize) const
             "\"software\":\"%s\","
             "\"heap\":\"%s\","
             "\"heapFree\":%lu,"
+            "\"heapFragmentation\":%u,"
             "\"heapTotal\":%lu,"
             "\"psramFree\":%lu,"
             "\"psramTotal\":%lu,"
@@ -490,6 +499,7 @@ size_t SystemStats::toJson(char* buffer, size_t bufferSize) const
         m_software,
         m_heap,
         (unsigned long)m_heapFree,
+        static_cast<unsigned>(m_heapFragmentation),
         (unsigned long)m_heapTotal,
         (unsigned long)m_psramFree,
         (unsigned long)m_psramTotal,
@@ -531,6 +541,7 @@ size_t SystemStats::toJsonDelta(char* buffer, size_t bufferSize)
             "\"software\":\"%s\","
             "\"heap\":\"%s\","
             "\"heapFree\":%lu,"
+            "\"heapFragmentation\":%u,"
             "\"psramFree\":%lu,"
             "\"psramTotal\":%lu,"
             "\"uptimeSeconds\":%lu,"
@@ -553,6 +564,7 @@ size_t SystemStats::toJsonDelta(char* buffer, size_t bufferSize)
         m_software,
         m_heap,
         (unsigned long)m_heapFree,
+        static_cast<unsigned>(m_heapFragmentation),
         (unsigned long)m_psramFree,
         (unsigned long)m_psramTotal,
         (unsigned long)m_uptimeSeconds,
@@ -582,6 +594,7 @@ void SystemStats::sendSSEUpdate()
     // Nur senden wenn sich etwas geändert hat
     bool hasChanges = (m_wifiQuality != m_lastWifiQuality) ||
                       (m_heapFree != m_lastHeapFree) ||
+                      (m_heapFragmentation != m_lastHeapFragmentation) ||
                       (strcmp(m_localTime, m_lastLocalTime) != 0);
     
     if (!hasChanges) return;
@@ -597,6 +610,7 @@ void SystemStats::sendSSEUpdate()
         // Letzte Werte merken
         m_lastWifiQuality = m_wifiQuality;
         m_lastHeapFree = m_heapFree;
+        m_lastHeapFragmentation = m_heapFragmentation;
         stringutils::safeCopy(m_lastLocalTime, m_localTime);
     }
 }

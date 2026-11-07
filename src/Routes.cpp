@@ -636,7 +636,7 @@ static void onSSEConnect(AsyncEventSourceClient *client)
     }
 
     // Initiale Daten an neuen Client senden
-    char jsonBuffer[1200];
+    char jsonBuffer[1280];
     size_t len = SYSTEM_STATS.toJson(jsonBuffer, sizeof(jsonBuffer));
     if (len > 0)
     {
@@ -690,7 +690,7 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
 
     g_server->on("/api/status", HTTP_GET, [](AsyncWebServerRequest *request)
                  {
-        char jsonBuffer[1200];
+        char jsonBuffer[1280];
         size_t len = SYSTEM_STATS.toJson(jsonBuffer, sizeof(jsonBuffer));
         
         if (len > 0)
@@ -1367,43 +1367,129 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
                 return;
             }
 
-            // JSON -> StationManager RAM-Array aktualisieren
-            if (g_stationManager) {
-                g_stationManager->withStationsMutable([&doc](Station* stations, int count) {
-                    JsonArray arr = doc.as<JsonArray>();
-                    int idx = 0;
-
-                    for (JsonObject obj : arr) {
-                        if (idx >= MAX_STATIONS) break;
-
-                        stations[idx] = Station();  // Reset
-                        stringutils::safeCopy(stations[idx].shortName, obj["shortName"] | "");
-                        stringutils::safeCopy(stations[idx].name,      obj["name"]      | "");
-                        stringutils::safeCopy(stations[idx].url,       obj["url"]       | "");
-                        stations[idx].preset = obj["preset"] | false;
-                        idx++;
-                    }
-
-                    // Restliche Slots leeren
-                    for (int i = idx; i < MAX_STATIONS; i++) {
-                        stations[i] = Station();
-                    }
-                });
-
-                // In Flash-Partition speichern
-                if (!g_stationManager->saveStations()) {
-                    LOG_ERROR("Stations API: Speichern in Flash-Partition fehlgeschlagen");
-                    request->send(500, "application/json", "{\"error\":\"Senderliste konnte nicht gespeichert werden\"}");
-                    free(bodyBuffer);
-                    bodyBuffer = nullptr;
-                    return;
-                }
-
-                g_stationsReloadPending = true;
+            // Beim Sortieren ordnet order jedem neuen Platz seinen ursprünglichen Platz zu.
+            const bool reordering = doc.is<JsonObject>();
+            JsonArray arr = reordering ? doc["stations"].as<JsonArray>() : doc.as<JsonArray>();
+            JsonArray order = doc["order"].as<JsonArray>();
+            if (arr.isNull() || (reordering && (arr.size() != MAX_STATIONS || order.size() != MAX_STATIONS)))
+            {
+                request->send(400, "application/json", "{\"error\":\"Ungültige Senderreihenfolge\"}");
+                free(bodyBuffer);
+                bodyBuffer = nullptr;
+                return;
             }
 
+            /** @brief Übernimmt die gespeicherten Senderfelder ohne die Skalenposition zu verändern. */
+            const auto readStation = [](Station &station, JsonObjectConst obj)
+            {
+                stringutils::safeCopy(station.shortName, obj["shortName"] | "");
+                stringutils::safeCopy(station.name, obj["name"] | "");
+                stringutils::safeCopy(station.url, obj["url"] | "");
+                station.preset = obj["preset"] | false;
+            };
+
+            if (!g_stationManager)
+            {
+                request->send(503, "application/json", "{\"error\":\"Senderverwaltung nicht bereit\"}");
+                free(bodyBuffer);
+                bodyBuffer = nullptr;
+                return;
+            }
+
+            int orderError = 0;
+            uint8_t selectedStation = APP_STATE.getCurrentRetroStation();
+            g_stationManager->withStationsMutable([&](Station *stations, int count)
+            {
+                if (reordering)
+                {
+                    bool seen[MAX_STATIONS] = {};
+                    const uint8_t currentStation = APP_STATE.getCurrentRetroStation();
+                    if (count != MAX_STATIONS)
+                    {
+                        orderError = 409;
+                        return;
+                    }
+
+                    for (int i = 0; i < MAX_STATIONS; ++i)
+                    {
+                        if (!order[i].is<int>() || !arr[i].is<JsonObject>())
+                        {
+                            orderError = 400;
+                            return;
+                        }
+                        const int source = order[i].as<int>();
+                        if (source < 0 || source >= MAX_STATIONS || seen[source])
+                        {
+                            orderError = 400;
+                            return;
+                        }
+                        seen[source] = true;
+                        JsonObjectConst obj = arr[i].as<JsonObjectConst>();
+                        const Station &original = stations[source];
+                        if (!obj["shortName"].is<const char *>() || !obj["name"].is<const char *>() || !obj["url"].is<const char *>() || !obj["preset"].is<bool>() ||
+                            strcmp(obj["shortName"], original.shortName) != 0 || strcmp(obj["name"], original.name) != 0 || strcmp(obj["url"], original.url) != 0 || obj["preset"].as<bool>() != original.preset)
+                        {
+                            orderError = 409;
+                            return;
+                        }
+                        if (source == currentStation)
+                            selectedStation = static_cast<uint8_t>(i);
+                    }
+                }
+
+                int idx = 0;
+
+                for (JsonObject obj : arr)
+                {
+                    if (idx >= MAX_STATIONS)
+                        break;
+
+                    if (!reordering)
+                        stations[idx] = Station();
+                    readStation(stations[idx], obj);
+                    idx++;
+                }
+
+                // Restliche Slots leeren
+                for (int i = idx; i < MAX_STATIONS; i++)
+                    stations[i] = Station();
+            });
+
+            if (orderError)
+            {
+                request->send(orderError, "application/json", "{\"error\":\"Senderreihenfolge ungültig oder Senderliste inzwischen geändert\"}");
+                free(bodyBuffer);
+                bodyBuffer = nullptr;
+                return;
+            }
+
+            // In Flash-Partition speichern
+            if (!g_stationManager->saveStations())
+            {
+                if (reordering)
+                {
+                    g_stationManager->withStationsMutable([&](Station *stations, int count)
+                    {
+                        for (int i = 0; i < count; ++i)
+                            readStation(stations[order[i].as<int>()], arr[i].as<JsonObjectConst>());
+                    });
+                }
+                LOG_ERROR("Stations API: Speichern in Flash-Partition fehlgeschlagen");
+                request->send(500, "application/json", "{\"error\":\"Senderliste konnte nicht gespeichert werden\"}");
+                free(bodyBuffer);
+                bodyBuffer = nullptr;
+                return;
+            }
+
+            if (reordering && selectedStation != APP_STATE.getCurrentRetroStation())
+                APP_STATE.setCurrentRetroStation(selectedStation);
+            g_stationsReloadPending = true;
+
             LOG_SUCCESS("Senderliste gespeichert (RAM + Flash-Partition)");
-            request->send(200, "application/json", "{\"success\":true}");
+            constexpr size_t RESPONSE_SIZE = 64; ///< Maximale Länge der Speicherbestätigung
+            char response[RESPONSE_SIZE];
+            stringutils::safeFormat(response, "{\"success\":true,\"stationId\":%u}", static_cast<unsigned>(APP_STATE.getCurrentRetroStation()));
+            request->send(200, "application/json", response);
 
             free(bodyBuffer);
             bodyBuffer = nullptr;

@@ -61,8 +61,8 @@ namespace
     constexpr uint16_t C_OFF_TEXT = 0xF800;    ///< Text des Ausschalt-Buttons in Rot
 
     // Adresse: im QR-Code kodierte Form und sichtbare Kurzform
-    constexpr const char *QR_URL = "https://www.burda-audio.de/retroradio";
-    constexpr const char *URL_DISPLAY = "burda-audio.de/retroradio";
+    constexpr const char *QR_URL = "https://github.com/DIYLAB-DE/RetroRadio";
+    constexpr const char *URL_DISPLAY = "github.com/DIYLAB-DE/RetroRadio";
     constexpr const char *PROJECT_TITLE = "RetroRadio";
 }
 

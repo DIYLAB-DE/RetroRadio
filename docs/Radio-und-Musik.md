@@ -83,6 +83,18 @@ Die Abbildungen zeigen vorhandene Musikdateien und ein Ordnercover zur Demonstra
 
 [![Lautstärke null im SD-Player](bilder/bedienung/sdplayer-lautstaerke-null-klein.png)](bilder/bedienung/sdplayer-lautstaerke-null.png)
 
+### Wiedergabe wiederholen
+
+Die Farbe der Play-Taste zeigt den gewählten Modus:
+
+| Farbe | Modus | Bedienung |
+| --- | --- | --- |
+| Orange | Normal | Die Liste wird einmal abgespielt. |
+| Grün | Aktuellen Titel wiederholen | Während normaler laufender Wiedergabe kurz auf Play tippen. |
+| Rot | Gesamte Wiedergabeliste wiederholen | Play mindestens 0,8 Sekunden halten und loslassen. |
+
+Ein kurzer Druck auf Play während laufender Wiedergabe mit aktiver Wiederholung schaltet zurück auf normal. Pause und Titelsprünge behalten den Modus. Play setzt eine Pause mit dem gewählten Modus fort. **Stop**, **Leeren** und das Verlassen des Players schalten die Wiederholung aus. Die Listenwiederholung umfasst auch eine Wiedergabeliste mit Titeln aus mehreren Ordnern.
+
 ### Ordnercover und Bildgrenzen
 
 Lege ein JPEG-Bild mit dem Namen **`folder.jpg`** in denselben Ordner wie die Musiktitel. Es hat Vorrang vor dem eingebetteten Cover und gilt für alle Titel dieses Ordners. Groß- und Kleinschreibung sind beliebig, beispielsweise funktioniert auch `Folder.JPG`. Eine `folder.png` wird nicht als Ordnerbild gesucht.
@@ -98,7 +110,7 @@ Fehlt das Ordnerbild oder ist es zu groß, beschädigt oder nicht ladbar, versuc
 
 ### Kassetten wechseln
 
-Ein Tipp auf die Kassette wechselt zur nächsten der acht Gestaltungen. Die Wickel und Naben werden bei der Wiedergabe animiert. Die Gestaltung ändert nicht die Musikauswahl.
+Ein Tipp auf die Kassette wechselt zur nächsten der acht Gestaltungen. Die Wickel und Naben werden bei der Wiedergabe animiert. Die Bandwickel zeigen den Fortschritt der gesamten Wiedergabeliste. Jeder Titel belegt dabei einen gleich großen Anteil, hinzu kommt der laufende Fortschritt des aktuellen Titels. Am Listenende ist das Band vollständig rechts aufgewickelt. Die Wickel zeigen daher keine genaue Restspielzeit an. Die Gestaltung ändert nicht die Musikauswahl.
 
 | Variante 1 | Variante 2 | Variante 3 | Variante 4 |
 | --- | --- | --- | --- |

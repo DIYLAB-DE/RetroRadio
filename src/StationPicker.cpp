@@ -348,6 +348,7 @@ void StationPicker::drawCancelButton()
     );
 
     m_cancelBtn.setFont(LeagueGothicCond34);
+    m_cancelBtn.setLabelTransparent(true);
     m_cancelBtn.drawButton();
 }
 

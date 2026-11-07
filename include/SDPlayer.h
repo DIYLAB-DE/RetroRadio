@@ -375,6 +375,16 @@ private:
         PAUSED   ///< Pausiert
     };
 
+    /**
+     * @brief Wiederholungsverhalten am natürlichen Titelende
+     */
+    enum class RepeatMode
+    {
+        OFF,     ///< Wiedergabeliste einmal bis zum Ende abspielen
+        TRACK,   ///< Aktuellen Titel wiederholen
+        PLAYLIST ///< Wiedergabeliste nach dem letzten Titel neu beginnen
+    };
+
     // ===================================================================
     // Layout-Konstanten
     // ===================================================================
@@ -468,6 +478,7 @@ private:
     Gfx_Sprite *m_sprKnobText = nullptr;          ///< Sprite für Lautstärkeregler-Text
     Gfx_Sprite *m_sprTracks = nullptr;            ///< Sprite für Equalizer-Regler
     Gfx_Sprite *m_sprPlaylist = nullptr;          ///< Sprite für Playlist-Anzeige
+    Gfx_Sprite *m_sprPlayButton = nullptr;        ///< Sprite für flimmerfreie Farbwechsel der Play-Taste
     uint16_t *m_emptyFolderIcon = nullptr;        ///< Ordner-Symbol der leeren Playlist, vergrößert gezeichnet, im PSRAM
     Gfx_Sprite *m_sprScrollbar = nullptr;         ///< Sprite für Scrollbar
     Gfx_Sprite *m_sprMeta = nullptr;              ///< Sprite für Metadaten-Anzeige
@@ -567,8 +578,9 @@ private:
 
     uint32_t m_lastWrapTime = 0; ///< Für zeitbasierte Wickeldorn-Rotation
 
-    // Performance-Optimierung: Wickel und Zahnkränze nur bei Wiedergabe oder State-Änderung rendern
+    // Wickel und Zahnkränze nur bei Wiedergabe, Zustands- oder Positionsänderung rendern
     bool m_lastCassettePlaying = false; ///< Letzter Wiedergabe-Status für Change-Detection
+    float m_lastCassetteProgress = -1.0f; ///< Zuletzt verarbeiteter Gesamtfortschritt der Wiedergabeliste
     float m_lastWrapAngleL = -999.0f;   ///< Letzter gerenderter Winkel links
     float m_lastWrapAngleR = -999.0f;   ///< Letzter gerenderter Winkel rechts
     int m_lastReelRadiusL = -1;         ///< Letzter gerenderter Wickelradius links in Bildpunkten
@@ -604,6 +616,7 @@ private:
     // ===================================================================
 
     PlaybackState m_playbackState = PlaybackState::STOPPED; ///< Aktueller Playback-Zustand
+    RepeatMode m_repeatMode = RepeatMode::OFF;              ///< Wiederholung bis Stopp, Leeren oder Verlassen des Players
     bool m_resetRequested = false;                          ///< Flag: Reset des Players angefordert
 
     // ===================================================================
@@ -702,6 +715,12 @@ private:
     void processEventQueue();
 
     // Button-Handling
+    /**
+     * @brief Zeichnet eine Player-Taste, die Play-Taste wird vollständig im Sprite aufgebaut
+     * @param index Index der Taste von 0 bis 4
+     * @param pressed true für den hervorgehobenen Rahmen bei Berührung
+     */
+    void drawPlayerButton(int index, bool pressed = false);
     void updatePlayerButtonStates();
     void handleButtons();
     void handlePlayerButtons();

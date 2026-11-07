@@ -161,6 +161,7 @@ SdPlayer::~SdPlayer()
     m_tft->safeDeleteSprite(m_sprKnobText);
     m_tft->safeDeleteSprite(m_sprTracks);
     m_tft->safeDeleteSprite(m_sprPlaylist);
+    m_tft->safeDeleteSprite(m_sprPlayButton);
     m_tft->safeDeleteSprite(m_sprScrollbar);
     m_tft->safeDeleteSprite(m_sprProgress);
     m_tft->safeDeleteSprite(m_sprMeta);
@@ -329,7 +330,12 @@ void SdPlayer::finalizeCurrentTrack(TrackFinishType finishType, bool advanceToNe
             m_playedTracks[finishedIndex] = true;
 
         if (advanceToNext)
-            playNextTrack();
+        {
+            if (m_repeatMode == RepeatMode::TRACK)
+                playCurrentTrack();
+            else
+                playNextTrack();
+        }
     }
     else
     {
@@ -1550,6 +1556,15 @@ bool SdPlayer::init(DS1307_RTC &rtc, const SdPlayerCallbacks &callbacks)
     for (int i = 0; i < 4; i++)
         m_controlButtons[i].drawButton();
 
+    // Play-Taste vollständig im Sprite aufbauen, einschließlich gedrücktem Rahmen und Modusfarbe.
+    if (!m_tft->safeCreateSprite(m_sprPlayButton, m_playerButtonDefs[1].w, m_playerButtonDefs[1].h))
+    {
+        LOG_ERROR("Konnte Play-Tasten-Sprite nicht erstellen!");
+        return false;
+    }
+    constexpr uint16_t PLAYER_BACKGROUND_COLOR = 0x1082; ///< Hintergrund des Player-Bereichs außerhalb der abgerundeten Taste
+    m_sprPlayButton->fillSprite(PLAYER_BACKGROUND_COLOR);
+
     // Player-Buttons initialisieren
     for (int i = 0; i < 5; i++)
     {
@@ -1567,7 +1582,10 @@ bool SdPlayer::init(DS1307_RTC &rtc, const SdPlayerCallbacks &callbacks)
             nullptr                                                // Icon
         );
 
-        m_playerButtons[i].drawButton();
+        if (i == 1)
+            m_playerButtons[i].setDrawTarget(m_sprPlayButton, m_playerButtonDefs[i].x, m_playerButtonDefs[i].y);
+
+        drawPlayerButton(i);
     }
 
     // Sprites für Playlist erstellen
@@ -1690,7 +1708,7 @@ void SdPlayer::redrawAll()
 
     // Player-Buttons neu zeichnen (Symbole, keine Sprach-Strings)
     for (int i = 0; i < 5; i++)
-        m_playerButtons[i].drawButton();
+        drawPlayerButton(i);
     updatePlayerButtonStates();
 
     // Progress-Bar neu zeichnen
@@ -1756,18 +1774,31 @@ void SdPlayer::updateCassette(bool force)
     // ===================================================================
     // Performance-Optimierung: State-Change-Detection
     // ===================================================================
-    // Wickeldorne nur rendern wenn: 1. Wiedergabe aktiv ist (Animation läuft) oder 2. sich der Wiedergabe-Status geändert hat (Start/Stop/Pause).
-    // Das spart ca. 10-20ms pro Frame wenn keine Wiedergabe läuft.
+    // Bei ruhender Wiedergabe werden nur Zustands- und Positionsänderungen gezeichnet.
     const bool stateChanged = (playing != m_lastCassettePlaying);
     m_lastCassettePlaying = playing;
 
-    // Wenn nicht playing und kein State-Change, nur minimales Update
-    if (!force && !playing && !stateChanged)
+    // Jeder Titel belegt denselben Bandanteil, innerhalb dieses Anteils folgt das Band der aktuellen Spielzeit.
+    float p = 0.0f;
+    if (!m_playlist.empty())
+    {
+        float trackProgress = 0.0f;
+        if (m_audioStatus.duration > 0)
+            trackProgress = constrain((float)m_audioStatus.currentTime / (float)m_audioStatus.duration, 0.0f, 1.0f);
+
+        p = m_playlistFinished ? 1.0f : ((float)m_currentTrackIndex + trackProgress) / (float)m_playlist.size();
+        p = constrain(p, 0.0f, 1.0f);
+    }
+
+    // Titelsprünge und Änderungen der Liste aktualisieren die Wickel auch im Stopp oder in der Pause.
+    if (!force && !playing && !stateChanged && p == m_lastCassetteProgress)
     {
         // Delta-Time trotzdem aktualisieren, um Sprünge beim Resume zu vermeiden
         m_lastWrapTime = nowMs;
         return;
     }
+
+    m_lastCassetteProgress = p;
 
     // Delta-Time-basierte Zeitbasis
     if (m_lastWrapTime == 0)
@@ -1782,19 +1813,6 @@ void SdPlayer::updateCassette(bool force)
 
     if (dt > 0.05f)
         dt = 0.05f; // Max 50ms (verhindert Sprünge bei Task-Blockierung)
-
-    // Fortschritt & aktuelle Radien: auch in der Pause aus dem Status rechnen,
-    // sonst springen die Wickel beim Pausieren auf Anfangsstellung (p = 0)
-    float p = 0.0f;
-    if (m_audioStatus.duration > 0)
-    {
-        p = (float)m_audioStatus.currentTime / (float)m_audioStatus.duration;
-        if (p < 0.f)
-            p = 0.f;
-
-        if (p > 1.f)
-            p = 1.f;
-    }
 
     const CassetteDesign &design = m_cassetteDesigns[m_cassetteDesignIdx];
     const float rmin2 = (float)design.reelRMin * design.reelRMin;
@@ -3843,6 +3861,14 @@ void SdPlayer::playNextTrack()
 
     if (m_currentTrackIndex >= m_playlist.size() - 1)
     {
+        if (m_repeatMode == RepeatMode::PLAYLIST)
+        {
+            m_currentTrackIndex = 0;
+            resetPlayedStatus();
+            playCurrentTrack();
+            return;
+        }
+
         LOG_INFO("Playlist beendet");
         m_playlistFinished = true;
         m_needsPlaylistRedraw = true;
@@ -3906,6 +3932,7 @@ void SdPlayer::clearPlaylist()
 
     m_currentTrackIndex = 0;
     m_playlistFinished = false;
+    m_repeatMode = RepeatMode::OFF;
     m_scrollState.scrollOffset = 0;
     m_scrollState.scrollVelocity = 0;
     m_needsPlaylistRedraw = true;
@@ -3943,6 +3970,16 @@ void SdPlayer::clearPlaylist()
 // ===================================================================
 
 /**
+ * @brief Zeichnet eine Player-Taste und überträgt bei Play das fertige Sprite
+ */
+void SdPlayer::drawPlayerButton(int index, bool pressed)
+{
+    m_playerButtons[index].drawButton(pressed);
+    if (index == 1 && m_sprPlayButton)
+        m_sprPlayButton->pushSprite(m_playerButtonDefs[index].x, m_playerButtonDefs[index].y);
+}
+
+/**
  * @brief Aktualisiert die visuellen Zustände der Player-Buttons
  */
 void SdPlayer::updatePlayerButtonStates()
@@ -3951,13 +3988,20 @@ void SdPlayer::updatePlayerButtonStates()
     if (m_uiSuspended)
         return;
 
-    // PLAY
-    if (m_playbackState == PlaybackState::PLAYING)
-        m_playerButtons[1].setLabelText("^PLAY:32:FD20^"); // orange
-    else
-        m_playerButtons[1].setLabelText("^PLAY:32:5370^"); // normal
+    // Der Wiederholungsmodus bleibt auch während einer Pause sichtbar.
+    const char *playLabel = "^PLAY:32:5370^";
+    if (m_playbackState != PlaybackState::STOPPED && m_repeatMode == RepeatMode::TRACK)
+        playLabel = "^PLAY:32:07E0^"; // Grün
+    else if (m_playbackState != PlaybackState::STOPPED && m_repeatMode == RepeatMode::PLAYLIST)
+        playLabel = "^PLAY:32:F800^"; // Rot
+    else if (m_playbackState == PlaybackState::PLAYING)
+        playLabel = "^PLAY:32:FD20^"; // Orange
 
-    m_playerButtons[1].drawButton();
+    if (strcmp(m_playerButtons[1].getLabelText(), playLabel) != 0)
+    {
+        m_playerButtons[1].setLabelText(playLabel);
+        drawPlayerButton(1);
+    }
 
     // PAUSE
     if (m_playbackState == PlaybackState::PAUSED)
@@ -4203,7 +4247,7 @@ void SdPlayer::handlePlayerButtons()
         // Nur ein frisches Aufsetzen macht die Taste scharf, eine hereinwandernde laufende Berührung nicht
         if (isPressed && !m_wasPlayerPressed[i] && !m_wasTouching)
         {
-            m_playerButtons[i].drawButton(true);
+            drawPlayerButton(i, true);
             m_wasPlayerPressed[i] = true;
             m_playerPressTime[i] = millis();
 
@@ -4242,7 +4286,7 @@ void SdPlayer::handlePlayerButtons()
 
         if (!isPressed && m_wasPlayerPressed[i])
         {
-            m_playerButtons[i].drawButton(false);
+            drawPlayerButton(i);
             m_wasPlayerPressed[i] = false;
 
             // Rutscht der Finger von der Taste, ist das ein Abbruch: nur echtes Abheben löst die Aktion aus
@@ -4304,7 +4348,12 @@ void SdPlayer::handlePlayerButtons()
             { // Abspielen
                 if (!m_playlist.empty())
                 {
-                    // Wenn pausiert: nur Resume
+                    constexpr uint32_t REPEAT_HOLD_MS = 800; ///< Haltezeit für die Wiederholung der gesamten Liste
+                    const bool repeatPlaylist = millis() - m_playerPressTime[i] >= REPEAT_HOLD_MS;
+                    if (repeatPlaylist)
+                        m_repeatMode = RepeatMode::PLAYLIST;
+
+                    // Wenn pausiert: Resume mit dem gewählten Wiederholungsmodus
                     if (m_playbackState == PlaybackState::PAUSED)
                     {
                         m_playbackState = PlaybackState::PLAYING;
@@ -4317,14 +4366,20 @@ void SdPlayer::handlePlayerButtons()
 
                         updatePlayerButtonStates();
                     }
-                    // Wenn bereits spielend oder gerade startend: nichts tun (der gecachte Audio-Status hinkt bis zu 1 s hinterher, ein Doppeldruck startete den Titel sonst von vorn)
+                    // Auch während des Starts nur den Modus ändern, den Titel dabei nicht neu starten.
                     else if (m_playbackState == PlaybackState::PLAYING || m_waitingForPlaybackStart)
                     {
-                        LOG_INFO("Track läuft bereits");
+                        if (!repeatPlaylist)
+                            m_repeatMode = m_repeatMode == RepeatMode::OFF ? RepeatMode::TRACK : RepeatMode::OFF;
+
+                        updatePlayerButtonStates();
                     }
                     // Wenn gestoppt: neuen Track starten
                     else
                     {
+                        if (!repeatPlaylist)
+                            m_repeatMode = RepeatMode::OFF;
+
                         if (m_playlistFinished)
                         {
                             m_currentTrackIndex = 0;
@@ -4363,6 +4418,7 @@ void SdPlayer::handlePlayerButtons()
 
             if (i == 3)
             { // Stop
+                m_repeatMode = RepeatMode::OFF;
                 requestBackendStop();
                 resetRuntimePlaybackState();
                 clearDisplayedMetadata(false);
@@ -4407,6 +4463,7 @@ void SdPlayer::handlePlayerButtons()
 void SdPlayer::stopPlayerImmediately()
 {
     // Player stoppen
+    m_repeatMode = RepeatMode::OFF;
     requestBackendStop();
 
     // SD-Playback beendet -> Visualizer sperren

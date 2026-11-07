@@ -19,7 +19,7 @@ Ein kurzer Tipp wählt eine Taste oder ein Feld. Listen lassen sich mit dem Fing
 
 - [Radio und Musik](Radio-und-Musik.md): Sender, Favoriten, Klang, alle acht Visualisierungen, vier magische Augen, Dateiauswahl, Cover und Kassetten.
 - [Werkstatt mit 38 Werkzeugen](werkstatt/README.md): nach Kategorien geordnete Übersicht mit einzelnen Werkzeugseiten und anklickbaren Vorschaubildern.
-- [Weboberfläche](Weboberfläche.md): Bedienung und Verwaltung im Browser, einschließlich Senderpflege und SD-Dateien.
+- [Weboberfläche](Weboberfläche.md): Bedienung und Verwaltung im Browser, einschließlich Senderpflege, Sortieren der 70 Senderplätze und SD-Dateien.
 
 ## Tagesansicht
 
@@ -125,7 +125,7 @@ Unter **Klang -> Lautsprecher** schaltet Minus die beiden eingebauten Lautsprech
 
 ## Sperren und Ausschalten
 
-Das Hauptmenü bietet den Ausschaltknopf unten rechts. Ab Werk ist die **PIN-Sperre** eingeschaltet, die Start-PIN lautet **`0000`**. Unter **Einstellungen -> Sicherheit** kannst Du den Code ändern oder die Sperre ausschalten. Tippe dafür auf den Schalter und gib einmal Deine aktuelle PIN ein. Das Radio öffnet beim Start und Aufwecken direkt das Hauptmenü. Auch die Weboberfläche öffnet sich ohne PIN. Der Schalter wirkt sofort. Beim Wiedereinschalten gilt wieder Deine bisherige PIN. Die Netzwerkverbindung des Geräts und die Weboberfläche sind getrennt vom sichtbaren Display zu betrachten, Details zu deren Zugriff stehen in der [Webanleitung](Weboberfläche.md).
+Das Hauptmenü bietet den Ausschaltknopf unten rechts. QR-Code und Projektadresse im Ausschaltbildschirm führen zum [RetroRadio-Projekt auf GitHub](https://github.com/DIYLAB-DE/RetroRadio). Ab Werk ist die **PIN-Sperre** eingeschaltet, die Start-PIN lautet **`0000`**. Unter **Einstellungen -> Sicherheit** kannst Du den Code ändern oder die Sperre ausschalten. Tippe dafür auf den Schalter und gib einmal Deine aktuelle PIN ein. Das Radio öffnet beim Start und Aufwecken direkt das Hauptmenü. Auch die Weboberfläche öffnet sich ohne PIN. Der Schalter wirkt sofort. Beim Wiedereinschalten gilt wieder Deine bisherige PIN. Die Netzwerkverbindung des Geräts und die Weboberfläche sind getrennt vom sichtbaren Display zu betrachten, Details zu deren Zugriff stehen in der [Webanleitung](Weboberfläche.md).
 
 | Gesperrt | Code eingeben |
 | --- | --- |

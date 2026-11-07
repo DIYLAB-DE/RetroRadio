@@ -516,10 +516,9 @@ void WorkshopTool_PeriodicTable::drawTable(Gfx_Sprite *spr)
     {
         int sx, sy;
         getCellSpritePos(s_elements[i], sx, sy);
-        const uint16_t fillColor = scaleColor(getCategoryColor(s_elements[i]), 0.55f);
         char numBuf[5];
         snprintf(numBuf, sizeof(numBuf), "%d", (int)s_elements[i].number);
-        spr->setTextColor(C_LEGEND_TXT, fillColor);
+        spr->setTextColor(C_LEGEND_TXT);
         spr->drawString(numBuf, sx + 2, sy + 2);
     }
     spr->unloadFont();
@@ -531,8 +530,7 @@ void WorkshopTool_PeriodicTable::drawTable(Gfx_Sprite *spr)
     {
         int sx, sy;
         getCellSpritePos(s_elements[i], sx, sy);
-        const uint16_t fillColor = scaleColor(getCategoryColor(s_elements[i]), 0.55f);
-        spr->setTextColor(0xFFFF, fillColor);
+        spr->setTextColor(0xFFFF);
         spr->drawString(s_elements[i].symbol, sx + CELL_W / 2, sy + 13);
     }
     spr->unloadFont();
@@ -576,14 +574,14 @@ void WorkshopTool_PeriodicTable::drawPopup(Gfx_Sprite *spr)
     snprintf(numBuf, sizeof(numBuf), "%d", (int)e.number);
     spr->loadFont(ComfortaaBold10);
     spr->setTextDatum(TL_DATUM);
-    spr->setTextColor(C_LEGEND_TXT, fillColor);
+    spr->setTextColor(C_LEGEND_TXT);
     spr->drawString(numBuf, symX + 2, symY + 2);
     spr->unloadFont();
 
     // Symbol zentriert (CB14, wie drawCell: TC_DATUM, sy+13)
     spr->loadFont(ComfortaaBold14);
     spr->setTextDatum(TC_DATUM);
-    spr->setTextColor(0xFFFF, fillColor);
+    spr->setTextColor(0xFFFF);
     spr->drawString(e.symbol, symX + POPUP_HDR_SYM / 2, symY + 13);
     spr->unloadFont();
 

@@ -1186,7 +1186,10 @@ void Button::drawButton(bool inverted, const char *long_name)
         // Bei senkrechter Mitte auf das Versalband ausrichten statt auf den Schriftkasten.
         const int16_t middleShift = (m_textdatum & DATUM_VERTICAL_MIDDLE) ? fontMiddleShift(m_font_legacy) : 0;
 
-        target()->setTextColor(text, fill);
+        if (m_labelTransparent)
+            target()->setTextColor(text);
+        else
+            target()->setTextColor(text, fill);
         target()->setTextDatum(m_textdatum);
         target()->drawString(display_text, text_x + m_labelOffsetX,
                              y0 + (m_h >> 1) + m_yd + m_labelOffsetY + middleShift);

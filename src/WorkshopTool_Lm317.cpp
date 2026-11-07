@@ -506,6 +506,7 @@ void WorkshopTool_Lm317::drawPackage(int pkgX, int pkgY, int pkgW, int pkgH)
     spr->drawString("OUT", ax + pkgW - 6, ay + pkgH / 2);
 
     spr->setTextDatum(MC_DATUM);
+    spr->setTextColor(C_PIN_LABEL);
     spr->drawString("ADJ", ax + pkgW / 2, ay + pkgH - 10);
 
     spr->unloadFont();
