@@ -189,6 +189,7 @@ const char *AppState::P_KEY_LOCK_PIN = "lockPin";
 // UI Preferences Key
 const char *AppState::P_KEY_UI_LANGUAGE = "uiLanguage";
 const char *AppState::P_KEY_SERIAL_LOGS_ENABLED = "serialLogsOn";
+const char *AppState::P_KEY_SECOND_HAND_SWEEP = "secHandSweep";
 
 // Geräte-Netzwerkname Preferences Key
 const char *AppState::P_KEY_HOSTNAME = "hostname";
@@ -396,6 +397,7 @@ void AppState::loadFromPreferences()
     loadPrefText(m_prefs, P_KEY_LOCK_PIN, m_lockPin, sizeof(m_lockPin), "0000");
 
     // UI-Einstellungen
+    m_secondHandSweep = m_prefs.getBool(P_KEY_SECOND_HAND_SWEEP, DEFAULT_SECOND_HAND_SWEEP);
     loadPrefText(m_prefs, P_KEY_UI_LANGUAGE, m_uiLanguage, sizeof(m_uiLanguage), DEFAULT_UI_LANGUAGE);
     if (!isSupportedUiLanguage(m_uiLanguage))
         stringutils::safeCopy(m_uiLanguage, DEFAULT_UI_LANGUAGE);
@@ -1095,6 +1097,25 @@ bool AppState::setSerialLogsEnabled(bool enabled)
 }
 
 /**
+ * @brief Speichert die Gangart der großen Uhr und benachrichtigt verbundene Browser
+ */
+bool AppState::setSecondHandSweep(bool sweep)
+{
+    {
+        std::lock_guard<std::mutex> guard(m_secondHandMutex);
+        if (sweep == getSecondHandSweep())
+            return true;
+        if (!m_prefs.putBool(P_KEY_SECOND_HAND_SWEEP, sweep))
+            return false;
+
+        m_secondHandSweep = sweep;
+    }
+
+    notifySecondHandModeChanged();
+    return true;
+}
+
+/**
  * @brief Löscht die UI-Sprach-Preference und setzt Deutsch als Standard
  */
 void AppState::resetPreferencesUiLanguage()
@@ -1614,6 +1635,12 @@ void AppState::resetToDefaults(bool clearNVRAM, bool clearPrefs)
 
         m_prefs.remove(P_KEY_PIN_LOCK_ENABLED);
         m_pinLockEnabled = DEFAULT_PIN_LOCK_ENABLED;
+        {
+            std::lock_guard<std::mutex> guard(m_secondHandMutex);
+            m_prefs.remove(P_KEY_SECOND_HAND_SWEEP);
+            m_secondHandSweep = DEFAULT_SECOND_HAND_SWEEP;
+        }
+        notifySecondHandModeChanged();
         resetPreferencesWeather();
         resetPreferencesNtp();
         resetPreferencesGoogleApi();

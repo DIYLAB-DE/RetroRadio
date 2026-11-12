@@ -201,7 +201,7 @@ namespace
     constexpr int CLOUD_VIS_BTN_MARGIN = 12; ///< Abstand des Sichtbarkeits-Knopfes zum Titelbox-Rand
     constexpr int CLOUD_ROW_COUNT = 5;     ///< Fünf Cloud-Werte
 
-    // Zeit-Panel: drei Wahl-Zeilen oben, fünf Stepper-Spalten plus Set-Knopf unten
+    // Zeit-Panel: drei Wahl-Zeilen, manuelle Zeit und Sekundenzeiger-Schalter
     constexpr int TIME_FIELD_H = 50;       ///< Höhe einer Wahl-Zeile
     constexpr int TIME_FIELD_GAP = 6;      ///< Abstand zwischen Wahl-Zeilen
     constexpr int TIME_FIELD_PAD_X = 14;   ///< Innenabstand der Wahl-Zeile links/rechts
@@ -209,7 +209,6 @@ namespace
     constexpr int TIME_FIELD_VALUE_Y = 26; ///< Y des Wertes relativ zum Zeilen-Anfang
     constexpr int TIME_FIELD_COUNT = 3;    ///< Zeitzone, NTP-Server, Sync-Intervall
 
-    constexpr int TIME_STEPPER_BLOCK_Y = TIME_FIELD_COUNT * (TIME_FIELD_H + TIME_FIELD_GAP) + 6;
     constexpr int TIME_STEPPER_COL_W = 70;  ///< Breite einer Stepper-Spalte
     constexpr int TIME_STEPPER_COL_GAP = 6; ///< Abstand zwischen Stepper-Spalten
     constexpr int TIME_STEPPER_TOTAL_W = 5 * TIME_STEPPER_COL_W + 4 * TIME_STEPPER_COL_GAP;
@@ -218,6 +217,12 @@ namespace
     constexpr int TIME_STEPPER_TOTAL_H = TIME_STEPPER_BTN_H * 2 + TIME_STEPPER_VAL_H + 4;
     constexpr int TIME_SET_BTN_H = 45;  ///< Höhe des Zeit-setzen-Knopfes
     constexpr int TIME_SET_BTN_W = 160; ///< Breite des Zeit-setzen-Knopfes
+    constexpr int TIME_SECOND_Y = CONTENT_H - TIME_FIELD_H; ///< Obere Kante der Sekundenzeiger-Zeile relativ zum Inhalt
+    constexpr int TIME_STEPPER_BLOCK_Y = (TIME_FIELD_COUNT * (TIME_FIELD_H + TIME_FIELD_GAP) - TIME_FIELD_GAP + TIME_SECOND_Y - TIME_STEPPER_TOTAL_H) / 2; ///< Schrittgeber zwischen Auswahlzeilen und Sekundenzeiger-Zeile
+
+    static_assert(TIME_STEPPER_BLOCK_Y >= TIME_FIELD_COUNT * (TIME_FIELD_H + TIME_FIELD_GAP), "Zeitfelder und Schrittgeber überlappen");
+    static_assert(TIME_STEPPER_BLOCK_Y + TIME_STEPPER_TOTAL_H + TIME_FIELD_GAP <= TIME_SECOND_Y, "Schrittgeber und Sekundenzeiger-Zeile überlappen");
+    static_assert(TIME_STEPPER_TOTAL_W + TIME_FIELD_GAP + TIME_SET_BTN_W <= CONTENT_W, "Zeit-setzen-Knopf passt nicht neben die Schrittgeber");
 
     // Zeitfenster-Panel: 7 Wochentage x 24 volle Stunden
     constexpr int TIME_WINDOW_DAYS = AppState::TIME_WINDOW_DAY_COUNT;   ///< Anzahl Wochentage
@@ -234,7 +239,7 @@ namespace
     constexpr int TIME_WINDOW_INNER_R = 5;     ///< Eckradius der Innenfläche
     constexpr int TIME_WINDOW_FRAME_INSET = 1; ///< Innenversatz der Matrix-Füllung
     constexpr int TIME_WINDOW_FRAME_PAD_Y = 2; ///< Vertikaler Außenabstand des Matrix-Rahmens
-    constexpr int TIME_WINDOW_CHECK_LINE_W = 2; ///< Strichbreite des Hakens
+    constexpr float TIME_WINDOW_TICK_R = 0.8f; ///< Radius des Hakenstrichs
     constexpr int TIME_WINDOW_HINT_GAP_Y = 16; ///< Abstand der Erklärung unter der Matrix
     constexpr int TIME_WINDOW_HINT_LINE_H = 19; ///< Zeilenhöhe der Erklärung
     constexpr int TIME_WINDOW_HINT_X = CONTENT_X + 4; ///< Linke Textkante der Erklärung
@@ -1190,6 +1195,9 @@ void Settings::draw()
             resetPinEntry();
             m_workDirty = true;
         }
+
+        if (m_panel == Panel::TIME && m_displayedSecondHandSweep != APP_STATE.getSecondHandSweep())
+            m_workDirty = true;
 
         if (m_menuDirty)
         {
@@ -4994,9 +5002,7 @@ Settings::Rect Settings::timeFieldRect(int idx) const
  */
 Settings::Rect Settings::timeStepperColumnRect(int col) const
 {
-    const int totalW = TIME_STEPPER_TOTAL_W;
-    const int startX = CONTENT_X + (CONTENT_W - totalW) / 2;
-    const int x = startX + col * (TIME_STEPPER_COL_W + TIME_STEPPER_COL_GAP);
+    const int x = CONTENT_X + col * (TIME_STEPPER_COL_W + TIME_STEPPER_COL_GAP);
     const int y = CONTENT_Y + TIME_STEPPER_BLOCK_Y;
     return Rect{x, y, TIME_STEPPER_COL_W, TIME_STEPPER_TOTAL_H};
 }
@@ -5033,9 +5039,17 @@ Settings::Rect Settings::timeStepperValueRect(int col) const
  */
 Settings::Rect Settings::timeSetButtonRect() const
 {
-    const int x = CONTENT_X + (CONTENT_W - TIME_SET_BTN_W) / 2;
-    const int y = CONTENT_Y + TIME_STEPPER_BLOCK_Y + TIME_STEPPER_TOTAL_H + 11;
+    const int x = CONTENT_X + CONTENT_W - TIME_SET_BTN_W;
+    const int y = CONTENT_Y + TIME_STEPPER_BLOCK_Y + (TIME_STEPPER_TOTAL_H - TIME_SET_BTN_H) / 2;
     return Rect{x, y, TIME_SET_BTN_W, TIME_SET_BTN_H};
+}
+
+/**
+ * @brief Liefert die Zeile des Sekundenzeiger-Schalters im Zeit-Panel
+ */
+Settings::Rect Settings::timeSecondHandRect() const
+{
+    return {CONTENT_X, CONTENT_Y + TIME_SECOND_Y, CONTENT_W, TIME_FIELD_H};
 }
 
 /**
@@ -5070,7 +5084,7 @@ void Settings::initManualFromRtc()
 }
 
 /**
- * @brief Zeichnet das Zeit-Panel: Auswahl-Zeilen oben, Stepper-Block unten.
+ * @brief Zeichnet Zeitfelder, manuelle Zeit und Sekundenzeiger-Schalter
  */
 void Settings::drawPanelTime(Gfx_Sprite *spr)
 {
@@ -5137,6 +5151,22 @@ void Settings::drawPanelTime(Gfx_Sprite *spr)
         spr->unloadFont();
     }
 
+    // Sekundenzeiger
+    m_displayedSecondHandSweep = APP_STATE.getSecondHandSweep();
+    const Rect secondHand = timeSecondHandRect();
+    spr->fillSmoothRoundRect(secondHand.x, secondHand.y, secondHand.w, secondHand.h, 8, BTN_OUTLINE);
+    spr->fillSmoothRoundRect(secondHand.x + 1, secondHand.y + 1, secondHand.w - 2, secondHand.h - 2, 7, C_ROW_BG);
+    const Rect toggle = {secondHand.x + secondHand.w - TOGGLE_MARGIN - TOGGLE_W, secondHand.y + (secondHand.h - TOGGLE_H) / 2, TOGGLE_W, TOGGLE_H};
+    drawToggle(spr, toggle, m_displayedSecondHandSweep, C_ROW_BG);
+    spr->loadFont(ComfortaaBold16);
+    spr->setTextDatum(TL_DATUM);
+    spr->setTextColor(C_SUB);
+    spr->drawString(I18n::str(SettingsKey::SETTINGS_TIME_SECOND_LABEL), secondHand.x + TIME_FIELD_PAD_X, secondHand.y + TIME_FIELD_LABEL_Y);
+    spr->setTextColor(C_TEXT);
+    const SettingsKey modeKey = m_displayedSecondHandSweep ? SettingsKey::SETTINGS_TIME_SECOND_SWEEP : SettingsKey::SETTINGS_TIME_SECOND_STEP;
+    spr->drawString(I18n::str(modeKey), secondHand.x + TIME_FIELD_PAD_X, secondHand.y + TIME_FIELD_VALUE_Y);
+    spr->unloadFont();
+
     // Schrittgeberblock mit fünf Spalten in sprachabhängiger Datums- und Zeitreihenfolge
     clampManualDay();
     const int manualValues[FIELD_COUNT] = {
@@ -5199,6 +5229,15 @@ void Settings::drawPanelTime(Gfx_Sprite *spr)
  */
 void Settings::handleTimeTouch(int sx, int sy)
 {
+    const Rect secondHand = timeSecondHandRect();
+    if (pointIn(sx, sy, secondHand.x, secondHand.y, secondHand.w, secondHand.h))
+    {
+        if (!APP_STATE.setSecondHandSweep(!APP_STATE.getSecondHandSweep()))
+            showInfoBox(SettingsKey::SETTINGS_TIME_SECOND_LABEL, SettingsKey::SETTINGS_TIME_SECOND_WRITE_ERROR);
+        m_workDirty = true;
+        return;
+    }
+
     // Auswahl-Zeilen
     for (int i = 0; i < TIME_FIELD_COUNT; ++i)
     {
@@ -5673,8 +5712,8 @@ void Settings::drawPanelTimeWindow(Gfx_Sprite *spr)
             {
                 const int cx = boxX + TIME_WINDOW_CHECK_SIZE / 2;
                 const int cy = boxY + TIME_WINDOW_CHECK_SIZE / 2;
-                spr->drawWideLine(cx - 3, cy - 1, cx - 1, cy + 2, TIME_WINDOW_CHECK_LINE_W, color);
-                spr->drawWideLine(cx - 1, cy + 2, cx + 4, cy - 4, TIME_WINDOW_CHECK_LINE_W, color);
+                spr->drawWideLine(cx - 3, cy - 1, cx - 1, cy + 2, TIME_WINDOW_TICK_R, color);
+                spr->drawWideLine(cx - 1, cy + 2, cx + 4, cy - 4, TIME_WINDOW_TICK_R, color);
             }
         }
 
@@ -5685,7 +5724,8 @@ void Settings::drawPanelTimeWindow(Gfx_Sprite *spr)
                                C_SEP_LINE);
     }
 
-    for (int hour = 0; hour <= TIME_WINDOW_HOURS; ++hour)
+    // Hinter der letzten Stunde schließt der Rahmen das Raster. Eine weitere Linie läge außerhalb des Rahmens.
+    for (int hour = 0; hour < TIME_WINDOW_HOURS; ++hour)
     {
         const int x = gridX + (hour * TIME_WINDOW_GRID_W) / TIME_WINDOW_HOURS;
         spr->drawFastVLine(x, rowsY, rowsH, C_SEP_LINE);

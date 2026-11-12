@@ -226,6 +226,10 @@ namespace
     const char DE_TIME_MANUAL_OK[] PROGMEM = "Die Uhr wurde gesetzt.";
     const char DE_TIME_MANUAL_FAIL[] PROGMEM = "Die Uhr konnte nicht gesetzt werden.";
     const char DE_TIME_SAVED_MSG[] PROGMEM = "Die Zeit-Einstellungen wurden gespeichert.";
+    const char DE_TIME_SECOND_LABEL[] PROGMEM = "Sekundenzeiger";
+    const char DE_TIME_SECOND_SWEEP[] PROGMEM = "schleichend";
+    const char DE_TIME_SECOND_STEP[] PROGMEM = "Sekundenschritte";
+    const char DE_TIME_SECOND_WRITE_ERROR[] PROGMEM = "Die Gangart konnte nicht gespeichert werden.";
 
     const char DE_INFO_SECTION_NETWORK[] PROGMEM = "Netzwerk";
     const char DE_INFO_SECTION_SYSTEM[] PROGMEM = "System";
@@ -510,6 +514,10 @@ namespace
     const char EN_TIME_MANUAL_OK[] PROGMEM = "The clock has been set.";
     const char EN_TIME_MANUAL_FAIL[] PROGMEM = "The clock could not be set.";
     const char EN_TIME_SAVED_MSG[] PROGMEM = "The time settings have been saved.";
+    const char EN_TIME_SECOND_LABEL[] PROGMEM = "Second hand";
+    const char EN_TIME_SECOND_SWEEP[] PROGMEM = "sweeping";
+    const char EN_TIME_SECOND_STEP[] PROGMEM = "ticking";
+    const char EN_TIME_SECOND_WRITE_ERROR[] PROGMEM = "The second hand setting could not be saved.";
 
     const char EN_INFO_SECTION_NETWORK[] PROGMEM = "Network";
     const char EN_INFO_SECTION_SYSTEM[] PROGMEM = "System";
@@ -800,6 +808,10 @@ namespace
         {DE_TIME_MANUAL_OK, EN_TIME_MANUAL_OK},
         {DE_TIME_MANUAL_FAIL, EN_TIME_MANUAL_FAIL},
         {DE_TIME_SAVED_MSG, EN_TIME_SAVED_MSG},
+        {DE_TIME_SECOND_LABEL, EN_TIME_SECOND_LABEL},
+        {DE_TIME_SECOND_SWEEP, EN_TIME_SECOND_SWEEP},
+        {DE_TIME_SECOND_STEP, EN_TIME_SECOND_STEP},
+        {DE_TIME_SECOND_WRITE_ERROR, EN_TIME_SECOND_WRITE_ERROR},
 
         {DE_INFO_SECTION_NETWORK, EN_INFO_SECTION_NETWORK},
         {DE_INFO_SECTION_SYSTEM, EN_INFO_SECTION_SYSTEM},

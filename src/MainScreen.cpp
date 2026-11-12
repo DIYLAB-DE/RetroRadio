@@ -1,7 +1,11 @@
 #include "MainScreen.h"
 
 #include <cmath> // für cosf, sinf in der Analog-Uhr
+#include <algorithm>
+#include <cstring>
+#include <sys/time.h>
 #include <time.h>
+#include <utility>
 
 #include "RetroRadio.h"
 #include "SDPlayer.h"
@@ -126,6 +130,37 @@ namespace
 {
     constexpr const char *DATE_PLACEHOLDER = "--. ---. ----";
     constexpr const char *DAY_PLACEHOLDER = "--";
+    constexpr unsigned long CLOCK_FRAME_MS = 33;                        ///< Mindestabstand der schleichenden Zeigerbilder in Millisekunden
+    constexpr float CLOCK_HOUR_LENGTH = Layout::CLOCK_RADIUS * 0.55f;   ///< Länge des Stundenzeigers
+    constexpr float CLOCK_MINUTE_LENGTH = Layout::CLOCK_RADIUS * 0.75f; ///< Länge des Minutenzeigers
+    constexpr float CLOCK_SECOND_LENGTH = Layout::CLOCK_RADIUS * 0.95f; ///< Länge des Sekundenzeigers
+    constexpr float CLOCK_COUNTER_LENGTH = Layout::CLOCK_RADIUS * 0.2f; ///< Länge des Sekundenzeiger-Rückstücks
+    constexpr float CLOCK_HAND_WIDTH = Layout::CLOCK_RADIUS * 0.025f;   ///< Halbbreite von Stunden- und Minutenzeiger
+    constexpr float CLOCK_SECOND_WIDTH = Layout::CLOCK_RADIUS * 0.015f; ///< Halbbreite des Sekundenzeigers
+    constexpr float CLOCK_CENTER_RADIUS = Layout::CLOCK_RADIUS * 0.08f; ///< Radius der Zeigerachse
+    constexpr float CLOCK_SECOND_TIP = 0.5f;                            ///< Halbbreite der Sekundenzeigerspitze
+    constexpr int SIGNAL_BARS_W = Layout::SIGNAL_BAR_COUNT * Layout::SIGNAL_BAR_WIDTH + (Layout::SIGNAL_BAR_COUNT - 1) * Layout::SIGNAL_BAR_GAP; ///< Gesamtbreite der WLAN-Balken
+    constexpr int SIGNAL_BARS_H = Layout::SIGNAL_BAR_MIN_H + (Layout::SIGNAL_BAR_COUNT - 1) * Layout::SIGNAL_BAR_STEP_H; ///< Höhe des größten WLAN-Balkens
+    constexpr int SIGNAL_BARS_X = Layout::CLOCK_CENTER_X - SIGNAL_BARS_W / 2; ///< Linke Kante der WLAN-Balken
+    constexpr int SIGNAL_BARS_BOTTOM = Layout::CLOCK_CENTER_Y + int(Layout::CLOCK_RADIUS * Layout::SIGNAL_BAR_RADIAL_POS) + SIGNAL_BARS_H / 2; ///< Unterkante der WLAN-Balken
+
+    /**
+     * @brief Berechnet einen Uhrenpunkt im Uhrzeigersinn ab 12 Uhr
+     */
+    std::pair<float, float> clockPoint(float cx, float cy, float angleDeg, float length)
+    {
+        constexpr float CLOCK_DEG_TO_RAD = 0.0174532925f; ///< Umrechnung von Grad in Radiant
+        const float rad = (angleDeg - 90.0f) * CLOCK_DEG_TO_RAD;
+        return {cx + cosf(rad) * length, cy + sinf(rad) * length};
+    }
+
+    /**
+     * @brief Liefert die Anzahl der aktiven WLAN-Balken
+     */
+    int clockSignalBars(bool connected, uint8_t percent)
+    {
+        return connected && percent > 0 ? (percent - 1) * Layout::SIGNAL_BAR_COUNT / 100 + 1 : 0;
+    }
 }
 
 // ===================================================================
@@ -150,6 +185,8 @@ MainScreen::MainScreen()
  */
 MainScreen::~MainScreen()
 {
+    m_clockCanvas.deleteSprite();
+
     // Sprites nur löschen wenn m_tft gültig ist
     if (m_tft)
     {
@@ -159,6 +196,7 @@ MainScreen::~MainScreen()
         // Label-Cache-Sprites freigeben
         m_tft->safeDeleteSprite(m_sprLabelNtp);
         m_tft->safeDeleteSprite(m_sprLabelDst);
+        m_tft->safeDeleteSprite(m_sprClockDial);
 
         if (m_sprMainScreen)
             m_tft->safeDeleteSprite(m_sprMainScreen);
@@ -191,6 +229,11 @@ bool MainScreen::init(LGFX &tft, DS1307_RTC &rtc, StationManager &stationManager
         LOG_ERROR("Konnte Sprite für das Hauptdisplay nicht erstellen!");
         return false;
     }
+
+    m_clockCanvas.setBuffer(m_sprMainScreen->getBuffer(), Layout::SPRITE_WIDTH, Layout::SPRITE_HEIGHT, 16);
+    m_clockCanvas.setSwapBytes(true);
+    if (!m_tft->safeCreateSprite(m_sprClockDial, Layout::SPRITE_WIDTH, Layout::SPRITE_HEIGHT))
+        LOG_WARNING("Zifferblatt-Cache nicht verfügbar, Uhr läuft in Sekundenschritten.");
 
     // Zeichenzustand initialisieren
     m_drawStep = 0;
@@ -554,6 +597,16 @@ void MainScreen::wakeFromTimeWindowSleep()
  */
 void MainScreen::updateMainScreen()
 {
+    if (m_activeModule || !APP_STATE.isDisplayOn() || APP_STATE.getBlockGFX())
+        return;
+
+    const bool sweep = APP_STATE.getSecondHandSweep();
+    if (sweep != m_clockSweep)
+    {
+        m_clockSweep = sweep;
+        m_needsRedraw = true;
+    }
+
     // Aktuellen WiFi-Status prüfen
     bool currentWifiStatus = APP_STATE.getWifiConnected();
 
@@ -577,12 +630,18 @@ void MainScreen::updateMainScreen()
         m_needsRedraw = true; // Status-Marker in der Uhr aktualisieren
     }
 
-    // WiFi-Signal bei Prozentänderung aktualisieren
+    // Nur eine geänderte Balkenzahl erfordert eine neue Darstellung.
     uint8_t curPct = APP_STATE.getWifiSignalPercent();
     if (curPct != m_lastWifiPercent)
     {
+        if (clockSignalBars(currentWifiStatus, curPct) != clockSignalBars(currentWifiStatus, m_lastWifiPercent))
+        {
+            if (m_sprClockDial)
+                m_clockBarsDirty = true;
+            else
+                m_needsRedraw = true;
+        }
         m_lastWifiPercent = curPct;
-        m_needsRedraw = true; // WiFi-Balken in der Uhr aktualisieren
     }
 
     // Systemzeit einmalig für Kalender-Button und Sekunden-Check holen
@@ -590,6 +649,12 @@ void MainScreen::updateMainScreen()
     struct tm nowLocal;
     localtime_r(&nowEpoch, &nowLocal);
     bool timeValid = DS1307_RTC::isSystemTimeValid();
+    if (timeValid != m_clockTimeValid)
+    {
+        m_clockTimeValid = timeValid;
+        m_dateCacheValid = false;
+        m_needsRedraw = true;
+    }
 
     // Kalender-Button (Index 3) aktualisieren wenn sich der Tag ändert. Bei ungültiger Systemzeit wird der Platzhalter angezeigt, bis NTP oder RTC die Zeit setzt.
     if (m_buttons[BUTTON_INDEX_CALENDAR])
@@ -610,20 +675,36 @@ void MainScreen::updateMainScreen()
 
             m_lastUpdatedDay = currentDay;
             m_dateCacheValid = false; // Datum-Cache bei Tageswechsel neu rendern
+            m_needsRedraw = true;
         }
     }
 
     unsigned long currentTime = millis();
 
-    // Sekundenwechsel erzwingt Redraw der Uhr
+    // Netzwerktexte einmal pro Sekunde prüfen, der Rückfall zeichnet weiterhin im Sekundentakt.
     if (m_lastDrawnSecond != nowLocal.tm_sec)
     {
         m_lastDrawnSecond = nowLocal.tm_sec;
-        m_needsRedraw = true;
+        if (m_sprClockDial)
+        {
+            const uint32_t ipv4 = static_cast<uint32_t>(WiFi.localIP());
+            const char *ssid = SYSTEM_STATS.getWifiSSID();
+            if (ipv4 != m_clockIpv4 || strcmp(ssid, m_clockSsid) != 0)
+            {
+                m_clockIpv4 = ipv4;
+                stringutils::safeCopy(m_clockSsid, ssid);
+                m_needsRedraw = true;
+            }
+        }
+        else
+        {
+            m_needsRedraw = true;
+        }
     }
 
     // Prüfen ob genug Zeit vergangen ist für den nächsten Zeichenschritt
-    if (currentTime - m_lastDrawTime < m_drawInterval)
+    const unsigned long interval = m_sprClockDial ? std::max(m_drawInterval, CLOCK_FRAME_MS) : m_drawInterval;
+    if (currentTime - m_lastDrawTime < interval)
         return;
 
     m_lastDrawTime = currentTime;
@@ -631,6 +712,12 @@ void MainScreen::updateMainScreen()
     // Wenn GFX blockiert ist, den gesamten Zeichen- und Swap-Vorgang überspringen
     if (APP_STATE.getBlockGFX())
         return;
+
+    if (m_sprClockDial)
+    {
+        updateClockSweep();
+        return;
+    }
 
     // Je nach Status verschiedene Aktionen
     switch (m_drawState)
@@ -1316,7 +1403,7 @@ void MainScreen::drawImmediate()
         return;
 
     drawBackground(puffer);
-    drawAnalogClock(puffer, Layout::CLOCK_CENTER_X, Layout::CLOCK_CENTER_Y, Layout::CLOCK_RADIUS);
+    drawAnalogClock();
 
     display();
 }
@@ -1341,7 +1428,7 @@ bool MainScreen::drawIncremental()
         return false;
 
     case 1:
-        drawAnalogClock(puffer, Layout::CLOCK_CENTER_X, Layout::CLOCK_CENTER_Y, Layout::CLOCK_RADIUS);
+        drawAnalogClock();
         m_drawStep++;
         return false;
 
@@ -1388,17 +1475,184 @@ void MainScreen::drawBackground(Gfx_Sprite *buffer)
 }
 
 /**
- * @brief Zeichnet eine analoge Uhr mit integrierten Status-Indikatoren und Datum.
+ * @brief Setzt Zifferblatt und Zeiger im vorhandenen Uhrpuffer zusammen
+ */
+void MainScreen::drawAnalogClock()
+{
+    Gfx_Sprite *buffer = getBuffer();
+    if (!buffer || !APP_STATE.isDisplayOn() || APP_STATE.getBlockGFX())
+        return;
+
+    Gfx_Sprite *dial = m_sprClockDial ? m_sprClockDial : buffer;
+    if (m_sprClockDial)
+        drawBackground(dial);
+    drawClockDial(dial, Layout::CLOCK_CENTER_X, Layout::CLOCK_CENTER_Y, Layout::CLOCK_RADIUS);
+    if (m_sprClockDial)
+        memcpy(buffer->getBuffer(), dial->getBuffer(), Layout::SPRITE_WIDTH * Layout::SPRITE_HEIGHT * sizeof(uint16_t));
+
+    m_clockTimeValid = DS1307_RTC::isSystemTimeValid();
+    m_clockSweep = APP_STATE.getSecondHandSweep();
+    m_drawnClockHands = currentClockHands(m_sprClockDial != nullptr && m_clockSweep);
+    drawClockHands(m_drawnClockHands);
+    m_clockBarsDirty = false;
+}
+
+/**
+ * @brief Liest die Zeigerwinkel aus einem gemeinsamen Zeitstempel
+ */
+MainScreen::ClockHands MainScreen::currentClockHands(bool sweep)
+{
+    constexpr float DEGREES_PER_MINUTE = 6.0f; ///< Winkel einer Sekunden- oder Minutenmarkierung
+    constexpr float DEGREES_PER_HOUR = 30.0f;  ///< Winkel einer Stundenmarkierung
+    constexpr float MICROSECONDS_PER_SECOND = 1000000.0f; ///< Mikrosekunden je Sekunde
+    timeval now{};
+    gettimeofday(&now, nullptr);
+    const time_t seconds = now.tv_sec;
+    struct tm localTime;
+    localtime_r(&seconds, &localTime);
+
+    ClockHands hands;
+    hands.hour = (localTime.tm_hour % 12 + localTime.tm_min / 60.0f) * DEGREES_PER_HOUR;
+    hands.minute = (localTime.tm_min + localTime.tm_sec / 60.0f) * DEGREES_PER_MINUTE;
+    hands.second = (localTime.tm_sec + (sweep ? now.tv_usec / MICROSECONDS_PER_SECOND : 0.0f)) * DEGREES_PER_MINUTE;
+    return hands;
+}
+
+/**
+ * @brief Zeichnet alle Zeiger und die Achse innerhalb des aktuellen Sprite-Clips
+ */
+void MainScreen::drawClockHands(const ClockHands &hands)
+{
+    if (!m_clockTimeValid)
+        return;
+
+    const auto &theme = Theme::ActiveMainScreen;
+    const int cx = Layout::CLOCK_CENTER_X;
+    const int cy = Layout::CLOCK_CENTER_Y;
+    const auto hour = clockPoint(cx, cy, hands.hour, CLOCK_HOUR_LENGTH);
+    const auto minute = clockPoint(cx, cy, hands.minute, CLOCK_MINUTE_LENGTH);
+    const auto second = clockPoint(cx, cy, hands.second, CLOCK_SECOND_LENGTH);
+    const auto counter = clockPoint(cx, cy, hands.second + 180.0f, CLOCK_COUNTER_LENGTH);
+
+    m_clockCanvas.drawHand(cx, cy, hour.first, hour.second, CLOCK_HAND_WIDTH, CLOCK_HAND_WIDTH, theme.clockHands);
+    m_clockCanvas.drawHand(cx, cy, minute.first, minute.second, CLOCK_HAND_WIDTH, CLOCK_HAND_WIDTH, theme.clockHands);
+    m_clockCanvas.fillSmoothCircle(cx, cy, CLOCK_CENTER_RADIUS, theme.clockCenter);
+    m_clockCanvas.drawHand(counter.first, counter.second, second.first, second.second, CLOCK_SECOND_WIDTH, CLOCK_SECOND_TIP, theme.clockSecondHand);
+    m_clockCanvas.fillSmoothCircle(cx, cy, CLOCK_CENTER_RADIUS * 0.8f, theme.clockCenterAccent);
+}
+
+/**
+ * @brief Berechnet die begrenzte Zeichenfläche eines Zeigers mit Glättungssaum
+ */
+MainScreen::ClockRect MainScreen::clockHandRect(float angle, float back, float length, float width)
+{
+    constexpr float ANTIALIAS_MARGIN = 2.0f; ///< Saum für Kantenglättung und Rundung der Rechteckgrenzen
+    const auto start = clockPoint(Layout::CLOCK_CENTER_X, Layout::CLOCK_CENTER_Y, angle + 180.0f, back);
+    const auto end = clockPoint(Layout::CLOCK_CENTER_X, Layout::CLOCK_CENTER_Y, angle, length);
+    const float margin = width + ANTIALIAS_MARGIN;
+    const int left = std::max(0, int(floorf(std::min(start.first, end.first) - margin)));
+    const int top = std::max(0, int(floorf(std::min(start.second, end.second) - margin)));
+    const int right = std::min(Layout::SPRITE_WIDTH, int(ceilf(std::max(start.first, end.first) + margin)) + 1);
+    const int bottom = std::min(Layout::CLOCK_DIAMETER, int(ceilf(std::max(start.second, end.second) + margin)) + 1);
+    return {left, top, right - left, bottom - top};
+}
+
+/**
+ * @brief Stellt einen Bereich aus dem Zifferblatt wieder her und überträgt ihn mit allen überlappenden Zeigern
+ */
+void MainScreen::redrawClockRect(const ClockRect &rect, const ClockHands &hands)
+{
+    if (rect.w <= 0 || rect.h <= 0)
+        return;
+
+    const auto *source = static_cast<const uint16_t *>(m_sprClockDial->getBuffer());
+    auto *target = static_cast<uint16_t *>(m_sprMainScreen->getBuffer());
+    for (int row = rect.y; row < rect.y + rect.h; ++row)
+    {
+        const int offset = row * Layout::SPRITE_WIDTH + rect.x;
+        memcpy(target + offset, source + offset, rect.w * sizeof(uint16_t));
+    }
+
+    m_clockCanvas.setClipRect(rect.x, rect.y, rect.w, rect.h);
+    drawClockHands(hands);
+    m_clockCanvas.clearClipRect();
+
+    int32_t clipX, clipY, clipW, clipH;
+    m_tft->getClipRect(&clipX, &clipY, &clipW, &clipH);
+    m_tft->setClipRect(Layout::SPRITE_X + rect.x, Layout::SPRITE_Y + rect.y, rect.w, rect.h);
+    m_sprMainScreen->pushSprite(Layout::SPRITE_X, Layout::SPRITE_Y);
+    m_tft->setClipRect(clipX, clipY, clipW, clipH);
+}
+
+/**
+ * @brief Aktualisiert die Zeiger ohne erneutes Zeichnen des Zifferblatts
+ */
+void MainScreen::updateClockSweep()
+{
+    if (m_needsRedraw)
+    {
+        requestRedraw(true);
+        return;
+    }
+
+    const ClockHands hands = currentClockHands(m_clockSweep);
+    if (m_clockBarsDirty)
+    {
+        drawClockSignalBars(m_sprClockDial);
+        redrawClockRect({SIGNAL_BARS_X, SIGNAL_BARS_BOTTOM - SIGNAL_BARS_H, SIGNAL_BARS_W, SIGNAL_BARS_H}, hands);
+        m_clockBarsDirty = false;
+    }
+
+    if (!m_clockTimeValid)
+        return;
+
+    auto updateHand = [&](float before, float after, float back, float length, float width)
+    {
+        if (before == after)
+            return;
+
+        const ClockRect oldRect = clockHandRect(before, back, length, width);
+        const ClockRect newRect = clockHandRect(after, back, length, width);
+        const int left = std::min(oldRect.x, newRect.x);
+        const int top = std::min(oldRect.y, newRect.y);
+        const int right = std::max(oldRect.x + oldRect.w, newRect.x + newRect.w);
+        const int bottom = std::max(oldRect.y + oldRect.h, newRect.y + newRect.h);
+        redrawClockRect({left, top, right - left, bottom - top}, hands);
+    };
+
+    updateHand(m_drawnClockHands.second, hands.second, CLOCK_COUNTER_LENGTH, CLOCK_SECOND_LENGTH, CLOCK_SECOND_WIDTH);
+    updateHand(m_drawnClockHands.minute, hands.minute, 0.0f, CLOCK_MINUTE_LENGTH, CLOCK_HAND_WIDTH);
+    updateHand(m_drawnClockHands.hour, hands.hour, 0.0f, CLOCK_HOUR_LENGTH, CLOCK_HAND_WIDTH);
+    m_drawnClockHands = hands;
+}
+
+/**
+ * @brief Zeichnet die WLAN-Balken ohne Texte oder Zeiger
+ */
+void MainScreen::drawClockSignalBars(Gfx_Sprite *buffer)
+{
+    const auto &theme = Theme::ActiveMainScreen;
+    const bool connected = APP_STATE.getWifiConnected();
+    const int activeBars = clockSignalBars(connected, APP_STATE.getWifiSignalPercent());
+    for (int i = 0; i < Layout::SIGNAL_BAR_COUNT; ++i)
+    {
+        const int height = Layout::SIGNAL_BAR_MIN_H + i * Layout::SIGNAL_BAR_STEP_H;
+        const int x = SIGNAL_BARS_X + i * (Layout::SIGNAL_BAR_WIDTH + Layout::SIGNAL_BAR_GAP);
+        const uint16_t color = connected && i < activeBars ? theme.statusWifiActive : theme.statusOff;
+        buffer->fillRect(x, SIGNAL_BARS_BOTTOM - height, Layout::SIGNAL_BAR_WIDTH, height, color);
+    }
+}
+
+/**
+ * @brief Zeichnet das Zifferblatt mit Status-Indikatoren und Datum ohne Zeiger.
  *
  * Status-Indikatoren innerhalb der Uhr:
  * - 11-Uhr-Marker: NTP-Status
  * - 1-Uhr-Marker: DST-Status
  * - Zwischen Zentrum und 6 Uhr: WiFi-Signalbalken, darunter SSID + IP
  * - Rotierte Labels "NTP" und "DST" neben den jeweiligen Markern
- *
- * Bei ungültiger Systemzeit (kein NTP-Sync, keine gepufferte RTC) werden die Zeiger weggelassen, damit der Anwender sofort sieht, dass aktuell keine Uhrzeit verfügbar ist.
  */
-void MainScreen::drawAnalogClock(Gfx_Sprite *buffer, int centerX, int centerY, float radius)
+void MainScreen::drawClockDial(Gfx_Sprite *buffer, int centerX, int centerY, float radius)
 {
     if (!buffer || !APP_STATE.isDisplayOn() || APP_STATE.getBlockGFX())
         return;
@@ -1407,13 +1661,8 @@ void MainScreen::drawAnalogClock(Gfx_Sprite *buffer, int centerX, int centerY, f
     const auto &T = Theme::ActiveMainScreen;
 
     // Geometrie-Konstanten
-    const float HOUR_HAND_RATIO = 0.55f;
-    const float MINUTE_HAND_RATIO = 0.75f;
-    const float SECOND_HAND_RATIO = 0.95f;
     const float HOUR_MARK_LENGTH = radius * 0.15f;
     const float MINOR_MARK_LENGTH = radius * 0.08f;
-    const float HAND_WIDTH = radius * 0.025f;
-    const float CENTER_CIRCLE_RADIUS = radius * 0.08f;
     const int DEGREES_PER_HOUR = 30;
     const int DEGREES_PER_MINUTE = 6;
 
@@ -1421,14 +1670,6 @@ void MainScreen::drawAnalogClock(Gfx_Sprite *buffer, int centerX, int centerY, f
     bool ntpSynced = APP_STATE.getNtpSynced();
     bool dstActive = APP_STATE.getDstActive();
     bool wifiConnected = APP_STATE.getWifiConnected();
-    uint8_t wifiPercent = APP_STATE.getWifiSignalPercent();
-
-    // Lambda für Koordinatenberechnung
-    auto getCoord = [](float cx, float cy, float angleDeg, float length) -> std::pair<float, float>
-    {
-        const float rad = (angleDeg - 90.0f) * 0.0174532925f; // DEG2RAD
-        return {cx + cosf(rad) * length, cy + sinf(rad) * length};
-    };
 
     buffer->setTextDatum(TL_DATUM);
 
@@ -1438,8 +1679,8 @@ void MainScreen::drawAnalogClock(Gfx_Sprite *buffer, int centerX, int centerY, f
         if (minute % 5 != 0)
         {
             const float angleDeg = minute * DEGREES_PER_MINUTE;
-            auto outer = getCoord(centerX, centerY, angleDeg, radius - 10);
-            auto inner = getCoord(centerX, centerY, angleDeg, radius - 10 - MINOR_MARK_LENGTH);
+            auto outer = clockPoint(centerX, centerY, angleDeg, radius - 10);
+            auto inner = clockPoint(centerX, centerY, angleDeg, radius - 10 - MINOR_MARK_LENGTH);
             buffer->drawWideLine(roundf(inner.first), roundf(inner.second), roundf(outer.first), roundf(outer.second), 1.0f, T.clockMinorMarks);
         }
     }
@@ -1448,8 +1689,8 @@ void MainScreen::drawAnalogClock(Gfx_Sprite *buffer, int centerX, int centerY, f
     for (int hour = 0; hour < 12; hour++)
     {
         const float angleDeg = hour * DEGREES_PER_HOUR;
-        auto outer = getCoord(centerX, centerY, angleDeg, radius - 10);
-        auto inner = getCoord(centerX, centerY, angleDeg, radius - 10 - HOUR_MARK_LENGTH);
+        auto outer = clockPoint(centerX, centerY, angleDeg, radius - 10);
+        auto inner = clockPoint(centerX, centerY, angleDeg, radius - 10 - HOUR_MARK_LENGTH);
 
         // Standardfarbe und -dicke
         float lineWidth = (hour % 3 == 0) ? 3.0f : 2.0f;
@@ -1478,7 +1719,7 @@ void MainScreen::drawAnalogClock(Gfx_Sprite *buffer, int centerX, int centerY, f
     {
         // NTP-Label bei 11 Uhr (330°), radial innerhalb der Markierung
         constexpr float NTP_ANGLE = 330.0f;
-        auto ntpPos = getCoord(centerX, centerY, NTP_ANGLE, radius * Layout::LABEL_RADIAL_POS);
+        auto ntpPos = clockPoint(centerX, centerY, NTP_ANGLE, radius * Layout::LABEL_RADIAL_POS);
         m_sprLabelNtp->pushRotateZoomWithAA(buffer, roundf(ntpPos.first), roundf(ntpPos.second), NTP_ANGLE + 90.0f, 1.0f, 1.0f, TFT_BLACK);
     }
 
@@ -1486,46 +1727,14 @@ void MainScreen::drawAnalogClock(Gfx_Sprite *buffer, int centerX, int centerY, f
     {
         // DST-Label bei 1 Uhr (30°), radial innerhalb der Markierung
         constexpr float DST_ANGLE = 30.0f;
-        auto dstPos = getCoord(centerX, centerY, DST_ANGLE, radius * Layout::LABEL_RADIAL_POS);
+        auto dstPos = clockPoint(centerX, centerY, DST_ANGLE, radius * Layout::LABEL_RADIAL_POS);
         m_sprLabelDst->pushRotateZoomWithAA(buffer, roundf(dstPos.first), roundf(dstPos.second), DST_ANGLE + 90.0f, 1.0f, 1.0f, TFT_BLACK);
     }
 
     // WiFi-Signalbalken
     {
-        constexpr int barCount = Layout::SIGNAL_BAR_COUNT;
-        constexpr int barW = Layout::SIGNAL_BAR_WIDTH;
-        constexpr int gap = Layout::SIGNAL_BAR_GAP;
-        constexpr int minH = Layout::SIGNAL_BAR_MIN_H;
-        constexpr int stepH = Layout::SIGNAL_BAR_STEP_H;
-        constexpr int maxH = minH + (barCount - 1) * stepH;
-
-        // Gesamtbreite aller Balken
-        constexpr int totalBarW = barCount * barW + (barCount - 1) * gap;
-
-        // Position: zwischen Zentrum und 6-Uhr-Marker
-        int barCenterY = centerY + int(radius * Layout::SIGNAL_BAR_RADIAL_POS);
-        int x0 = centerX - totalBarW / 2;
-        int yBottom = barCenterY + maxH / 2;
-
-        // Aktive Balken aus Signalstärke berechnen
-        int activeBars = 0;
-        if (wifiConnected && wifiPercent > 0)
-            activeBars = (wifiPercent - 1) * barCount / 100 + 1;
-
-        for (int i = 0; i < barCount; ++i)
-        {
-            int barH = minH + i * stepH;
-            int bx = x0 + i * (barW + gap);
-            int by = yBottom - barH;
-
-            uint16_t color;
-            if (!wifiConnected)
-                color = T.statusOff;
-            else
-                color = (i < activeBars) ? T.statusWifiActive : T.statusOff;
-
-            buffer->fillRect(bx, by, barW, barH, color);
-        }
+        drawClockSignalBars(buffer);
+        const int yBottom = SIGNAL_BARS_BOTTOM;
 
         // SSID + IP unter den Balken anzeigen
         const char *ssid = SYSTEM_STATS.getWifiSSID();
@@ -1574,45 +1783,6 @@ void MainScreen::drawAnalogClock(Gfx_Sprite *buffer, int centerX, int centerY, f
 
             buffer->unloadFont();
         }
-    }
-
-    // Zeiger nur zeichnen wenn die Systemzeit plausibel ist. Ohne NTP-Sync und ohne gepufferte RTC bleibt das Zifferblatt leer - so sieht der Anwender sofort, dass keine aktuelle Uhrzeit verfügbar ist.
-    if (DS1307_RTC::isSystemTimeValid())
-    {
-        time_t nowEpoch = time(nullptr);
-        struct tm localTime;
-        localtime_r(&nowEpoch, &localTime);
-
-        const float hourLength = radius * HOUR_HAND_RATIO;
-        const float minuteLength = radius * MINUTE_HAND_RATIO;
-        const float secondLength = radius * SECOND_HAND_RATIO;
-
-        const float hourAngle = (localTime.tm_hour % 12 + localTime.tm_min / 60.0f) * DEGREES_PER_HOUR;
-        const float minuteAngle = (localTime.tm_min + localTime.tm_sec / 60.0f) * DEGREES_PER_MINUTE;
-        const float secondAngle = localTime.tm_sec * DEGREES_PER_MINUTE;
-
-        // Stundenzeiger
-        auto hourPos = getCoord(centerX, centerY, hourAngle, hourLength);
-        buffer->drawWideLine(centerX, centerY, hourPos.first, hourPos.second, HAND_WIDTH, T.clockHands);
-
-        // Minutenzeiger
-        auto minPos = getCoord(centerX, centerY, minuteAngle, minuteLength);
-        buffer->drawWideLine(centerX, centerY, minPos.first, minPos.second, HAND_WIDTH, T.clockHands);
-
-        // Mittelpunkt
-        buffer->fillSmoothCircle(centerX, centerY, CENTER_CIRCLE_RADIUS, T.clockCenter);
-
-        // Sekundenzeiger
-        const float counterWeightLength = radius * 0.2f;
-        const float secHandWidth = radius * 0.015f;
-
-        auto secTip = getCoord(centerX, centerY, secondAngle, secondLength);
-        auto counterWeightTip = getCoord(centerX, centerY, secondAngle + 180, counterWeightLength);
-
-        buffer->drawWedgeLine(roundf(counterWeightTip.first), roundf(counterWeightTip.second), roundf(secTip.first), roundf(secTip.second), secHandWidth, 0.5f, T.clockSecondHand);
-
-        // Innerer Akzent im Mittelpunkt
-        buffer->fillSmoothCircle(centerX, centerY, CENTER_CIRCLE_RADIUS * 0.8f, T.clockCenterAccent);
     }
 
     // Datum unter der Uhr

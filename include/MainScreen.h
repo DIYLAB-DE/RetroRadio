@@ -34,6 +34,49 @@ public:
     };
 
 private:
+    /**
+     * @brief Zeigerwinkel in Grad im Uhrzeigersinn ab 12 Uhr
+     */
+    struct ClockHands
+    {
+        float hour = 0.0f;   ///< Winkel des Stundenzeigers
+        float minute = 0.0f; ///< Winkel des Minutenzeigers
+        float second = 0.0f; ///< Winkel des Sekundenzeigers einschließlich Sekundenbruchteil
+    };
+
+    /**
+     * @brief Zu erneuernder Bereich innerhalb des Uhrsprites
+     */
+    struct ClockRect
+    {
+        int x; ///< Linke Kante
+        int y; ///< Obere Kante
+        int w; ///< Breite in Pixeln
+        int h; ///< Höhe in Pixeln
+    };
+
+    /**
+     * @brief Zeichenansicht auf den vorhandenen Uhrpuffer mit Teilpixelkoordinaten
+     */
+    class ClockSprite : public Gfx_Sprite
+    {
+    public:
+        /**
+         * @brief Zeichnet eine geglättete Keillinie ohne Rundung der Endpunkte auf ganze Pixel
+         * @param x0 X-Koordinate des Anfangs
+         * @param y0 Y-Koordinate des Anfangs
+         * @param x1 X-Koordinate des Endes
+         * @param y1 Y-Koordinate des Endes
+         * @param r0 Halbbreite am Anfang
+         * @param r1 Halbbreite am Ende
+         * @param color Farbe in RGB565
+         */
+        void drawHand(float x0, float y0, float x1, float y1, float r0, float r1, uint16_t color)
+        {
+            draw_wedgeline(x0, y0, x1, y1, r0, r1, lgfx::convert_to_rgb888(color));
+        }
+    };
+
     // Display und Hardware
     LGFX *m_tft = nullptr;                      ///< Zeiger auf TFT-Display
     DS1307_RTC *m_rtc = nullptr;                ///< Zeiger auf Echtzeituhr
@@ -42,10 +85,15 @@ private:
 
 
     // Sprites
-    // Ein Puffer genügt. Während der Bildschirm über mehrere Durchläufe aufgebaut wird, zeigt
-    // das Panel weiter den zuletzt geschobenen Stand aus seinem eigenen Bildspeicher; der Sprite
-    // ist dabei nicht sichtbar. Ein zweiter Puffer kostete 375 KB und wurde nie gelesen.
     Gfx_Sprite *m_sprMainScreen = nullptr; ///< Sprite für das Hauptdisplay
+    Gfx_Sprite *m_sprClockDial = nullptr;  ///< Zifferblatt samt Datum ohne Zeiger, nullptr aktiviert den Sekundentakt
+    ClockSprite m_clockCanvas;            ///< Nutzt den Speicher von m_sprMainScreen ohne eigene Pixelallokation
+    ClockHands m_drawnClockHands;          ///< Zuletzt gezeichnete Zeigerstellung
+    bool m_clockTimeValid = false;        ///< Zeitgültigkeit der aktuellen Uhrdarstellung
+    bool m_clockSweep = true;             ///< Zuletzt übernommene Gangart, true ist schleichend
+    bool m_clockBarsDirty = false;        ///< WLAN-Balken im Zifferblatt müssen aktualisiert werden
+    uint32_t m_clockIpv4 = 0;             ///< Zuletzt geprüfte IP-Adresse
+    char m_clockSsid[33] = {};            ///< Zuletzt geprüfter WLAN-Name
     Gfx_Sprite *m_sprDateCache = nullptr;                ///< Cache-Sprite für Datumszeile (nur bei Tageswechsel neu gerendert)
     Gfx_Sprite *m_sprLabelNtp = nullptr;                 ///< Cache-Sprite für "NTP"-Label (einmalig gerendert, rotiert geblittet)
     Gfx_Sprite *m_sprLabelDst = nullptr;                 ///< Cache-Sprite für "DST"-Label (einmalig gerendert, rotiert geblittet)
@@ -57,7 +105,7 @@ private:
 
     // Timing für Non-Blocking
     unsigned long m_lastDrawTime = 0;  ///< Zeitstempel der letzten Zeichenoperation
-    unsigned long m_drawInterval = 16; ///< Millisekunden zwischen Zeichenschritten (ca. 60 FPS)
+    unsigned long m_drawInterval = 16; ///< Mindestabstand der Zeichenschritte, schleichende Uhr zusätzlich auf 30 Bilder/s begrenzt
     int m_lastDrawnSecond = -1;        ///< Zuletzt gezeichnete Sekunde zur Optimierung
 
     // Initialisierungs-Flag
@@ -138,7 +186,14 @@ private:
 
     // Private Zeichenfunktionen für verschiedene UI-Bereiche
     void drawBackground(Gfx_Sprite *buffer);
-    void drawAnalogClock(Gfx_Sprite *buffer, int centerX, int centerY, float radius = 200.0f);
+    void drawAnalogClock(); ///< Setzt Zifferblatt und Zeiger im Uhrpuffer zusammen
+    void drawClockDial(Gfx_Sprite *buffer, int centerX, int centerY, float radius); ///< Zeichnet Zifferblatt, Status und Datum ohne Zeiger
+    void drawClockSignalBars(Gfx_Sprite *buffer); ///< Zeichnet nur die WLAN-Balken an ihrer festen Position
+    void updateClockSweep(); ///< Aktualisiert geänderte Zeigerbereiche aus dem zwischengespeicherten Zifferblatt
+    void drawClockHands(const ClockHands &hands); ///< Zeichnet alle Zeiger und die Achse in die begrenzte Zeichenansicht
+    void redrawClockRect(const ClockRect &rect, const ClockHands &hands); ///< Stellt einen Bereich wieder her und überträgt ihn mit den aktuellen Zeigern
+    static ClockHands currentClockHands(bool sweep); ///< Liest die Systemzeit, bei sweep mit Sekundenbruchteilen
+    static ClockRect clockHandRect(float angle, float back, float length, float width); ///< Ermittelt die Zeigergrenzen einschließlich Kantenglättung
     void renderDateCache();   ///< Rendert das Datum-Cache-Sprite neu (nur bei Tageswechsel)
     void renderLabelCaches(); ///< Rendert NTP/DST-Label-Cache-Sprites (einmalig)
     void drawActiveCornerDebugRegions(); ///< Zeichnet Debug-Rechtecke für die Sliding-Bereiche

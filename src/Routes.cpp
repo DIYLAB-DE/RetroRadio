@@ -486,6 +486,23 @@ void notifyPinLockModeChanged()
 }
 
 /**
+ * @brief Liefert die gespeicherte Gangart der Hauptmenü-Uhr
+ */
+static const char *secondHandStatusJson()
+{
+    return APP_STATE.getSecondHandSweep() ? "{\"sweep\":true}" : "{\"sweep\":false}";
+}
+
+/**
+ * @brief Meldet die Gangart der Hauptmenü-Uhr an verbundene Browser
+ */
+void notifySecondHandModeChanged()
+{
+    if (g_events)
+        g_events->send(secondHandStatusJson(), "secondhand", millis());
+}
+
+/**
  * @brief Meldet dem Webinterface den Sperrzustand des Displays
  */
 void notifyDisplayLockChanged(bool locked)
@@ -655,6 +672,7 @@ static void onSSEConnect(AsyncEventSourceClient *client)
 
     // Aktuellen Display-Sperrzustand mitschicken, damit ein nach einer Sperre neu verbundener Browser den Stand kennt
     client->send(lockStatusJson(), "lock", millis());
+    client->send(secondHandStatusJson(), "secondhand", millis());
 }
 
 // ===================================================================
@@ -755,16 +773,35 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
     });
 
     // ===================================================================
-    // API: NTP-Einstellungen (GET/POST)
+    // API: Sekundenzeiger und allgemeine Einstellungen
     // ===================================================================
 
-    // GET: Aktuelle NTP-Einstellungen abrufen
+    g_server->on("/api/secondhand", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        const auto *mode = request->getParam("sweep", true);
+        if (!mode || (mode->value() != "true" && mode->value() != "false"))
+        {
+            request->send(400);
+            return;
+        }
+
+        if (!APP_STATE.setSecondHandSweep(mode->value() == "true"))
+        {
+            request->send(500);
+            return;
+        }
+
+        request->send(200, "application/json", secondHandStatusJson());
+    });
+
+    // GET: Aktuelle Einstellungen abrufen
     g_server->on("/api/settings", HTTP_GET, [](AsyncWebServerRequest *request)
                  {
         char jsonBuffer[900];
         stringutils::safeFormat(jsonBuffer,
             "{"
             "\"pinLockEnabled\":%s,"
+            "\"secondHandSweep\":%s,"
             "\"hostname\":\"%s\","
             "\"ntpServer\":\"%s\","
             "\"timezoneRegion\":\"%s\","
@@ -779,6 +816,7 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
             "\"language\":\"%s\""
             "}",
             APP_STATE.isPinLockEnabled() ? "true" : "false",
+            APP_STATE.getSecondHandSweep() ? "true" : "false",
             APP_STATE.getHostname(),
             APP_STATE.getNtpServer(),
             APP_STATE.getTimezoneRegion(),

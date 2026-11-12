@@ -41,6 +41,8 @@ Die Anzeigen folgen den Audiodaten. Bei angehaltener Wiedergabe oder sehr leisem
 
 Ein langer Druck auf das magische Auge oben rechts schaltet reihum durch **EM11, EM34, EM80 und EM84**. Es ist eine grafische Nachbildung, keine zusätzliche Röhre im Hardwareaufbau.
 
+Die **EM34** steht senkrecht: Der breitere Schatten liegt oben, der schmalere unten. Das gilt auch für die Vorschau unter **Einstellungen -> Anzeige** und im Browser.
+
 Beim Senderwechsel begleitet das magische Auge weiterhin die Zeigerfahrt. Sobald der Zeiger seine Zielposition erreicht hat, zeigt es die aktuelle WLAN-Signalstärke an: Je stärker das Signal, desto weiter schließt sich das Auge beziehungsweise wächst das Leuchtband. Der Wert wird etwa alle 1,5 Sekunden aktualisiert, sodass auch Empfangsschwankungen bei laufendem Sender sichtbar werden. Ohne WLAN-Verbindung zeigt das Auge den minimalen Ausschlag. Angezeigt wird die Funkverbindung zum WLAN-Router.
 
 Für das magische Auge gilt folgende Anzeigeskala:
@@ -64,6 +66,8 @@ Der SD-Player verbindet eine animierte Kassette, Coveranzeige, Titelinformatione
 | Laufende Wiedergabe mit Ordnercover | Pause | Noch keine Titel |
 | --- | --- | --- |
 | [![SD-Player mit Cover](bilder/bedienung/sdplayer-cover-wiedergabe-klein.png)](bilder/bedienung/sdplayer-cover-wiedergabe.png) | [![SD-Player pausiert](bilder/bedienung/sdplayer-pause-klein.png)](bilder/bedienung/sdplayer-pause.png) | [![Leere Titelliste](bilder/bedienung/sdplayer-uebersicht-klein.png)](bilder/bedienung/sdplayer-uebersicht.png) |
+
+Ohne laufenden Titel zeigt die Statuszeile **- keine Wiedergabe -**, nach dem Ende der Liste **- Playlist beendet -**. Die Meldungen stehen jeweils mittig zwischen zwei Strichen.
 
 ### SD-Karte auswählen
 

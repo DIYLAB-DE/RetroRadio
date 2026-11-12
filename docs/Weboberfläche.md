@@ -46,7 +46,9 @@ Mit **Laden** wählst Du eine Sicherungsdatei aus. Das Portal prüft die Datei u
 
 Hier richtest Du Zeitzone, Zeitserver, Synchronisationsintervall, Wetterstandort, Sprache, Nachrichtenressort und Gerätenamen ein. Eine vollständig abgewählte Nachrichten-Ressortauswahl wird ebenfalls gespeichert. Die Browser-Zeit kann in das Eingabefeld übernommen und mit **Zeit setzen** an das Gerät übergeben werden.
 
-Unter **Netzwerkname** und **Sprache** zeigt die Zeile **PIN-Sperre für Radio und Web**, ob die Sperre ein- oder ausgeschaltet ist. Klicke auf **Ein**, gib Deine aktuelle PIN ein und bestätige mit **Ausschalten**. Mit **Aus** schaltest Du die Sperre sofort wieder ein. Dann gilt wieder Deine bisherige PIN. Unter **PIN ändern** gibst Du die aktuelle und die neue vierstellige PIN ein. Mit **Speichern** gilt die neue PIN sofort.
+Unter **Netzwerkname** und **Sprache** zeigt **PIN-Sperre**, ob die Sperre für Radio und Weboberfläche ein- oder ausgeschaltet ist. Klicke auf **Ein**, gib Deine aktuelle PIN ein und bestätige mit **Ausschalten**. Mit **Aus** schaltest Du die Sperre sofort wieder ein. Dann gilt wieder Deine bisherige PIN. Unter **PIN ändern** gibst Du die aktuelle und die neue vierstellige PIN ein. Mit **Speichern** gilt die neue PIN sofort.
+
+Mit **Sekundenzeiger** neben der PIN-Sperre wählst Du **schleichend** oder **Sekundenschritte** für die große Uhr im Hauptmenü. Die Wahl wirkt sofort und bleibt nach einem Neustart erhalten. Änderungen am Gerät werden im Browser angezeigt. Dafür ist **Speichern & neu starten** nicht nötig. Noch offene Änderungen an den übrigen Systemeinstellungen werden dabei nicht mitgespeichert.
 
 [![Systemeinstellungen](bilder/web/system-klein.png)](bilder/web/system.png)
 

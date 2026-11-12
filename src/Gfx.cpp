@@ -761,11 +761,11 @@ namespace
     constexpr float EYE_CAP_TINT_GREEN = 0.98f;   ///< Grünanteil des warm getönten Metallgraus
     constexpr float EYE_CAP_TINT_BLUE = 0.93f;    ///< Blauanteil des warm getönten Metallgraus
 
-    constexpr float EM34_AXIS_ANGLE = -0.7853982f;   ///< Drehung der Keilachse in Radiant, ein negativer Wert neigt die Anzeige nach rechts oben
+    constexpr float EM34_AXIS_ANGLE = -1.5707963f;   ///< Richtung der Keilachse in Radiant ab der Waagerechten nach rechts, negative Werte drehen sie nach oben. Bei -pi/2 steht sie senkrecht wie in der üblichen Einbaulage der Röhre
     constexpr float EM34_HALF_ANGLE_OPEN = 1.18f;    ///< Halber Schattenwinkel bei Pegel 0 in Radiant
     constexpr float EM34_HALF_ANGLE_CLOSED = 0.015f; ///< Halber Schattenwinkel bei vollem Pegel in Radiant
-    constexpr float EM34_SENSITIVITY_LEFT = 1.18f;   ///< Empfindlichkeit des linken Hauptkeils, er schließt schon vor Vollausschlag
-    constexpr float EM34_SENSITIVITY_RIGHT = 0.78f;  ///< Empfindlichkeit des rechten Hauptkeils, er bleibt bis zuletzt einen Spalt offen
+    constexpr float EM34_SENSITIVITY_LEFT = 1.18f;   ///< Empfindlichkeit des linken Hauptkeils (negative Achsseite, bei senkrechter Achse unten), er schließt schon vor Vollausschlag
+    constexpr float EM34_SENSITIVITY_RIGHT = 0.78f;  ///< Empfindlichkeit des rechten Hauptkeils (positive Achsseite, bei senkrechter Achse oben), er bleibt bis zuletzt einen Spalt offen
     constexpr float EM34_SMALL_LENGTH_RATIO = 0.90f;       ///< Länge der Nebenkeile als Anteil des Radius
     constexpr float EM34_SMALL_HALF_WIDTH_RATIO = 0.1294f; ///< Halbe Breite der Nebenkeile am Schirmmittelpunkt
     constexpr float EM34_SMALL_TIP_RATIO = 0.02f;          ///< Halbe Breite der Nebenkeile an ihrer Spitze

@@ -279,6 +279,7 @@ private:
     int  m_manualHour  = 12;                    ///< Stepper-Wert: Stunde (0-23)
     int  m_manualMinute = 0;                    ///< Stepper-Wert: Minute (0-59)
     bool m_manualInit = false;                  ///< true sobald die Stepper aus der RTC vorinitialisiert wurden
+    bool m_displayedSecondHandSweep = true; ///< Zuletzt gezeichnete Gangart im Zeit-Panel
     bool m_timeWindow[TIME_WINDOW_DAY_COUNT][TIME_WINDOW_HOUR_COUNT] = {}; ///< Zeitfenster-Matrix: Wochentag x Stunde, Standard aktiv
     uint32_t m_timeWindowBaselineMasks[TIME_WINDOW_DAY_COUNT] = {}; ///< Stand beim letzten Speichern oder Init
 
@@ -403,6 +404,7 @@ private:
     Rect timeStepperDownRect(int col) const;
     Rect timeStepperValueRect(int col) const;
     Rect timeSetButtonRect() const;
+    Rect timeSecondHandRect() const; ///< Zeile des Sekundenzeiger-Schalters im Zeit-Panel
     Rect timeWindowCellRect(int day, int hour) const;
     uint32_t timeWindowDayMask(int day) const;
     void loadTimeWindowFromAppState();

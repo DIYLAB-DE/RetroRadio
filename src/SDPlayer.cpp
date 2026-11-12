@@ -1613,8 +1613,7 @@ bool SdPlayer::init(DS1307_RTC &rtc, const SdPlayerCallbacks &callbacks)
 
     // Metadaten-Anzeige initialisieren
     drawMetaText(true);
-    drawMetaText(false, " ", reinterpret_cast<PGM_P>(STR(SDPlayerKey::SDPLAYER_STATUS_NO_PLAYBACK)),
-                 Theme::ColorMainText, Theme::ColorMainText, Theme::ColorMainText, " - ");
+    drawStatusText(reinterpret_cast<PGM_P>(STR(SDPlayerKey::SDPLAYER_STATUS_NO_PLAYBACK)));
 
     // Lautstärkeregler und Equalizer initialisieren
     drawKnob(true, APP_STATE.getCurrentVolume());
@@ -1718,8 +1717,7 @@ void SdPlayer::redrawAll()
     drawMetaText(true);
     if (m_playlistFinished)
     {
-        drawMetaText(false, " ", reinterpret_cast<PGM_P>(STR(SDPlayerKey::SDPLAYER_STATUS_PLAYLIST_END)),
-                     Theme::ColorMainText, Theme::ColorMainText, Theme::ColorMainText, " - ");
+        drawStatusText(reinterpret_cast<PGM_P>(STR(SDPlayerKey::SDPLAYER_STATUS_PLAYLIST_END)));
     }
     else if (!m_playlist.empty() && m_currentTitle[0] != '\0')
     {
@@ -1727,8 +1725,7 @@ void SdPlayer::redrawAll()
     }
     else
     {
-        drawMetaText(false, " ", reinterpret_cast<PGM_P>(STR(SDPlayerKey::SDPLAYER_STATUS_NO_PLAYBACK)),
-                     Theme::ColorMainText, Theme::ColorMainText, Theme::ColorMainText, " - ");
+        drawStatusText(reinterpret_cast<PGM_P>(STR(SDPlayerKey::SDPLAYER_STATUS_NO_PLAYBACK)));
     }
 
     // Lautstärke und Equalizer neu zeichnen ohne Audio-Callbacks zu feuern
@@ -2751,6 +2748,17 @@ void SdPlayer::updateMetadata(const char *artist, const char *title, const char 
 
     if (artistChanged)
         m_needsCassetteLabelRedraw = true;
+}
+
+/**
+ * @brief Zeichnet eine Statusmeldung mittig zwischen zwei Strichen
+ */
+void SdPlayer::drawStatusText(const char *text)
+{
+    constexpr size_t STATUS_TEXT_SIZE = 96; ///< Platz für Meldung, Striche und Abschlusszeichen
+    char statusText[STATUS_TEXT_SIZE];
+    stringutils::safeFormat(statusText, "- %s -", text);
+    drawMetaText(false, "", statusText, Theme::ColorMainText, Theme::ColorMainText);
 }
 
 /**
@@ -3888,8 +3896,7 @@ void SdPlayer::playNextTrack()
 
         m_currentAudioFile[0] = '\0'; // Leerer Pfad für "Kein Cover"
         drawCoverFallback(nullptr);
-        drawMetaText(false, " ", reinterpret_cast<PGM_P>(STR(SDPlayerKey::SDPLAYER_STATUS_PLAYLIST_END)),
-                     Theme::ColorMainText, Theme::ColorMainText, Theme::ColorMainText, " - ");
+        drawStatusText(reinterpret_cast<PGM_P>(STR(SDPlayerKey::SDPLAYER_STATUS_PLAYLIST_END)));
 
         return;
     }
@@ -3960,8 +3967,7 @@ void SdPlayer::clearPlaylist()
     m_currentAudioFile[0] = '\0';
     drawCoverFallback(nullptr);
 
-    drawMetaText(false, " ", reinterpret_cast<PGM_P>(STR(SDPlayerKey::SDPLAYER_STATUS_NO_PLAYBACK)),
-                 Theme::ColorMainText, Theme::ColorMainText, Theme::ColorMainText, " - ");
+    drawStatusText(reinterpret_cast<PGM_P>(STR(SDPlayerKey::SDPLAYER_STATUS_NO_PLAYBACK)));
     LOG_INFO("Playlist geleert.");
 }
 

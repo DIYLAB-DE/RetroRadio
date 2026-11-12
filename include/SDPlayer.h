@@ -668,6 +668,13 @@ private:
 
     // Zeichenfunktionen
     void drawProgressBar();
+
+    /**
+     * @brief Zeichnet eine Statusmeldung mittig zwischen zwei Strichen in der vorhandenen Statuszeile
+     * @param text Übersetzte Statusmeldung ohne Striche
+     */
+    void drawStatusText(const char *text);
+
     void drawMetaText(bool init, const char *first = "", const char *second = "", uint16_t firstColor = 0x5370, uint16_t secondColor = TFT_SILVER, uint16_t separatorColor = TFT_DARKGRAY, const char *separator = " | ", int reservedPixels = 10, uint16_t backgroundColor = 0x1082);
     void calcMarkerPos(float angleDeg, int center, int radiusOffset, int &outX, int &outY);
     void drawKnob(bool init, uint8_t vol = 0, bool skipCallbacks = false);

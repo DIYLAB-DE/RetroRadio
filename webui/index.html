@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RetroRadio Portal</title>
+  <title>RetroRadio</title>
 
   <!-- Favicon -->
   <link rel="icon"
@@ -1158,6 +1158,14 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       margin-bottom: 0;
     }
 
+    .pin-settings-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 12px;
+      min-width: 0;
+    }
+
     .pin-settings-actions {
       display: flex;
       flex-wrap: wrap;
@@ -1168,7 +1176,13 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       min-width: 4em;
     }
 
-    #pinLockToggle[aria-checked="true"] {
+    #secondHandToggle {
+      min-width: 10em;
+      white-space: nowrap;
+    }
+
+    #pinLockToggle[aria-checked="true"],
+    #secondHandToggle[aria-checked="true"] {
       background-color: var(--navbar-color);
     }
 
@@ -1925,11 +1939,13 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
 
       .pin-settings {
         display: flex;
-        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: stretch;
         row-gap: var(--settings-label-gap);
       }
 
-      .pin-settings-actions {
+      .pin-settings-actions,
+      #secondHandToggle {
         margin-inline-start: auto;
       }
 
@@ -3222,7 +3238,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     <section class="homepage" id="home">
       <div class="content">
         <div class="text">
-          <h1 data-i18n="home.title">RetroRadio Portal</h1>
+          <h1 data-i18n="home.title">RetroRadio</h1>
           <p data-i18n="home.subtitle">Webinterface für Konfiguration und Verwaltung</p>
         </div>
 
@@ -3638,16 +3654,22 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         </div>
 
         <div class="settings-item pin-settings">
-          <h4 id="pinLockLabel" data-i18n="settings.pinLockToggle">PIN-Sperre für Radio und Web</h4>
-          <div class="pin-settings-actions">
-            <button type="button" id="pinLockToggle" class="btn btn-secondary" role="switch" aria-labelledby="pinLockLabel" aria-checked="true" disabled>...</button>
-            <button type="button" id="pinChangeBtn" class="btn btn-secondary" aria-haspopup="dialog">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true" focusable="false">
-                <circle cx="16" cy="8" r="5"/>
-                <path d="m12.5 11.5-9 9m3-3 2.5 2.5m.5-5.5 2.5 2.5"/>
-              </svg>
-              <span data-i18n="settings.pinChangeTitle">PIN ändern</span>
-            </button>
+          <div class="pin-settings-group">
+            <h4 id="pinLockLabel" data-i18n="settings.pinLockToggle">PIN-Sperre</h4>
+            <div class="pin-settings-actions">
+              <button type="button" id="pinLockToggle" class="btn btn-secondary" role="switch" aria-labelledby="pinLockLabel" aria-checked="true" disabled>...</button>
+              <button type="button" id="pinChangeBtn" class="btn btn-secondary" aria-haspopup="dialog">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true" focusable="false">
+                  <circle cx="16" cy="8" r="5"/>
+                  <path d="m12.5 11.5-9 9m3-3 2.5 2.5m.5-5.5 2.5 2.5"/>
+                </svg>
+                <span data-i18n="settings.pinChangeTitle">PIN ändern</span>
+              </button>
+            </div>
+          </div>
+          <div class="pin-settings-group">
+            <h4 id="secondHandLabel" data-i18n="settings.secondHandToggle">Sekundenzeiger</h4>
+            <button type="button" id="secondHandToggle" class="btn btn-secondary" role="switch" aria-labelledby="secondHandLabel" aria-checked="true" disabled>...</button>
           </div>
         </div>
 
@@ -3946,7 +3968,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'lock.ok': 'Entsperren',
         'lock.button': 'Interface sperren',
         'theme.toggle': 'Hell/Dunkel umschalten',
-        'home.title': 'RetroRadio Portal',
+        'home.title': 'RetroRadio',
         'home.subtitle': 'Webinterface für Konfiguration und Verwaltung',
         'status.title.left': 'System',
         'status.title.right': 'Status',
@@ -4020,7 +4042,10 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'settings.locationDetect': 'Standort ermitteln',
         'settings.city': 'Ort',
         'settings.cityPlaceholder': 'Wird automatisch befüllt',
-        'settings.pinLockToggle': 'PIN-Sperre für Radio und Web',
+        'settings.pinLockToggle': 'PIN-Sperre',
+        'settings.secondHandToggle': 'Sekundenzeiger',
+        'settings.secondHandSweep': 'schleichend',
+        'settings.secondHandStep': 'Sekundenschritte',
         'settings.pinOn': 'Ein',
         'settings.pinOff': 'Aus',
         'settings.pinChangeTitle': 'PIN ändern',
@@ -4161,6 +4186,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'js.uploadFailed': 'Upload fehlgeschlagen',
         'js.currentCodeInvalid': 'Die aktuelle PIN ist falsch.',
         'js.savePinLockFailed': 'Die PIN-Sperre konnte nicht gespeichert werden.',
+        'js.saveSecondHandFailed': 'Die Gangart des Sekundenzeigers konnte nicht gespeichert werden.',
         'js.savePinFailed': 'Die neue PIN konnte nicht gespeichert werden.',
         'js.plzFiveDigits': 'PLZ muss genau 5 Ziffern haben.',
         'js.geoNotResolved': 'Der Standort wurde nicht ermittelt. Der bisherige Standort bleibt gespeichert.',
@@ -4235,7 +4261,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'lock.ok': 'Unlock',
         'lock.button': 'Lock interface',
         'theme.toggle': 'Toggle light/dark mode',
-        'home.title': 'RetroRadio Portal',
+        'home.title': 'RetroRadio',
         'home.subtitle': 'Web interface for configuration and management',
         'status.title.left': 'System',
         'status.title.right': 'Status',
@@ -4309,7 +4335,10 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'settings.locationDetect': 'Find location',
         'settings.city': 'City',
         'settings.cityPlaceholder': 'Filled automatically',
-        'settings.pinLockToggle': 'PIN lock for radio and web',
+        'settings.pinLockToggle': 'PIN lock',
+        'settings.secondHandToggle': 'Second hand',
+        'settings.secondHandSweep': 'sweeping',
+        'settings.secondHandStep': 'ticking',
         'settings.pinOn': 'On',
         'settings.pinOff': 'Off',
         'settings.pinChangeTitle': 'Change PIN',
@@ -4450,6 +4479,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'js.uploadFailed': 'Upload failed',
         'js.currentCodeInvalid': 'The current PIN is incorrect.',
         'js.savePinLockFailed': 'Could not save the PIN lock setting.',
+        'js.saveSecondHandFailed': 'Could not save the second hand setting.',
         'js.savePinFailed': 'Could not save the new PIN.',
         'js.plzFiveDigits': 'Postal code must have exactly 5 digits.',
         'js.geoNotResolved': 'The location could not be determined. The previous location will be kept.',
@@ -4614,6 +4644,14 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
           LockUI.applyStatus(data);
         } catch (error) {
           console.error('Fehler beim Parsen des Lock-Events:', error);
+        }
+      });
+
+      eventSource.addEventListener('secondhand', function (e) {
+        try {
+          applySecondHand(JSON.parse(e.data).sweep);
+        } catch (error) {
+          console.error('Fehler beim Lesen der Sekundenzeiger-Einstellung:', error);
         }
       });
 
@@ -5358,6 +5396,42 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     let resolvedCity          = '';
     let geocodeController     = null;
 
+    let secondHandSweep = null;
+    let secondHandSaving = false;
+    let secondHandRevision = 0;
+
+    function applySecondHand(sweep) {
+      if (typeof sweep !== 'boolean') return;
+      secondHandSweep = sweep;
+      ++secondHandRevision;
+      const toggle = document.getElementById('secondHandToggle');
+      toggle.setAttribute('aria-checked', String(sweep));
+      toggle.dataset.i18n = sweep ? 'settings.secondHandSweep' : 'settings.secondHandStep';
+      toggle.textContent = t(toggle.dataset.i18n);
+      toggle.disabled = secondHandSaving;
+    }
+
+    async function toggleSecondHand() {
+      if (secondHandSaving || secondHandSweep === null || LockUI.isLocked()) return;
+      const toggle = document.getElementById('secondHandToggle');
+      const revision = secondHandRevision;
+      secondHandSaving = true;
+      toggle.disabled = true;
+      try {
+        const body = new URLSearchParams({sweep: String(!secondHandSweep)});
+        const response = await fetch('/api/secondhand', {method: 'POST', body});
+        if (!response.ok) throw new Error('Speichern fehlgeschlagen');
+        const status = await response.json();
+        if (typeof status.sweep !== 'boolean') throw new Error('Gangart fehlt');
+        if (revision === secondHandRevision) applySecondHand(status.sweep);
+      } catch (error) {
+        alert(t('js.saveSecondHandFailed'));
+      } finally {
+        secondHandSaving = false;
+        toggle.disabled = secondHandSweep === null;
+      }
+    }
+
     function initSettings() {
       applyLanguage(localStorage.getItem('retroRadioLanguage') || I18N_DEFAULT_LANGUAGE);
       initLanguageSelect();
@@ -5366,6 +5440,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       initLocationSettings();
       initRessortChips();
       initManualTime();
+      document.getElementById('secondHandToggle').addEventListener('click', toggleSecondHand);
       loadCurrentSettings();
       setupSettingsButtons();
       initGoogleApiSettings();
@@ -5449,11 +5524,13 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     async function loadCurrentSettings() {
+      const secondHandRequestRevision = secondHandRevision;
       try {
         const response = await fetch('/api/settings');
         if (response.ok) {
           const data = await response.json();
           LockUI.setInitialMode(data.pinLockEnabled);
+          if (secondHandRequestRevision === secondHandRevision) applySecondHand(data.secondHandSweep);
           if (data.hostname) document.getElementById('hostnameInput').value = data.hostname;
           if (data.ntpServer) document.getElementById('ntpServerInput').value = data.ntpServer;
           if (data.newsRegion) selectedNewsRegion = parseInt(data.newsRegion);
@@ -6688,7 +6765,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         const TINT_EDGE = 0.88, TINT_CORNER = 0.95, TINT_SECOND = 0.72;
         const CAP_RADIUS_RATIO = 0.45, CAP_GRAY_LIGHT = 75, CAP_GRAY_DARK = 30, CAP_EDGE_START = 0.78, CAP_EDGE_DARKEN = 22, CAP_TINT_G = 0.98, CAP_TINT_B = 0.93;
 
-        const EM34_AXIS = -0.7853982, EM34_OPEN = 1.18, EM34_CLOSED = 0.015, EM34_SENS_L = 1.18, EM34_SENS_R = 0.78;
+        const EM34_AXIS = -1.5707963, EM34_OPEN = 1.18, EM34_CLOSED = 0.015, EM34_SENS_L = 1.18, EM34_SENS_R = 0.78;
         const EM34_SMALL_LEN = 0.90, EM34_SMALL_HALF_W = 0.1294, EM34_SMALL_TIP = 0.02, EM34_SMALL_FADE = 0.90;
 
         const EM11_AXIS = 0.0, EM11_UP_MIN = 12, EM11_UP_MAX = 88, EM11_CROSS_MIN = 6, EM11_CROSS_MAX = 70, EM11_CROSS_DELAY = 0.15;

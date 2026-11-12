@@ -30,6 +30,7 @@ public:
         StorageError  ///< Der Zustand konnte nicht gespeichert werden
     };
 
+    static constexpr bool DEFAULT_SECOND_HAND_SWEEP = true; ///< Schleichender Sekundenzeiger ab Werk und bei fehlender Einstellung
     static constexpr bool DEFAULT_PIN_LOCK_ENABLED = true; ///< PIN-Abfrage ab Werk und bei fehlender Einstellung
     static constexpr uint8_t TIME_WINDOW_DAY_COUNT = 7;   ///< Anzahl Wochentage im Zeitfenster
     static constexpr uint8_t TIME_WINDOW_HOUR_COUNT = 24; ///< Anzahl voller Stunden im Zeitfenster
@@ -119,6 +120,8 @@ private:
     // UI-Einstellungen
     char m_uiLanguage[8] = "de"; ///< UI-Sprache, z.B. "de" oder "en"
     bool m_serialLogsEnabled = false; ///< Serielle Logs sind ab Werk ausgeschaltet
+    std::atomic<bool> m_secondHandSweep{DEFAULT_SECOND_HAND_SWEEP}; ///< Gangart der großen Uhr, true ist schleichend
+    std::mutex m_secondHandMutex; ///< Serialisiert das Speichern der Gangart durch Display und Weboberfläche
 
     // Zeitfenster
     uint32_t m_timeWindowMasks[TIME_WINDOW_DAY_COUNT] = {}; ///< Tagesmasken, Bit 0..23 steht für Stunde 0..23
@@ -191,6 +194,7 @@ private:
     // UI Preferences Key
     static const char *P_KEY_UI_LANGUAGE; ///< "uiLanguage"
     static const char *P_KEY_SERIAL_LOGS_ENABLED; ///< "serialLogsOn"
+    static const char *P_KEY_SECOND_HAND_SWEEP; ///< Gangart der großen Uhr im Flash
 
     // Geräte-Netzwerkname Preferences Key
     static const char *P_KEY_HOSTNAME; ///< "hostname"
@@ -841,6 +845,21 @@ public:
      * @return true bei gespeicherter Einstellung, false bei einem Schreibfehler ohne Zustandsänderung
      */
     bool setSerialLogsEnabled(bool enabled);
+
+    /**
+     * @brief Liefert die gespeicherte Gangart der großen Uhr
+     * @return true für schleichend, false für Sekundenschritte
+     */
+    bool getSecondHandSweep() const { return m_secondHandSweep.load(); }
+
+    /**
+     * @brief Speichert die Gangart der großen Uhr und meldet sie an verbundene Browser
+     * @param sweep true für schleichend, false für Sekundenschritte
+     * @return true bei erfolgreicher Speicherung oder unverändertem Wert, false bei Schreibfehler
+     *
+     * Die Uhr übernimmt den gespeicherten Wert im nächsten Hauptmenü-Update. Bei einem Schreibfehler bleibt die bisherige Gangart erhalten.
+     */
+    bool setSecondHandSweep(bool sweep);
 
     // Zeitfenster
 

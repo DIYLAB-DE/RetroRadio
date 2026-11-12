@@ -4,6 +4,8 @@
 
 Nach der [Erstinstallation](RetroRadio-Ersteinrichtung.md) öffnet das Hauptmenü die Anwendungen über die großen Symbole rechts. Die Uhr und die Netzwerkangaben stehen links. Das Haus unten rechts führt zurück ins Hauptmenü. Bei Radio und SD-Player öffnet es zuerst den Sleep-Timer: Tippe dort erneut auf das Haus, um die Wiedergabe sofort zu beenden und ins Hauptmenü zu wechseln.
 
+Der Sekundenzeiger der großen Uhr läuft standardmäßig schleichend. Unter **Einstellungen -> Zeit & Zeitserver -> Sekundenzeiger** kannst Du auf **Sekundenschritte** umschalten. Die Wahl wirkt sofort, wird automatisch gespeichert und bleibt nach einem Neustart erhalten. Derselbe Schalter steht in der [Weboberfläche](Weboberfläche.md#systemeinstellungen). Nach Werkseinstellungen gilt wieder **schleichend**.
+
 [![Hauptmenü](bilder/bedienung/hauptmenue-klein.png)](bilder/bedienung/hauptmenue.png)
 
 | Zeile | Links | Mitte | Rechts |
@@ -106,7 +108,7 @@ Links den Einstellbereich auswählen, rechts dessen Felder bearbeiten. Längere 
 | Bereich | Bedienung | Beispiel |
 | --- | --- | --- |
 | WLAN | Profile einzeln aktivieren, Netze suchen, Passwort eingeben, Verbindung testen und Netzwerknamen ändern. | [![WLAN](bilder/bedienung/einstellungen-wlan-klein.png)](bilder/bedienung/einstellungen-wlan.png) |
-| Zeit & Zeitserver | Zeitzone, Zeitserver und Synchronisation einstellen, bei Bedarf Uhrzeit manuell setzen. | [![Zeit](bilder/bedienung/einstellungen-zeit-klein.png)](bilder/bedienung/einstellungen-zeit.png) |
+| Zeit & Zeitserver | Zeitzone, Zeitserver und Synchronisation einstellen, bei Bedarf Uhrzeit manuell setzen und die Gangart des Sekundenzeigers wählen. | [![Zeit](bilder/bedienung/einstellungen-zeit-klein.png)](bilder/bedienung/einstellungen-zeit.png) |
 | Zeitfenster | Betriebszeiten des Displays über die angebotene Wochenübersicht festlegen. | [![Zeitfenster](bilder/bedienung/einstellungen-zeitfenster-klein.png)](bilder/bedienung/einstellungen-zeitfenster.png) |
 | Wetter | Deutsche Postleitzahl eingeben, Ort und Koordinaten werden ermittelt. | [![Wetter einstellen](bilder/bedienung/einstellungen-wetter-klein.png)](bilder/bedienung/einstellungen-wetter.png) |
 | Nachrichten | Gewünschtes Nachrichtenressort für die Laufzeile auswählen. | [![Nachrichten](bilder/bedienung/einstellungen-nachrichten-klein.png)](bilder/bedienung/einstellungen-nachrichten.png) |

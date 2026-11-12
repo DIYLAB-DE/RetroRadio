@@ -73,6 +73,9 @@ void notifyDisplayLockChanged(bool locked);
 /** @brief Sendet den aktuellen PIN-Modus und Sperrzustand an die verbundenen Browser. */
 void notifyPinLockModeChanged();
 
+/** @brief Sendet die aktuelle Gangart der Hauptmenü-Uhr an verbundene Browser. Vor dem Webserverstart bleibt der Aufruf ohne Wirkung. */
+void notifySecondHandModeChanged();
+
 // ============================================================================
 // Stations-Reload-Flag (WebUI -> RetroRadio)
 // ============================================================================

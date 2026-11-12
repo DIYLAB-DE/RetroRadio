@@ -278,6 +278,10 @@ enum class SettingsKey : uint16_t
     SETTINGS_TIME_MANUAL_FAIL,       ///< "Die Uhr konnte nicht gesetzt werden." / "The clock could not be set."
 
     SETTINGS_TIME_SAVED_MSG,         ///< "Die Zeit-Einstellungen wurden gespeichert." / "The time settings have been saved."
+    SETTINGS_TIME_SECOND_LABEL,      ///< "Sekundenzeiger" / "Second hand"
+    SETTINGS_TIME_SECOND_SWEEP,      ///< "schleichend" / "sweeping"
+    SETTINGS_TIME_SECOND_STEP,       ///< "Sekundenschritte" / "ticking"
+    SETTINGS_TIME_SECOND_WRITE_ERROR, ///< "Die Gangart konnte nicht gespeichert werden." / "The second hand setting could not be saved."
 
     // ===================================================================
     // Info-Panel (erweiterte Anzeige)
