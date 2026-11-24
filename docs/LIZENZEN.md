@@ -9,13 +9,13 @@ Der eigene RetroRadio-Quellcode steht unter der **GNU GPL Version 3**, siehe [vo
 | Bestandteil | Herkunft und Lizenz | Beilage |
 | --- | --- | --- |
 | RetroRadio | DIYLAB-DE, GPL-3.0 | [GPLv3](../LICENSE) |
-| audio-lite | Veränderte Fassung von Wolle/schreibfaul1s ESP32-audioI2S 3.4.7, GPL-3.0 | [Herkunft und Änderungen](../lib/audio-lite/README.md), [Lizenz](../lib/audio-lite/LICENSE) |
+| audio-lite v0.2.0 | Veränderte Fassung von Wolle/schreibfaul1s ESP32-audioI2S 3.4.7, GPL-3.0 | [Herkunft und Änderungen](https://github.com/DIYLAB-DE/audio-lite/blob/v0.2.0/README.md), [Lizenz](https://github.com/DIYLAB-DE/audio-lite/blob/v0.2.0/LICENSE) |
 | MP3-Decoder in audio-lite | Auf Helix von RealNetworks basierend, separate Helix-Texte siehe unten | [Helix-Hinweis](lizenzen/Helix-LICENSE.txt), [RPSL](lizenzen/Helix-RPSL.txt), [RCSL](lizenzen/Helix-RCSL.txt) |
-| AAC-Decoder | libfaad2, M. Bakker/Nero AG, GPL-2.0-or-later laut Dateiköpfen | [GPLv2](lizenzen/GPL-2.txt), Urhebervermerke unter `lib/audio-lite/src/aac_decoder/` |
+| AAC-Decoder | libfaad2, M. Bakker/Nero AG, GPL-2.0-or-later laut Dateiköpfen | [GPLv2](lizenzen/GPL-2.txt), [Urhebervermerke im Decoder](https://github.com/DIYLAB-DE/audio-lite/tree/v0.2.0/src/aac_decoder) |
 | Vorbis-Decoder | Xiph.Org Foundation, Dateikopf nennt Copyright 1994-2007 und BSD-Bedingungen | [Xiph-Lizenztext](lizenzen/Xiph-Vorbis-COPYING.txt), ursprüngliche Vermerke im Decoder |
 | KissFFT | Mark Borgerding, Copyright 2003-2010, BSD-3-Clause | [COPYING](lizenzen/KissFFT-COPYING.txt), [BSD-Bedingungen](lizenzen/KissFFT-BSD-3-Clause.txt) |
 | QR-Code-Generator | Project Nayuki, MIT | Vollständiger Text in [qrcodegen.h](../include/qrcodegen.h) und [qrcodegen.c](../src/qrcodegen.c) |
-| LovyanGFX 1.2.27 | lovyan03 und genannte Mitwirkende, BSD-2-Clause | [Lizenz](lizenzen/LovyanGFX-Lizenz.txt) |
+| LovyanGFX 1.2.36 | lovyan03 und genannte Mitwirkende, BSD-2-Clause | [Lizenz](lizenzen/LovyanGFX-Lizenz.txt) |
 | Button-Klasse | Erweiterte Fassung von LGFX_Button, Herkunftsvermerke in den Dateiköpfen | [LovyanGFX-Beilage](LICENSE-LovyanGFX.txt) |
 | ArduinoJson 7.4.3 | Benoît Blanchon, MIT | [Lizenz](lizenzen/ArduinoJson-Lizenz.txt) |
 | ESPAsyncWebServer 3.6.0 | Genannte Autoren, LGPL-3.0 | [Lizenz](lizenzen/ESPAsyncWebServer-Lizenz.txt) |
@@ -29,7 +29,7 @@ Die PlatformIO-Abhängigkeiten werden anhand der Projektkonfiguration bezogen. D
 
 ### Helix-Herkunft
 
-audio-lite übernimmt den MP3-Decoder aus [ESP32-audioI2S 3.4.7, Commit 59bf36b](https://github.com/schreibfaul1/ESP32-audioI2S/tree/59bf36b214580ad2d1157748cd0268c9376d6640). Der [Dateikopf dieses Stands](https://github.com/schreibfaul1/ESP32-audioI2S/blob/59bf36b214580ad2d1157748cd0268c9376d6640/src/mp3_decoder/mp3_decoder.h) nennt Helix als Grundlage. Die Änderungen für RetroRadio sind unter [audio-lite](../lib/audio-lite/README.md) beschrieben.
+audio-lite übernimmt den MP3-Decoder aus [ESP32-audioI2S 3.4.7, Commit 59bf36b](https://github.com/schreibfaul1/ESP32-audioI2S/tree/59bf36b214580ad2d1157748cd0268c9376d6640). Der [Dateikopf dieses Stands](https://github.com/schreibfaul1/ESP32-audioI2S/blob/59bf36b214580ad2d1157748cd0268c9376d6640/src/mp3_decoder/mp3_decoder.h) nennt Helix als Grundlage. Die Änderungen für RetroRadio sind unter [audio-lite](https://github.com/DIYLAB-DE/audio-lite/blob/v0.2.0/README.md) beschrieben.
 
 Die öffentlich belegbaren Stationen der Herkunft sind:
 

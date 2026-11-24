@@ -372,9 +372,9 @@ void AppState::loadFromPreferences()
     LOG_INFO_F("NTP geladen: Server=%s, TZ=%s, Intervall=%lu ms", m_ntpServer, m_timezoneRegion, m_ntpSyncIntervalMs);
 
     // Regionale Einstellungen
-    m_newsRegion = m_prefs.getInt(P_KEY_NEWS_REGION, 4);
+    m_newsRegion = m_prefs.getInt(P_KEY_NEWS_REGION, DEFAULT_NEWS_REGION);
     if (m_newsRegion < 1 || m_newsRegion > 16)
-        m_newsRegion = 4;
+        m_newsRegion = DEFAULT_NEWS_REGION;
 
     loadPrefText(m_prefs, P_KEY_PLZ, m_plz, sizeof(m_plz));
     loadPrefText(m_prefs, P_KEY_NEWS_RESSORT, m_newsRessort, sizeof(m_newsRessort));
@@ -1067,18 +1067,43 @@ void AppState::resetPreferencesGoogleApi()
 /**
  * @brief UI-Sprache setzen und speichern
  */
-void AppState::setUiLanguage(const char *language)
+bool AppState::setUiLanguage(const char *language)
 {
     if (!isSupportedUiLanguage(language))
-        return;
+        return false;
+
+    const bool hadKey = m_prefs.isKey(P_KEY_UI_LANGUAGE);
+    char previous[sizeof(m_uiLanguage)] = {};
+    if (hadKey && !m_prefs.getString(P_KEY_UI_LANGUAGE, previous, sizeof(previous)))
+        return false;
+
+    char checked[sizeof(m_uiLanguage)] = {};
+    const bool written = m_prefs.putString(P_KEY_UI_LANGUAGE, language) == strlen(language);
+    if (!written || !m_prefs.getString(P_KEY_UI_LANGUAGE, checked, sizeof(checked)) || strcmp(checked, language) != 0)
+    {
+        LOG_ERROR("UI-Sprache konnte nicht bestätigt gespeichert werden");
+        bool restored = false;
+        if (hadKey)
+        {
+            restored = m_prefs.putString(P_KEY_UI_LANGUAGE, previous) == strlen(previous);
+            restored = restored && m_prefs.getString(P_KEY_UI_LANGUAGE, checked, sizeof(checked)) && strcmp(checked, previous) == 0;
+        }
+        else
+        {
+            restored = !m_prefs.isKey(P_KEY_UI_LANGUAGE) || m_prefs.remove(P_KEY_UI_LANGUAGE);
+            restored = restored && !m_prefs.isKey(P_KEY_UI_LANGUAGE);
+        }
+        if (!restored)
+            LOG_ERROR("Rücknahme der UI-Sprachspeicherung fehlgeschlagen");
+        return false;
+    }
 
     const bool changed = (strcmp(m_uiLanguage, language) != 0);
     stringutils::safeCopy(m_uiLanguage, language);
-    m_prefs.putString(P_KEY_UI_LANGUAGE, m_uiLanguage);
     LOG_INFO_F("UI-Sprache gesetzt: %s", m_uiLanguage);
-
     if (changed)
         I18n::onLanguageChanged();
+    return true;
 }
 
 /**
@@ -1629,6 +1654,17 @@ void AppState::resetToDefaults(bool clearNVRAM, bool clearPrefs)
     // Preferences löschen
     if (clearPrefs)
     {
+        for (uint8_t i = 0; i < WIFI_PROFILE_COUNT; ++i)
+            clearWiFiProfile(i);
+        m_prefs.remove(P_KEY_LOCK_PIN);
+        stringutils::safeCopy(m_lockPin, "0000");
+        m_prefs.remove(P_KEY_NEWS_REGION);
+        m_prefs.remove(P_KEY_PLZ);
+        m_prefs.remove(P_KEY_NEWS_RESSORT);
+        m_newsRegion = DEFAULT_NEWS_REGION;
+        m_plz[0] = '\0';
+        m_newsRessort[0] = '\0';
+
         m_prefs.remove(P_KEY_SERIAL_LOGS_ENABLED);
         m_serialLogsEnabled = false;
         Logger::getInstance().setEnabled(false);

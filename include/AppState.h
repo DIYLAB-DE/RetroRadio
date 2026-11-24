@@ -31,6 +31,7 @@ public:
     };
 
     static constexpr bool DEFAULT_SECOND_HAND_SWEEP = true; ///< Schleichender Sekundenzeiger ab Werk und bei fehlender Einstellung
+    static constexpr int DEFAULT_NEWS_REGION = 4; ///< Nachrichtenregion bei fehlender Einstellung
     static constexpr bool DEFAULT_PIN_LOCK_ENABLED = true; ///< PIN-Abfrage ab Werk und bei fehlender Einstellung
     static constexpr uint8_t TIME_WINDOW_DAY_COUNT = 7;   ///< Anzahl Wochentage im Zeitfenster
     static constexpr uint8_t TIME_WINDOW_HOUR_COUNT = 24; ///< Anzahl voller Stunden im Zeitfenster
@@ -67,7 +68,7 @@ private:
     unsigned long m_ntpSyncIntervalMs = 3600000; ///< NTP Sync-Intervall in ms, Standard 1h
 
     // Regionale Einstellungen
-    int m_newsRegion = 4;   ///< Tagesschau-Regionalfilter (1=BW ... 16=TH), 3 = Berlin
+    int m_newsRegion = DEFAULT_NEWS_REGION;   ///< Tagesschau-Regionalfilter (1=BW ... 16=TH), 3 = Berlin
     char m_plz[8];          ///< Postleitzahl (5 Stellen)
     char m_newsRessort[16]; ///< Tagesschau-Ressortfilter, z.B. "inland" (leer = kein Filter)
 
@@ -819,8 +820,9 @@ public:
     /**
      * @brief Setzt die UI-Sprache und speichert persistent
      * @param language Sprachkennung, erlaubt sind "de" und "en"
+     * @return true nach bestätigter Speicherung, false bei ungültiger Sprache oder Speicherfehler. Ein Fehler übernimmt die Sprache nicht und versucht den vorherigen Speicherwert wiederherzustellen.
      */
-    void setUiLanguage(const char *language);
+    bool setUiLanguage(const char *language);
 
     /**
      * @brief Gibt die gespeicherte UI-Sprache zurück
@@ -1045,7 +1047,7 @@ public:
     /**
      * @brief Setzt alle Einstellungen auf Standardwerte zurück
      * @param clearNVRAM Wenn true, wird auch das RTC-NVRAM gelöscht
-     * @param clearPrefs Wenn true, werden zusätzlich Wetter-, NTP- und Cloud-Preferences gelöscht
+     * @param clearPrefs Wenn true, werden auch die gespeicherten WLAN-Profile, PIN, regionalen Angaben und übrigen Anwendungseinstellungen zurückgesetzt
      */
     void resetToDefaults(bool clearNVRAM = true, bool clearPrefs = false);
 };

@@ -120,6 +120,7 @@ namespace
     const char DE_INFO_RESET_BTN[] PROGMEM = "zurücksetzen";
     const char DE_INFO_RESET_TITLE[] PROGMEM = "Zurücksetzen";
     const char DE_INFO_RESET_MSG[] PROGMEM = "Auf Werkseinstellungen zurücksetzen?\nAlle Profile und Einstellungen gehen verloren.";
+    const char DE_LANG_WRITE_ERROR[] PROGMEM = "Die Sprache konnte nicht gespeichert werden. Bitte erneut versuchen.";
     const char DE_LANG_RESTART_TITLE[] PROGMEM = "Sprache ändern";
     const char DE_LANG_RESTART_MSG[] PROGMEM = "Die neue Sprache gilt erst nach einem Neustart.\nJetzt neu starten?";
 
@@ -408,6 +409,7 @@ namespace
     const char EN_INFO_RESET_BTN[] PROGMEM = "reset";
     const char EN_INFO_RESET_TITLE[] PROGMEM = "Reset";
     const char EN_INFO_RESET_MSG[] PROGMEM = "Reset to factory settings?\nAll profiles and settings will be lost.";
+    const char EN_LANG_WRITE_ERROR[] PROGMEM = "The language could not be saved. Please try again.";
     const char EN_LANG_RESTART_TITLE[] PROGMEM = "Change language";
     const char EN_LANG_RESTART_MSG[] PROGMEM = "The new language takes effect after a restart.\nRestart now?";
 
@@ -702,6 +704,7 @@ namespace
         {DE_INFO_RESET_BTN, EN_INFO_RESET_BTN},
         {DE_INFO_RESET_TITLE, EN_INFO_RESET_TITLE},
         {DE_INFO_RESET_MSG, EN_INFO_RESET_MSG},
+        {DE_LANG_WRITE_ERROR, EN_LANG_WRITE_ERROR},
         {DE_LANG_RESTART_TITLE, EN_LANG_RESTART_TITLE},
         {DE_LANG_RESTART_MSG, EN_LANG_RESTART_MSG},
 

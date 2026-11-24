@@ -8,7 +8,6 @@ RetroRadio ist ein PlatformIO-Projekt mit Arduino-ESP32 für den ESP32-S3. Das D
 | --- | --- |
 | `src/` | Implementierungen der Anwendungen, Geräteoberfläche, Dienste und Werkstattwerkzeuge |
 | `include/` | Header, Konfiguration, Zeichenfunktionen, Schriften und eingebettete Bilder |
-| `lib/audio-lite/` | Mitgelieferte, veränderte Audiobibliothek auf Grundlage von ESP32-audioI2S 3.4.7 |
 | `lib/kissfft/` | FFT-Bibliothek für die Audioauswertung |
 | `boards/` | Boardbeschreibungen für 8 und 16 MB Flash |
 | `webui/index.html` | Quelltext der eingebetteten Weboberfläche |
@@ -16,6 +15,8 @@ RetroRadio ist ein PlatformIO-Projekt mit Arduino-ESP32 für den ESP32-S3. Das D
 | `platformio.ini` | Gemeinsame Build-Einstellungen und die beiden Umgebungen |
 | `partitions_8mb.csv`, `partitions_16mb.csv` | Partitionierung der jeweiligen Flashgröße |
 | `docs/` | Aufbau, Bedienung, Dienste, Hardwaredateien, Abbildungen und Lizenzbeilagen |
+
+Die Audiobibliothek [audio-lite v0.2.0](https://github.com/DIYLAB-DE/audio-lite/tree/v0.2.0) wird von PlatformIO über die feste Abhängigkeit in `platformio.ini` bezogen. Beide Flashvarianten verwenden SD-Leseportionen von 4096 Byte.
 
 ## Anwendungen und gemeinsame Bausteine
 

@@ -10,6 +10,8 @@ RetroRadio läuft auf dem Waveshare ESP32-S3-Touch-LCD-7 mit 800 x 480 Pixeln. D
 
 > **Display beim Kauf prüfen:** Benötigt wird das [Waveshare ESP32-S3-Touch-LCD-7](https://docs.waveshare.com/ESP32-S3-Touch-LCD-7) mit **800 x 480 Pixeln** und **SKU 27078**. Das ähnlich aussehende [ESP32-S3-Touch-LCD-7B](https://docs.waveshare.com/ESP32-S3-Touch-LCD-7B) mit **1024 x 600 Pixeln** ist für RetroRadio **nicht geeignet**. Achte auf die Modellbezeichnung ohne das abschließende **B**.
 
+Der aktuelle Änderungsumfang steht unter [Änderungen](docs/Änderungen.md). Die Audiobibliothek [audio-lite v0.2.0](https://github.com/DIYLAB-DE/audio-lite/tree/v0.2.0) wird beim Build automatisch bezogen. Dafür wird Git auch bei einem als ZIP heruntergeladenen Projekt benötigt.
+
 ## Dokumentation
 
 | Thema | Anleitung |

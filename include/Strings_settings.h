@@ -149,6 +149,7 @@ enum class SettingsKey : uint16_t
     SETTINGS_INFO_RESET_TITLE,   ///< "Zurücksetzen" / "Reset"
     SETTINGS_INFO_RESET_MSG,     ///< "Auf Werkseinstellungen zurücksetzen?\nAlle Profile und Einstellungen gehen verloren." / "Reset to factory settings?\nAll profiles and settings will be lost."
 
+    SETTINGS_LANG_WRITE_ERROR, ///< Fehler bei nicht bestätigter Sprachspeicherung
     SETTINGS_LANG_RESTART_TITLE, ///< "Sprache ändern" / "Change language"
     SETTINGS_LANG_RESTART_MSG,   ///< "Die neue Sprache gilt erst nach einem Neustart.\nJetzt neu starten?" / "The new language takes effect after a restart.\nRestart now?"
 

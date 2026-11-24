@@ -18,7 +18,7 @@ Der Lautstärkeknopf reagiert auf eine Drehbewegung am äußeren Bereich. Ein Ti
 
 [![Lautstärke null im Radio](bilder/bedienung/radio-lautstaerke-null-klein.png)](bilder/bedienung/radio-lautstaerke-null.png)
 
-Das Haus unten rechts öffnet den Sleep-Timer mit **5, 15, 25, 45 und 60 Minuten**. Ein Tipp auf das Haus im Dialog beendet die Wiedergabe sofort und führt zurück ins Hauptmenü. **Abbruch** schließt den Dialog. Nach Auswahl einer Zeit läuft die Wiedergabe bis zum Ablauf weiter. **Reset** öffnet einen eigenen Bestätigungsdialog, die Funktion nicht mit dem normalen Beenden verwechseln.
+Ein kurzer Tipp auf das Haus unten rechts beendet die Wiedergabe sofort und führt zurück ins Hauptmenü. Halte das Haus mindestens **0,8 Sekunden** gedrückt, um den Sleep-Timer mit **5, 15, 25, 45 und 60 Minuten** zu öffnen. Auch das Haus im Dialog beendet die Wiedergabe und führt ins Hauptmenü. **Abbruch** schließt den Dialog. Nach Auswahl einer Zeit läuft die Wiedergabe bis zum Ablauf weiter. **Reset** öffnet einen eigenen Bestätigungsdialog, die Funktion nicht mit dem normalen Beenden verwechseln.
 
 ## Alle acht Visualisierungen
 
@@ -81,7 +81,7 @@ Für den SD-Player wird eine schnelle microSD-Karte mit **mindestens Class 10 un
 | --- | --- | --- | --- |
 | [![Dateiauswahl](bilder/bedienung/sdplayer-dateiauswahl-klein.png)](bilder/bedienung/sdplayer-dateiauswahl.png) | [![Musikordner](bilder/bedienung/sdplayer-musikordner-klein.png)](bilder/bedienung/sdplayer-musikordner.png) | [![Albumordner](bilder/bedienung/sdplayer-albumauswahl-klein.png)](bilder/bedienung/sdplayer-albumauswahl.png) | [![Ausgewählter Ordner](bilder/bedienung/sdplayer-ordner-ausgewaehlt-klein.png)](bilder/bedienung/sdplayer-ordner-ausgewaehlt.png) |
 
-Die Titel werden über die Wiedergabetaste gestartet. Für die Coveranzeige wird zuerst ein Ordnerbild verwendet, danach das eingebettete Cover der Musikdatei. Ohne nutzbares Bild erscheint der Platzhalter. **Leeren** entfernt die Titelliste, nicht die Musikdateien auf der SD-Karte. Das Haus unten rechts öffnet wie im Radio den Sleep-Timer. Lautstärke, Balance, Klang und Visualisierungswechsel funktionieren wie im Radio.
+Die Titel werden über die Wiedergabetaste gestartet. Für die Coveranzeige wird zuerst ein Ordnerbild verwendet, danach das eingebettete Cover der Musikdatei. Ohne nutzbares Bild erscheint der Platzhalter. **Leeren** entfernt die Titelliste, nicht die Musikdateien auf der SD-Karte. Ein kurzer Tipp auf das Haus unten rechts beendet wie im Radio die Wiedergabe und führt ins Hauptmenü. Halten ab **0,8 Sekunden** öffnet den Sleep-Timer. Lautstärke, Balance, Klang und Visualisierungswechsel funktionieren wie im Radio.
 
 Die Abbildungen zeigen vorhandene Musikdateien und ein Ordnercover zur Demonstration. Titel, Künstlernamen und Coverabbildungen dienen als Beispiele, Musikdateien sind nicht Bestandteil des Repositorys.
 

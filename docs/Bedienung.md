@@ -2,7 +2,7 @@
 
 [RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > RetroRadio bedienen
 
-Nach der [Erstinstallation](RetroRadio-Ersteinrichtung.md) öffnet das Hauptmenü die Anwendungen über die großen Symbole rechts. Die Uhr und die Netzwerkangaben stehen links. Das Haus unten rechts führt zurück ins Hauptmenü. Bei Radio und SD-Player öffnet es zuerst den Sleep-Timer: Tippe dort erneut auf das Haus, um die Wiedergabe sofort zu beenden und ins Hauptmenü zu wechseln.
+Nach der [Erstinstallation](RetroRadio-Ersteinrichtung.md) öffnet das Hauptmenü die Anwendungen über die großen Symbole rechts. Die Uhr und die Netzwerkangaben stehen links. Das Haus unten rechts führt zurück ins Hauptmenü. Bei Radio und SD-Player beendet ein kurzer Tipp die Wiedergabe und öffnet das Hauptmenü. Halten ab 0,8 Sekunden öffnet den Sleep-Timer.
 
 Der Sekundenzeiger der großen Uhr läuft standardmäßig schleichend. Unter **Einstellungen -> Zeit & Zeitserver -> Sekundenzeiger** kannst Du auf **Sekundenschritte** umschalten. Die Wahl wirkt sofort, wird automatisch gespeichert und bleibt nach einem Neustart erhalten. Derselbe Schalter steht in der [Weboberfläche](Weboberfläche.md#systemeinstellungen). Nach Werkseinstellungen gilt wieder **schleichend**.
 
@@ -119,11 +119,11 @@ Links den Einstellbereich auswählen, rechts dessen Felder bearbeiten. Längere 
 | Anzeige | Die angebotenen Darstellungs- und Anzeigeoptionen wählen. | [![Anzeige](bilder/bedienung/einstellungen-anzeige-klein.png)](bilder/bedienung/einstellungen-anzeige.png) |
 | Info & Neustart | Netzwerk- und Geräteinformationen lesen, Neustart oder Zurücksetzen gezielt auslösen. | [![Informationen](bilder/bedienung/einstellungen-info-klein.png)](bilder/bedienung/einstellungen-info.png) |
 
-Unter **Allgemein -> Serielle Logs** schaltet **Ausgabe über USB** die Diagnosemeldungen für den seriellen Monitor ein oder aus. Die Änderung wirkt sofort, wird automatisch gespeichert und bleibt nach einem Neustart erhalten. Ab Werk und nach dem Zurücksetzen auf Werkseinstellungen ist die Ausgabe ausgeschaltet. Die Sprachauswahl steht darüber im selben Bereich.
+Unter **Allgemein -> Serielle Logs** schaltet **Ausgabe über USB** die Diagnosemeldungen für den seriellen Monitor ein oder aus. Die Änderung wirkt sofort, wird automatisch gespeichert und bleibt nach einem Neustart erhalten. Ab Werk und nach dem Zurücksetzen auf Werkseinstellungen ist die Ausgabe ausgeschaltet. Die Sprachauswahl steht darüber im selben Bereich. Bei einem Speicherfehler bleibt der Neustart aus und eine Meldung fordert zum erneuten Versuch auf.
 
 Unter **Klang -> Lautsprecher** schaltet Minus die beiden eingebauten Lautsprecher aus, Plus schaltet sie ein. Die Änderung wirkt sofort. **Speichern** übernimmt sie dauerhaft, beim Verwerfen wird der gespeicherte Zustand wiederhergestellt. Der Stereo-Line-Out bleibt bei abgeschalteten Lautsprechern aktiv. Diese Funktion ist unabhängig von Mute und von der gewählten Wiedergabelautstärke.
 
-**Alle löschen** im Cloud-Bereich betrifft sämtliche dortigen Werte, einschließlich OpenSky. Für den Demomodus einzelner Google-Anwendungen nur die zugehörigen Adressen leeren. **Zurücksetzen** und **Werkseinstellungen** sind keine normalen Beenden-Tasten, sie verändern gespeicherte Einstellungen.
+**Alle löschen** im Cloud-Bereich betrifft sämtliche dortigen Werte, einschließlich OpenSky. Für den Demomodus einzelner Google-Anwendungen nur die zugehörigen Adressen leeren. **Zurücksetzen** unter **Info & Neustart** entfernt auch WLAN-Profile, die persönliche PIN und regionale Angaben. Danach gilt wieder die Start-PIN **0000**, WLAN muss am Gerät neu eingerichtet werden. Die Senderliste bleibt bei dieser Geräteaktion erhalten. Die **Werkseinstellungen** der Weboberfläche stellen zusätzlich die Werkssender wieder her. Ein normaler Firmware-Upload erhält die gespeicherten Einstellungen und Sender.
 
 ## Sperren und Ausschalten
 

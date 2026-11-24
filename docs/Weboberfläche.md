@@ -6,7 +6,7 @@ Verbinde Rechner und Radio mit demselben erreichbaren Netzwerk. Die Adresse des 
 
 [![Weboberfläche entsperren](bilder/web/sperre-klein.png)](bilder/web/sperre.png)
 
-Die Navigationsleiste springt zu den einzelnen Bereichen derselben Seite. Bei eingeschalteter PIN-Sperre sperrt das Schloss die Browseransicht wieder. Mit dem Mond- beziehungsweise Sonnensymbol wechselst Du zwischen heller und dunkler Darstellung, unten stehen sechs Farbschemata zur Wahl. Die Browseransicht merkt sich diese Auswahl. Alle Webaufnahmen dieser Anleitung zeigen die dunkle Darstellung.
+Die Navigationsleiste springt zu den einzelnen Bereichen derselben Seite. Bei eingeschalteter PIN-Sperre sperrt das Schloss die Browseransicht wieder. Mit dem Mond- beziehungsweise Sonnensymbol wechselst Du zwischen heller und dunkler Darstellung, unten stehen sechs Farbschemata zur Wahl. Die Browseransicht merkt sich diese Auswahl. Alle Webaufnahmen dieser Anleitung zeigen die dunkle Darstellung. Nach einer unterbrochenen Verbindung werden Sender- und Dateilisten erneut geladen, fehlgeschlagene Abrufe werden wiederholt.
 
 ## Status
 
@@ -52,7 +52,9 @@ Mit **Sekundenzeiger** neben der PIN-Sperre wählst Du **schleichend** oder **Se
 
 [![Systemeinstellungen](bilder/web/system-klein.png)](bilder/web/system.png)
 
-**Speichern & neu starten** übernimmt die Systemeinstellungen und startet das Radio neu. **Neu starten** und **Werkseinstellungen** sind eigene Aktionen. Ein Zurücksetzen löscht persönliche Einstellungen, es ist kein normaler Schritt für ein Firmware-Update.
+**Speichern & neu starten** übernimmt die Systemeinstellungen und startet das Radio neu. Bei einer fehlgeschlagenen Sprachspeicherung erscheint eine Fehlermeldung, der Neustart bleibt aus. Nach einem angenommenen Neustartauftrag wartet die Seite auf die Rückkehr des Radios. Bleibt es unerreichbar, erscheint ein Hinweis.
+
+**Neu starten** und **Werkseinstellungen** sind eigene Aktionen. Die Werkseinstellungen löschen persönliche Einstellungen einschließlich WLAN und stellen die Werkssender wieder her. Danach richtest Du WLAN am Gerät neu ein und öffnest die dort angezeigte Adresse. Ein Zurücksetzen ist kein normaler Schritt für ein Firmware-Update.
 
 ## Cloud-Anbindung
 

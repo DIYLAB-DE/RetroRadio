@@ -394,6 +394,8 @@ void RetroRadio::draw()
         m_visualizer.handleTouch(m_touchX, m_touchY, m_touched);
         handleMagicEyeTouch();
         getPressedRetroButton();
+        if (m_exitRequested)
+            return;
         getPressedStation();
     }
     else
@@ -713,6 +715,7 @@ void RetroRadio::getPressedRetroButton()
 {
     bool buttonState = false;
     const unsigned long LONG_PRESS_THRESHOLD = 2000;
+    constexpr unsigned long HOME_HOLD_MS = 800; ///< Haltezeit bis zum Öffnen des Schlaftimers
 
     // Prüfen, ob bereits ein Dialog aktiv ist
     const bool dialogActive = (m_presetDlg && m_presetDlg->isActive()) || (m_msg && (m_msg->isActive() || m_msg->isBusy())) || (m_sleepDlg && m_sleepDlg->isActive());
@@ -735,18 +738,20 @@ void RetroRadio::getPressedRetroButton()
             m_pressTime[i] = millis();
         }
 
-        if (isPressed && m_wasPressed[i] && !m_longPressed[i])
+        const bool homeHeld = i == 4 && m_wasPressed[i] && millis() - m_pressTime[i] >= HOME_HOLD_MS;
+
+        if (i != 4 && isPressed && m_wasPressed[i] && !m_longPressed[i])
         {
             if (millis() - m_pressTime[i] > LONG_PRESS_THRESHOLD)
                 m_longPressed[i] = true;
         }
 
-        if (!isPressed && m_wasPressed[i])
+        if ((!isPressed || homeHeld) && m_wasPressed[i])
         {
             m_btn[i].drawButton(false);
 
-            // Rutscht der Finger von der Taste, ist das ein Abbruch: nur echtes Abheben löst die Aktion aus
-            if (m_touched)
+            // Verlässt der Finger die Taste, wird die Berührung abgebrochen.
+            if (m_touched && !isPressed)
             {
                 m_wasPressed[i] = false;
                 m_longPressed[i] = false;
@@ -806,6 +811,13 @@ void RetroRadio::getPressedRetroButton()
                 // Button 4: Hauptmenü / Sleep-Timer
                 if (i == 4)
                 {
+                    if (!homeHeld)
+                    {
+                        m_wasPressed[i] = false;
+                        stopRadioImmediately();
+                        return;
+                    }
+
                     m_lastStartedStation = 0xFF;
                     APP_STATE.setBlockGFX(true);
 

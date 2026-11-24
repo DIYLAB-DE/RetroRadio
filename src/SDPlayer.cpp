@@ -4094,6 +4094,8 @@ void SdPlayer::handleProgressTouch()
  */
 void SdPlayer::handleButtons()
 {
+    constexpr unsigned long HOME_HOLD_MS = 800; ///< Haltezeit bis zum Öffnen des Schlaftimers
+
     // Wenn nichts berührt und keine Buttons gedrückt waren
     if (!m_touched && !m_wasPressed[0] && !m_wasPressed[1] && !m_wasPressed[2] && !m_wasPressed[3])
         return;
@@ -4111,13 +4113,15 @@ void SdPlayer::handleButtons()
             m_pressTime[i] = millis();
         }
 
-        if (!isPressed && m_wasPressed[i])
+        const bool homeHeld = i == 3 && m_wasPressed[i] && millis() - m_pressTime[i] >= HOME_HOLD_MS;
+
+        if ((!isPressed || homeHeld) && m_wasPressed[i])
         {
             m_controlButtons[i].drawButton(false);
             m_wasPressed[i] = false;
 
-            // Rutscht der Finger von der Taste, ist das ein Abbruch: nur echtes Abheben löst die Aktion aus
-            if (m_touched)
+            // Verlässt der Finger die Taste, wird die Berührung abgebrochen.
+            if (m_touched && !isPressed)
                 continue;
 
             // FileExplorer
@@ -4202,6 +4206,12 @@ void SdPlayer::handleButtons()
             // Hauptmenü / Sleep-Timer
             if (i == 3)
             {
+                if (!homeHeld)
+                {
+                    stopPlayerImmediately();
+                    return;
+                }
+
                 APP_STATE.setBlockGFX(true);
 
                 m_sleepDlg->setBounds((m_tft->width() - 300) / 2, (m_tft->height() - 300) / 2, 300, 300);

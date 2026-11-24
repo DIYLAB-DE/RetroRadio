@@ -3036,6 +3036,14 @@ void Settings::updateSavingState()
  */
 bool Settings::handleDeferredActions()
 {
+    if (m_languageSaveErrorPending && m_state == State::IDLE)
+    {
+        m_languageSaveErrorPending = false;
+        selectPanel(Panel::GENERAL);
+        showInfoBox(SettingsKey::SETTINGS_LANG_SECTION, SettingsKey::SETTINGS_LANG_WRITE_ERROR);
+        return true;
+    }
+
     if (m_pinSaveErrorPending && m_state == State::IDLE)
     {
         m_pinSaveErrorPending = false;
@@ -3570,7 +3578,11 @@ void Settings::startLanguageRestartDialog()
         if (restart)
         {
             saveProfiles();
-            APP_STATE.setUiLanguage(m_pendingLangIndex == 1 ? "en" : "de");
+            if (!APP_STATE.setUiLanguage(m_pendingLangIndex == 1 ? "en" : "de"))
+            {
+                m_languageSaveErrorPending = true;
+                return;
+            }
             m_pendingLangIndex = -1;
             m_restartRequested = true;
         }
@@ -3733,7 +3745,11 @@ void Settings::startExitDialog()
             // Eine geänderte Sprache greift erst nach einem Neustart in allen Modulen; performRestart kehrt nicht zurück.
             if (languagePending())
             {
-                APP_STATE.setUiLanguage(m_pendingLangIndex == 1 ? "en" : "de");
+                if (!APP_STATE.setUiLanguage(m_pendingLangIndex == 1 ? "en" : "de"))
+                {
+                    m_languageSaveErrorPending = true;
+                    return;
+                }
                 m_pendingLangIndex = -1;
                 m_restartRequested = true;
             }

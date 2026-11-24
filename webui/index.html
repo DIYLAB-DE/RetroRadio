@@ -4131,6 +4131,8 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'js.noChanges': 'Keine Änderungen',
         'js.restartConfirm': 'RetroRadio jetzt neu starten?',
         'js.restarting': 'RetroRadio startet neu...',
+        'js.restartFailed': 'Der Auftrag wurde nicht angenommen. Bitte erneut versuchen.',
+        'js.restartTimeout': 'RetroRadio ist noch nicht erreichbar. Prüfe die Verbindung und öffne die Seite erneut. Nach Werkseinstellungen muss WLAN am Gerät neu eingerichtet werden.',
         'js.factoryConfirm1': 'ACHTUNG: Alle Einstellungen werden gelöscht!\n\nFortfahren?',
         'js.factoryConfirm2': 'Bist du wirklich sicher? Diese Aktion kann nicht rückgängig gemacht werden!',
         'js.factoryResetting': 'Werkseinstellungen werden wiederhergestellt...',
@@ -4424,6 +4426,8 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         'js.noChanges': 'No changes',
         'js.restartConfirm': 'Restart RetroRadio now?',
         'js.restarting': 'RetroRadio is restarting...',
+        'js.restartFailed': 'The request was not accepted. Please try again.',
+        'js.restartTimeout': 'RetroRadio is still unavailable. Check the connection and open the page again. After a factory reset, set up Wi-Fi on the device.',
         'js.factoryConfirm1': 'WARNING: All settings will be deleted!\n\nContinue?',
         'js.factoryConfirm2': 'Are you really sure? This action cannot be undone!',
         'js.factoryResetting': 'Factory settings are being restored...',
@@ -4605,6 +4609,11 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     let hasScreenshot = false;
     let eventSource = null;
     let sseReconnectTimeout = null;
+    let remoteConnectionRevision = 0;
+    let stationsNeedRefresh = true;
+    let stationsRequestPending = false;
+    let filesNeedRefresh = true;
+    let filesRequestPending = false;
 
     // Server-Sent Events (SSE)
     function initSSE() {
@@ -4613,6 +4622,12 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       eventSource = new EventSource('/events');
 
       eventSource.addEventListener('open', function (e) {
+        ++remoteConnectionRevision;
+        stationsNeedRefresh = true;
+        filesNeedRefresh = true;
+        loadAllStationsRemote();
+        loadPresets();
+        refreshFiles();
         if (sseReconnectTimeout) {
           clearTimeout(sseReconnectTimeout);
           sseReconnectTimeout = null;
@@ -4822,14 +4837,20 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     async function refreshFiles() {
-      if (fileOperationActive) return;
+      filesNeedRefresh = true;
+      if (fileOperationActive || filesRequestPending) return;
+      filesRequestPending = true;
+      const revision = remoteConnectionRevision;
+      const path = currentPath;
       const btn = document.querySelector('.file-manager-controls .btn-secondary');
       if (btn) { btn.disabled = true; btn.innerHTML = t('js.refreshing'); }
       try {
-        const response = await fetch(`/api/files/list?path=${encodeURIComponent(currentPath)}`);
+        const response = await fetch(`/api/files/list?path=${encodeURIComponent(path)}`, { cache: 'no-store' });
         const data = await response.json();
         if (!response.ok || data.error) throw new Error(data.error || t('js.fileLoadError'));
-        if (fileOperationActive) return;
+        if (fileOperationActive || revision !== remoteConnectionRevision || path !== currentPath) return;
+        if (data.available !== false && !Array.isArray(data.files)) throw new Error(t('js.fileLoadError'));
+        filesNeedRefresh = false;
 
         const available = data.available !== false;
         document.getElementById('uploadZone').style.display = available ? '' : 'none';
@@ -4845,11 +4866,12 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
         renderFileList(data.files);
         if (btn) btn.innerHTML = t('js.refreshed');
       } catch (e) {
-        if (fileOperationActive) return;
+        if (fileOperationActive || revision !== remoteConnectionRevision || path !== currentPath) return;
         const list = document.getElementById('fileList');
         list.innerHTML = '<div class="file-item"><span class="file-name"></span></div>';
         list.querySelector('.file-name').textContent = t('js.fileLoadError');
       } finally {
+        filesRequestPending = false;
         if (btn) setTimeout(() => { btn.innerHTML = t('files.refresh'); btn.disabled = false; }, 800);
       }
     }
@@ -5782,6 +5804,35 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       });
     }
 
+    /** @brief Wartet begrenzt auf gültige Statusdaten nach einem Neustart. Bei ausbleibender Antwort bleibt die Seite mit einem Hinweis geöffnet. */
+    async function reloadAfterRestart() {
+      const started = Date.now();
+      const previousUptime = statsCache.uptimeSeconds;
+      let wasOffline = false;
+      while (Date.now() - started < 70000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 2000);
+        try {
+          const response = await fetch('/api/status', { cache: 'no-store', signal: controller.signal });
+          if (!response.ok) throw new Error(t('js.unknownError'));
+          const data = await response.json();
+          const uptime = data.system && data.system.uptimeSeconds;
+          if (!Number.isFinite(uptime) || uptime < 0) throw new Error(t('js.unknownError'));
+          if (wasOffline || (previousUptime !== null && uptime < previousUptime) || Date.now() - started >= 10000) {
+            location.reload();
+            return true;
+          }
+        } catch (error) {
+          wasOffline = true;
+        } finally {
+          clearTimeout(timer);
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      alert(t('js.restartTimeout'));
+      return false;
+    }
+
     function setupSettingsButtons() {
       document.getElementById('btnSaveSettings').addEventListener('click', async () => {
         if (!selectedTimezone) { alert(t('js.selectTimezone')); return; }
@@ -5830,7 +5881,7 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
           if (response.ok) {
             localStorage.setItem('retroRadioLanguage', normalizeLanguage(document.getElementById('languageSelect').value));
             alert(t('js.settingsSavedRestart'));
-            setTimeout(() => location.reload(), 3000);
+            await reloadAfterRestart();
           } else {
             const data = await response.json();
             alert(t('js.error') + (data.error || t('js.unknownError')));
@@ -5843,9 +5894,10 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
       document.getElementById('btnRestart').addEventListener('click', async () => {
         if (!confirm(t('js.restartConfirm'))) return;
         try {
-          await fetch('/api/reboot', { method: 'POST' });
+          const response = await fetch('/api/reboot', { method: 'POST' });
+          if (!response.ok) { alert(t('js.restartFailed')); return; }
           alert(t('js.restarting'));
-          setTimeout(() => location.reload(), 3000);
+          await reloadAfterRestart();
         } catch (e) { alert(t('js.networkError') + e.message); }
       });
 
@@ -5856,7 +5908,9 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
           const response = await fetch('/factoryreset', { method: 'POST' });
           if (response.ok) {
             alert(t('js.factoryResetting'));
-            setTimeout(() => location.reload(), 5000);
+            await reloadAfterRestart();
+          } else {
+            alert(t('js.restartFailed'));
           }
         } catch (e) { alert(t('js.networkError') + e.message); }
       });
@@ -7816,6 +7870,8 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     async function loadRemoteStatus() {
+      if (stationsNeedRefresh) loadAllStationsRemote();
+      if (filesNeedRefresh) refreshFiles();
       try {
         const response = await fetch('/api/radio/status');
         if (response.ok) {
@@ -7841,28 +7897,30 @@ DISCLAIMER THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
     }
 
     async function loadAllStationsRemote() {
+      stationsNeedRefresh = true;
+      if (stationsRequestPending) return;
+      stationsRequestPending = true;
+      const revision = remoteConnectionRevision;
       try {
-        const response = await fetch('/api/stations');
-        if (response.ok) {
-          allStationsRemote = await response.json();
-          // Festes 70-Slot-Modell: auf 70 Einträge auffüllen
-          while (allStationsRemote.length < 70) {
-            allStationsRemote.push({ shortName: '', name: '', url: '', preset: false });
+        const response = await fetch('/api/stations', { cache: 'no-store' });
+        if (!response.ok) throw new Error(t('js.stationBackupError'));
+        const stations = await response.json();
+        if (revision !== remoteConnectionRevision) return;
+        if (!Array.isArray(stations) || stations.length !== 70) throw new Error(t('js.stationBackupError'));
+        allStationsRemote = stations;
+        ScaleWidget.init(allStationsRemote, (stationId) => {
+          if (remoteState.module !== 'RETRO_RADIO') {
+            alert(t('js.stationOnlyRadio'));
+            return;
           }
-          ScaleWidget.init(allStationsRemote, (stationId) => {
-            if (remoteState.module !== 'RETRO_RADIO') {
-              alert(t('js.stationOnlyRadio'));
-              return;
-            }
-            setStation(stationId);
-          });
-          // Aktuellen Sender setzen falls bekannt
-          if (remoteState.stationId !== undefined) {
-            ScaleWidget.setStation(remoteState.stationId);
-          }
-        }
+          setStation(stationId);
+        });
+        if (remoteState.stationId !== undefined) ScaleWidget.setStation(remoteState.stationId);
+        stationsNeedRefresh = false;
       } catch (error) {
         console.error('Fehler beim Laden der Sender:', error);
+      } finally {
+        stationsRequestPending = false;
       }
     }
 

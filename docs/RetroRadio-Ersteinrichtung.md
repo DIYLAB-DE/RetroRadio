@@ -4,7 +4,7 @@
 
 Diese Anleitung führt Dich vom fabrikneuen Waveshare-Display zum gestarteten RetroRadio. Du bereitest das Projekt unter Windows, Linux oder macOS in Visual Studio Code mit PlatformIO vor, überträgst die Firmware zunächst über UART1 und wechselst anschließend auf die USB-Buchse. Danach kannst Du denselben Projektordner zum Lesen und Bearbeiten des Quellcodes und für spätere Aktualisierungen verwenden.
 
-**Stand: 12.11.2026.** Der vollständige Installationsablauf wurde am 23.09.2026 unter Linux mit einem ESP32-S3-Touch-LCD-7, PCB 1.1, 8 MB Flash und 8 MB PSRAM praktisch bestätigt: Erstinstallation über UART1, Wechsel auf USB und erneuter erfolgreicher Upload. Die Schritte für Windows und macOS stützen sich auf die offiziellen Software- und Treiberunterlagen, eigene Durchläufe auf diesen Systemen stehen noch aus. Die 16-MB-Projektumgebung ist vorhanden, eine Erstinstallation auf dieser Boardvariante ist noch nicht praktisch bestätigt.
+**Stand: 24.11.2026, v26.11.24.** Der vollständige Installationsablauf wurde am 23.09.2026 unter Linux mit einem ESP32-S3-Touch-LCD-7, PCB 1.1, 8 MB Flash und 8 MB PSRAM praktisch bestätigt: Erstinstallation über UART1, Wechsel auf USB und erneuter erfolgreicher Upload. Die Schritte für Windows und macOS stützen sich auf die offiziellen Software- und Treiberunterlagen, eigene Durchläufe auf diesen Systemen stehen noch aus. Die 16-MB-Projektumgebung ist vorhanden, eine Erstinstallation auf dieser Boardvariante ist noch nicht praktisch bestätigt.
 
 > Beginne mit dem Displayboard ohne angeschlossene Audio-Hardware und weitere externe Module. RetroRadio aktiviert den USB-Anschluss selbst. Eine Zwischen-Firmware ist nicht erforderlich, die ab Werk installierte Demo kann direkt ersetzt werden.
 
@@ -31,7 +31,7 @@ Installiere die Desktop-Ausgabe von [Visual Studio Code](https://code.visualstud
 | Linux | Installiere das passende Paket gemäß der [VS-Code-Anleitung für Linux](https://code.visualstudio.com/docs/setup/linux), beispielsweise DEB unter Debian/Ubuntu oder RPM unter Fedora. Für PlatformIO werden Python 3 und die Unterstützung für virtuelle Python-Umgebungen benötigt, unter Debian/Ubuntu heißt das Zusatzpaket `python3-venv`. Installiere diese bei Bedarf über die Paketverwaltung Deiner Distribution. |
 | macOS | Lade die passende Ausgabe für Deinen Mac herunter und verschiebe **Visual Studio Code.app** nach **Programme / Applications**. Die [VS-Code-Anleitung für macOS](https://code.visualstudio.com/docs/setup/mac) beschreibt die Installation. |
 
-Für das Klonen des Projekts und spätere Git-Aktualisierungen benötigst Du zusätzlich [Git für Dein Betriebssystem](https://git-scm.com/install/). Falls Du Git gerade installiert hast, starte VS Code anschließend neu. In Abschnitt 3 ist auch die Beschaffung als ZIP-Datei beschrieben.
+Für das Klonen, spätere Git-Aktualisierungen und den Bezug der Audiobibliothek beim Build benötigst Du [Git für Dein Betriebssystem](https://git-scm.com/install/). Falls Du Git gerade installiert hast, starte VS Code anschließend neu. In Abschnitt 3 ist auch die Beschaffung als ZIP-Datei beschrieben. Git wird auch bei dieser Variante zum Bauen benötigt.
 
 ### PlatformIO installieren
 
@@ -68,7 +68,7 @@ Im Explorer von VS Code müssen unter anderem diese Einträge sichtbar sein:
 | `src` | C++-Quelldateien des Radios und seiner Anwendungen. |
 | `include` | Zugehörige Header-Dateien. |
 | `boards` | Boarddefinitionen für 8 und 16 MB Flash. |
-| `lib` | Mitgelieferte Bibliotheken, darunter die angepasste Audio-Bibliothek. |
+| `lib` | Mitgelieferte FFT-Bibliothek für die Audioauswertung. |
 
 Öffne den vollständigen Projektordner, nicht nur eine einzelne Quelldatei oder den Unterordner `src`. Bestätige eine Vertrauensabfrage von VS Code nur für die von Dir bezogene und geprüfte Projektquelle. Warte anschließend, bis PlatformIO das Projekt erkannt und vorbereitet hat. Beim ersten Öffnen und Bauen werden weitere Pakete heruntergeladen.
 
@@ -91,7 +91,7 @@ Verwende für alle folgenden Schritte dieselbe, zu Deiner Flashgröße passende 
 
 ## 5. Die Firmware zunächst bauen
 
-Starte unter **Project Tasks > Deine Umgebung > General > Build** den Build. Dabei wird aus dem Quellcode die Firmware erstellt. Das Board muss hierfür noch nicht angeschlossen sein. PlatformIO lädt die in der Projektkonfiguration festgelegten Werkzeuge und Abhängigkeiten. Der erste Durchlauf kann deshalb deutlich länger dauern als spätere Builds.
+Starte unter **Project Tasks > Deine Umgebung > General > Build** den Build. Dabei wird aus dem Quellcode die Firmware erstellt. Das Board muss hierfür noch nicht angeschlossen sein. PlatformIO lädt die in der Projektkonfiguration festgelegten Werkzeuge und Abhängigkeiten, darunter [audio-lite v0.2.0](https://github.com/DIYLAB-DE/audio-lite/tree/v0.2.0). Git muss dafür installiert und für PlatformIO erreichbar sein. Der erste Durchlauf kann deshalb deutlich länger dauern als spätere Builds.
 
 Warte auf **SUCCESS**. Bei einem Fehler behebst Du zuerst dessen Ursache anhand der Ausgabe im Terminalbereich von VS Code. Fahre erst nach einem erfolgreichen Build mit der Übertragung fort.
 
@@ -238,6 +238,6 @@ RetroRadio setzt beim Start den USB/CAN-Umschalter über `expanderPins::USB_SEL`
 
 Die Erstinstallation wurde unter Linux mit einem ESP32-S3-Touch-LCD-7, PCB 1.1, 8 MB Flash und 8 MB PSRAM geprüft. Die Hinweise für Windows und macOS basieren auf den offiziellen Software- und Treiberunterlagen. Ein vollständiger Installationsdurchlauf unter diesen Systemen und auf dem 16-MB-Board steht noch aus.
 
-Am 12.11.2026 wurden die öffentlichen Quellen von v26.11.12 für 8 und 16 MB Flash erfolgreich und ohne Compilerwarnungen gebaut. Die Gangart der Hauptmenü-Uhr einschließlich Speicherung und die Zeitfenster-Korrekturen wurden zuvor am 8-MB-Gerät abgenommen. Die reguläre 8-MB-Firmware wurde über USB übertragen und anhand der Flash-Prüfsummen bestätigt. Diese Prüfungen ersetzen keinen vollständigen Erstinstallationsdurchlauf unter Windows oder macOS und keinen Hardwaretest auf einem 16-MB-Board.
+Die Umstellung auf audio-lite v0.2.0 erhält vorhandene Einstellungen und Sender. Für ein normales Firmware-Update ist kein Zurücksetzen auf Werkseinstellungen nötig.
 
 [RetroRadio](../README.md) > [Dokumentation](../README.md#dokumentation) > RetroRadio: Erste Inbetriebnahme

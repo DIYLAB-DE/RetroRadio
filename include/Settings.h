@@ -316,6 +316,7 @@ private:
     std::unique_ptr<MessageBox> m_activeMessageBox;   ///< Aktive MessageBox
     std::unique_ptr<ProgressBox> m_activeProgressBox; ///< Aktive ProgressBox
 
+    bool m_languageSaveErrorPending = false; ///< Sprachspeicherfehler nach dem Schließen des aktiven Dialogs anzeigen
     bool m_pinSaveErrorPending = false; ///< Speicherfehler nach dem Schließen des aktiven Dialogs anzeigen
     bool m_exitRequested = false;    ///< Exit verzögert anfordern
     bool m_restartRequested = false; ///< Neustart verzögert anfordern

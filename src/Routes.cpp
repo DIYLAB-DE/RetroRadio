@@ -1033,7 +1033,12 @@ void setupRoutes(AsyncWebServer &server, LGFX &tft, StationManager &stationManag
                 }
 
                 if (strcmp(APP_STATE.getUiLanguage(), language) != 0) {
-                    APP_STATE.setUiLanguage(language);
+                    if (!APP_STATE.setUiLanguage(language)) {
+                        request->send(500, "application/json", "{\"error\":\"Sprache konnte nicht gespeichert werden. Bitte erneut versuchen.\"}");
+                        free(bodyBuffer);
+                        bodyBuffer = nullptr;
+                        return;
+                    }
                     hasChanges = true;
                 }
             }
